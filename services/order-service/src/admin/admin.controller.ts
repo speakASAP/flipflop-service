@@ -73,4 +73,50 @@ export class AdminController {
     const settings = await this.adminService.updateCompanySettings(updateDto);
     return ApiResponseUtil.success(settings);
   }
+
+  /**
+   * Get admin settings (environment variable overrides)
+   */
+  @Get('settings')
+  async getAdminSettings(@Request() req) {
+    await this.checkAdmin(req.user.id);
+    const settings = await this.adminService.getAdminSettings();
+    return ApiResponseUtil.success(settings);
+  }
+
+  /**
+   * Update admin settings (environment variable overrides)
+   */
+  @Put('settings')
+  async updateAdminSettings(
+    @Request() req,
+    @Body() updates: any,
+  ) {
+    await this.checkAdmin(req.user.id);
+    const settings = await this.adminService.updateAdminSettings(updates);
+    return ApiResponseUtil.success(settings);
+  }
+
+  /**
+   * Get list of configurable environment variables
+   */
+  @Get('settings/available')
+  async getConfigurableVariables(@Request() req) {
+    await this.checkAdmin(req.user.id);
+    const variables = this.adminService.getConfigurableVariables();
+    const nonEditable = [
+      'JWT_SECRET',
+      'DB_PASSWORD',
+      'PAYU_CLIENT_SECRET',
+      'SENDGRID_API_KEY',
+      'OPENROUTER_API_KEY',
+      'TELEGRAM_BOT_TOKEN',
+      'WHATSAPP_ACCESS_TOKEN',
+      'REDIS_PASSWORD',
+    ];
+    return ApiResponseUtil.success({
+      configurable: variables,
+      nonEditable,
+    });
+  }
 }

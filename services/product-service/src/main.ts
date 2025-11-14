@@ -6,6 +6,19 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { LoggerService } from '../../../shared/logger/logger.service';
+import {
+  validateAndLog,
+  commonDefinitions,
+  databaseDefinitions,
+} from '../../../shared/config/env-validator';
+
+// Validate environment variables before starting
+const productServiceDefinitions = [
+  ...commonDefinitions,
+  ...databaseDefinitions,
+];
+
+validateAndLog(productServiceDefinitions, 'product-service');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {

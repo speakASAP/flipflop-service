@@ -6,6 +6,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from '../../../shared/database/database.module';
 import { LoggerModule } from '../../../shared/logger/logger.module';
+import { SettingsModule } from '../../../shared/settings/settings.module';
 import { HealthModule } from '../../../shared/health/health.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
@@ -22,6 +23,7 @@ import { HealthController } from './health/health.controller';
     }),
     DatabaseModule,
     LoggerModule,
+    SettingsModule,
     HealthModule,
     CartModule,
     OrdersModule,

@@ -1,8 +1,8 @@
 services:
   frontend:
     build:
-      context: ./services/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/frontend/Dockerfile
     container_name: e-commerce-frontend
     restart: unless-stopped
     env_file:
@@ -31,8 +31,8 @@ services:
 
   api-gateway:
     build:
-      context: ./services/api-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/api-gateway/Dockerfile
     container_name: e-commerce-api-gateway
     restart: unless-stopped
     env_file:
@@ -60,8 +60,8 @@ services:
 
   user-service:
     build:
-      context: ./services/user-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/user-service/Dockerfile
     container_name: e-commerce-user-service
     restart: unless-stopped
     env_file:
@@ -89,8 +89,8 @@ services:
 
   product-service:
     build:
-      context: ./services/product-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/product-service/Dockerfile
     container_name: e-commerce-product-service
     restart: unless-stopped
     env_file:
@@ -119,8 +119,8 @@ services:
 
   order-service:
     build:
-      context: ./services/order-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/order-service/Dockerfile
     container_name: e-commerce-order-service
     restart: unless-stopped
     env_file:
@@ -148,8 +148,8 @@ services:
 
   supplier-service:
     build:
-      context: ./services/supplier-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/supplier-service/Dockerfile
     container_name: e-commerce-supplier-service
     restart: unless-stopped
     env_file:
@@ -177,8 +177,8 @@ services:
 
   ai-service:
     build:
-      context: ./services/ai-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/ai-service/Dockerfile
     container_name: e-commerce-ai-service
     restart: unless-stopped
     env_file:
@@ -201,8 +201,8 @@ services:
 
   analytics-service:
     build:
-      context: ./services/analytics-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/analytics-service/Dockerfile
     container_name: e-commerce-analytics-service
     restart: unless-stopped
     env_file:

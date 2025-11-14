@@ -3,16 +3,16 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-COPY ../../shared/package.json ../../shared/
-COPY ../../shared/tsconfig.json ../../shared/
+COPY services/api-gateway/package*.json ./
+COPY shared/package.json shared/
+COPY shared/tsconfig.json shared/
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
-COPY . .
-COPY ../../shared ../../shared
+COPY services/api-gateway/ ./
+COPY shared/ ./shared/
 
 # Build
 RUN npm run build
@@ -23,11 +23,11 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-COPY ../../shared/package.json ../../shared/
+COPY services/api-gateway/package*.json ./
+COPY shared/package.json shared/
 
 # Install production dependencies only
-RUN npm ci --only=production
+RUN npm install --only=production
 
 # Copy built files
 COPY --from=builder /app/dist ./dist

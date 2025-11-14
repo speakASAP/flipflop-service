@@ -36,3 +36,11 @@ export * from './utils/error-handler.util';
 // Health
 export * from './health/health.module';
 export * from './health/health.service';
+
+// Resilience
+export * from './resilience/resilience.module';
+export * from './resilience/circuit-breaker.service';
+export * from './resilience/retry.service';
+export * from './resilience/fallback.service';
+export * from './resilience/resilience.monitor';
+export * from './resilience/resilience.config';

@@ -14,7 +14,8 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiResponseUtil } from '../../../shared/utils/api-response.util';
+import { UpdateUserSettingsDto } from './dto/update-user-settings.dto';
+import { ApiResponseUtil } from '../../../../shared/utils/api-response.util';
 
 @Controller('users')
 @UseGuards(AuthGuard('jwt'))
@@ -37,6 +38,31 @@ export class UsersController {
   async getUser(@Param('id') id: string) {
     const user = await this.usersService.findById(id);
     return ApiResponseUtil.success(user);
+  }
+
+  /**
+   * Get user settings/preferences
+   */
+  @Get('settings')
+  async getUserSettings(@Request() req) {
+    const user = await this.usersService.findById(req.user.id);
+    return ApiResponseUtil.success({
+      preferences: user.preferences || {},
+    });
+  }
+
+  /**
+   * Update user settings/preferences
+   */
+  @Put('settings')
+  async updateUserSettings(
+    @Request() req,
+    @Body() updateDto: UpdateUserSettingsDto,
+  ) {
+    const user = await this.usersService.updateSettings(req.user.id, updateDto);
+    return ApiResponseUtil.success({
+      preferences: user.preferences,
+    });
   }
 }
 

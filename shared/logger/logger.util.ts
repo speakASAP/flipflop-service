@@ -81,7 +81,7 @@ export class Logger {
   }
 
   /**
-   * Send log to logging-microservice
+   * Send log to logging-microservice with retry and circuit breaker
    */
   private async sendToLoggingService(level: LogLevel, message: string, metadata: LogMetadata = {}): Promise<void> {
     const logData: LogData = {
@@ -96,56 +96,75 @@ export class Logger {
       },
     };
 
-    try {
-      const url = new URL(`${this.loggingServiceUrl}/api/logs`);
-      const isHttps = url.protocol === 'https:';
-      const httpModule = isHttps ? https : http;
+    // Simple retry mechanism (max 2 retries)
+    const maxRetries = 2;
+    let lastError: Error | null = null;
 
-      const postData = JSON.stringify(logData);
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const url = new URL(`${this.loggingServiceUrl}/api/logs`);
+        const isHttps = url.protocol === 'https:';
+        const httpModule = isHttps ? https : http;
 
-      const options = {
-        hostname: url.hostname,
-        port: url.port || (isHttps ? 443 : 80),
-        path: url.pathname,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(postData),
-        },
-        timeout: 5000, // 5 second timeout
-      };
+        const postData = JSON.stringify(logData);
 
-      return new Promise((resolve, reject) => {
-        const req = httpModule.request(options, (res) => {
-          let data = '';
-          res.on('data', (chunk) => {
-            data += chunk;
+        const options = {
+          hostname: url.hostname,
+          port: url.port || (isHttps ? 443 : 80),
+          path: url.pathname,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(postData),
+          },
+          timeout: 5000, // 5 second timeout
+        };
+
+        await new Promise<void>((resolve, reject) => {
+          const req = httpModule.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => {
+              data += chunk;
+            });
+            res.on('end', () => {
+              if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                resolve();
+              } else {
+                reject(new Error(`Logging service returned ${res.statusCode}`));
+              }
+            });
           });
-          res.on('end', () => {
-            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-              resolve();
-            } else {
-              reject(new Error(`Logging service returned ${res.statusCode}`));
-            }
+
+          req.on('error', (error) => {
+            reject(error);
           });
+
+          req.on('timeout', () => {
+            req.destroy();
+            reject(new Error('Request timeout'));
+          });
+
+          req.write(postData);
+          req.end();
         });
 
-        req.on('error', (error) => {
-          reject(error);
-        });
-
-        req.on('timeout', () => {
-          req.destroy();
-          reject(new Error('Request timeout'));
-        });
-
-        req.write(postData);
-        req.end();
-      });
-    } catch (error) {
-      // Silently fail - will fall back to local logging
-      throw error;
+        // Success - return
+        return;
+      } catch (error: any) {
+        lastError = error;
+        
+        // Don't retry on last attempt
+        if (attempt < maxRetries) {
+          // Exponential backoff: 100ms, 200ms
+          const delay = 100 * Math.pow(2, attempt);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      }
     }
+
+    // All retries failed - throw to trigger fallback
+    throw lastError || new Error('Logging service unavailable');
   }
 
   /**

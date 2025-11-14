@@ -17,4 +17,5 @@ export { DeliveryAddress } from './delivery-address.entity';
 export { Invoice } from './invoice.entity';
 export { ProformaInvoice } from './proforma-invoice.entity';
 export { CompanySettings } from './company-settings.entity';
+export { AdminSettings } from './admin-settings.entity';
 export { PaymentMethod } from './payment-method.entity';

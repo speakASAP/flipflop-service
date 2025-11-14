@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { NotificationService } from './notification.service';
 import { LoggerModule } from '../logger/logger.module';
+import { ResilienceModule } from '../resilience/resilience.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { LoggerModule } from '../logger/logger.module';
       maxRedirects: 5,
     }),
     LoggerModule,
+    ResilienceModule,
   ],
   providers: [NotificationService],
   exports: [NotificationService],

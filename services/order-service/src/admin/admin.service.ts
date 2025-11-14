@@ -7,14 +7,19 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CompanySettings } from '../../../../shared/entities/company-settings.entity';
+import { AdminSettings } from '../../../../shared/entities/admin-settings.entity';
 import { LoggerService } from '../../../../shared/logger/logger.service';
 import { UpdateCompanySettingsDto } from './dto/update-company-settings.dto';
+import { SettingsService } from '../../../../shared/settings/settings.service';
 
 @Injectable()
 export class AdminService {
   constructor(
     @InjectRepository(CompanySettings)
     private companySettingsRepository: Repository<CompanySettings>,
+    @InjectRepository(AdminSettings)
+    private adminSettingsRepository: Repository<AdminSettings>,
+    private settingsService: SettingsService,
     private logger: LoggerService,
   ) {}
 
@@ -73,5 +78,33 @@ export class AdminService {
     });
 
     return saved;
+  }
+
+  /**
+   * Get admin settings (environment variable overrides)
+   */
+  async getAdminSettings(): Promise<AdminSettings> {
+    return await this.settingsService.getAdminSettings();
+  }
+
+  /**
+   * Update admin settings (environment variable overrides)
+   */
+  async updateAdminSettings(updates: Partial<AdminSettings>): Promise<AdminSettings> {
+    const saved = await this.settingsService.updateAdminSettings(updates);
+
+    this.logger.log('Admin settings updated', {
+      settingsId: saved.id,
+      updatedFields: Object.keys(updates),
+    });
+
+    return saved;
+  }
+
+  /**
+   * Get list of configurable variables
+   */
+  getConfigurableVariables() {
+    return this.settingsService.getConfigurableVariables();
   }
 }

@@ -3,13 +3,15 @@
  * Provides health check functionality with dependency checking
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/typeorm';
 import { Connection } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
+import { CircuitBreakerService } from '../resilience/circuit-breaker.service';
+import { ResilienceMonitor } from '../resilience/resilience.monitor';
 
 export interface HealthStatus {
   status: 'ok' | 'degraded' | 'unhealthy';
@@ -33,6 +35,25 @@ export interface HealthStatus {
       message?: string;
     };
   };
+  resilience?: {
+    circuitBreakers?: Array<{
+      name: string;
+      state: 'open' | 'closed' | 'half-open';
+      failures: number;
+      successes: number;
+    }>;
+    retryStats?: {
+      [serviceName: string]: {
+        totalAttempts: number;
+        successRate: number;
+      };
+    };
+    fallbackStats?: {
+      [serviceName: string]: {
+        totalFallbacks: number;
+      };
+    };
+  };
 }
 
 @Injectable()
@@ -41,6 +62,8 @@ export class HealthService {
     @InjectConnection() private readonly connection: Connection,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    @Optional() private readonly circuitBreakerService?: CircuitBreakerService,
+    @Optional() private readonly resilienceMonitor?: ResilienceMonitor,
   ) {}
 
   /**
@@ -179,11 +202,41 @@ export class HealthService {
       }
     }
 
+    // Add resilience metrics if available
+    const resilience: HealthStatus['resilience'] = {};
+    
+    if (this.circuitBreakerService && this.resilienceMonitor) {
+      const metrics = this.resilienceMonitor.getMetrics();
+      
+      resilience.circuitBreakers = metrics.circuitBreakers.map(cb => ({
+        name: cb.name,
+        state: cb.state,
+        failures: cb.failures,
+        successes: cb.successes,
+      }));
+      
+      resilience.retryStats = {};
+      for (const [serviceName, stats] of Object.entries(metrics.retryStats)) {
+        resilience.retryStats[serviceName] = {
+          totalAttempts: stats.totalAttempts,
+          successRate: stats.successRate,
+        };
+      }
+      
+      resilience.fallbackStats = {};
+      for (const [serviceName, stats] of Object.entries(metrics.fallbackStats)) {
+        resilience.fallbackStats[serviceName] = {
+          totalFallbacks: stats.totalFallbacks,
+        };
+      }
+    }
+
     return {
       status: overallStatus,
       timestamp: new Date().toISOString(),
       service: serviceName,
       dependencies,
+      resilience: Object.keys(resilience).length > 0 ? resilience : undefined,
     };
   }
 }

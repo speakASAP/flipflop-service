@@ -12,52 +12,132 @@ import {
   NotificationResponse,
   NotificationChannel,
 } from './notification.interface';
+import { CircuitBreakerService } from '../resilience/circuit-breaker.service';
+import { RetryService } from '../resilience/retry.service';
+import { FallbackService } from '../resilience/fallback.service';
+import { ResilienceMonitor } from '../resilience/resilience.monitor';
 
 @Injectable()
 export class NotificationService {
   private readonly notificationServiceUrl: string;
   private readonly logger: LoggerService;
+  private readonly circuitBreakerService: CircuitBreakerService;
+  private readonly retryService: RetryService;
+  private readonly fallbackService: FallbackService;
+  private readonly resilienceMonitor: ResilienceMonitor;
 
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     logger: LoggerService,
+    circuitBreakerService: CircuitBreakerService,
+    retryService: RetryService,
+    fallbackService: FallbackService,
+    resilienceMonitor: ResilienceMonitor,
   ) {
     this.notificationServiceUrl =
       this.configService.get<string>('NOTIFICATION_SERVICE_URL') ||
       'http://notification-microservice:3010';
     this.logger = logger;
+    this.circuitBreakerService = circuitBreakerService;
+    this.retryService = retryService;
+    this.fallbackService = fallbackService;
+    this.resilienceMonitor = resilienceMonitor;
   }
 
   /**
-   * Send notification via notification-microservice
+   * Internal method to send notification via HTTP
+   */
+  private async sendNotificationHttp(dto: SendNotificationDto): Promise<NotificationResponse> {
+    const response = await firstValueFrom(
+      this.httpService.post<NotificationResponse>(
+        `${this.notificationServiceUrl}/notifications/send`,
+        dto,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000,
+        },
+      ),
+    );
+    return response.data;
+  }
+
+  /**
+   * Send notification via notification-microservice with resilience patterns
    */
   async sendNotification(
     dto: SendNotificationDto,
   ): Promise<NotificationResponse> {
+    // Create a function that captures the dto in closure
+    const callFn = async () => this.sendNotificationHttp(dto);
+    
+    // Get or create circuit breaker (reuses same instance by service name)
+    const breaker = this.circuitBreakerService.create(
+      'notification-service',
+      callFn,
+    );
+
+    // Check if circuit breaker is open
+    if (this.circuitBreakerService.isOpen('notification-service')) {
+      this.logger.warn('Notification service circuit breaker is open, using fallback', {
+        channel: dto.channel,
+        type: dto.type,
+        recipient: dto.recipient,
+      });
+
+      const fallbackResult = await this.fallbackService.handleNotificationFallback(dto);
+      this.resilienceMonitor.recordFallback('notification-service', 'queue');
+
+      return {
+        success: true,
+        data: {
+          id: `fallback-${Date.now()}`,
+          status: 'queued',
+          channel: dto.channel,
+          recipient: dto.recipient,
+        },
+      };
+    }
+
     try {
-      const response = await firstValueFrom(
-        this.httpService.post<NotificationResponse>(
-          `${this.notificationServiceUrl}/notifications/send`,
-          dto,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            timeout: 10000, // 10 second timeout
+      // Use retry service with circuit breaker
+      const response = await this.retryService.execute(
+        async () => {
+          return await breaker.fire();
+        },
+        {
+          retryable: (error: any) => {
+            // Don't retry on validation errors
+            return error.code !== 'VALIDATION_ERROR' && error.code !== 'NOT_FOUND';
           },
-        ),
+        },
       );
+
+      // Record successful retry
+      this.resilienceMonitor.recordRetryAttempt('notification-service', true);
 
       this.logger.log(`Notification sent successfully`, {
         channel: dto.channel,
         type: dto.type,
         recipient: dto.recipient,
-        notificationId: response.data?.data?.id,
+        notificationId: (response as NotificationResponse)?.data?.id,
       });
 
-      return response.data;
+      return (response as NotificationResponse) || {
+        success: true,
+        data: {
+          id: `sent-${Date.now()}`,
+          status: 'sent',
+          channel: dto.channel,
+          recipient: dto.recipient,
+        },
+      };
     } catch (error: any) {
+      // Record failed retry
+      this.resilienceMonitor.recordRetryAttempt('notification-service', false);
+
       // Log error but don't throw - notifications are non-critical
       this.logger.error('Failed to send notification', {
         error: error.message,
@@ -67,12 +147,18 @@ export class NotificationService {
         stack: error.stack,
       });
 
-      // Return error response instead of throwing
+      // Use fallback strategy
+      const fallbackResult = await this.fallbackService.handleNotificationFallback(dto);
+      this.resilienceMonitor.recordFallback('notification-service', 'queue');
+
+      // Return success even if queued (non-blocking)
       return {
-        success: false,
-        error: {
-          code: 'NOTIFICATION_FAILED',
-          message: error.message || 'Failed to send notification',
+        success: true,
+        data: {
+          id: `fallback-${Date.now()}`,
+          status: 'queued',
+          channel: dto.channel,
+          recipient: dto.recipient,
         },
       };
     }
