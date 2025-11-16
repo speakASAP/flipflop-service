@@ -13,16 +13,23 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ProductsService } from './products.service';
+import { CsvImportService } from './csv-import.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
-import { ApiResponseUtil } from '../../../shared/utils/api-response.util';
+import { ApiResponseUtil } from '../../../../shared/utils/api-response.util';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private productsService: ProductsService) {}
+  constructor(
+    private productsService: ProductsService,
+    private csvImportService: CsvImportService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -62,6 +69,40 @@ export class ProductsController {
   async remove(@Param('id') id: string) {
     await this.productsService.remove(id);
     return ApiResponseUtil.success({ message: 'Product deleted' });
+  }
+
+  /**
+   * Preview CSV file
+   */
+  @Post('import/preview')
+  @UseGuards(AuthGuard('jwt'))
+  async previewCsv(@Body() body: { csvContent: string }) {
+    const preview = this.csvImportService.previewCsv(body.csvContent);
+    return ApiResponseUtil.success(preview);
+  }
+
+  /**
+   * Import products from CSV
+   */
+  @Post('import')
+  @UseGuards(AuthGuard('jwt'))
+  async importCsv(
+    @Body()
+    body: {
+      csvContent: string;
+      fieldMapping: any;
+      defaultProfitMargin?: number;
+      updateExisting?: boolean;
+      skipErrors?: boolean;
+    },
+  ) {
+    const result = await this.csvImportService.importProducts(body.csvContent, {
+      fieldMapping: body.fieldMapping,
+      defaultProfitMargin: body.defaultProfitMargin,
+      updateExisting: body.updateExisting ?? false,
+      skipErrors: body.skipErrors ?? true,
+    });
+    return ApiResponseUtil.success(result);
   }
 }
 

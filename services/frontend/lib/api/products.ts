@@ -12,7 +12,9 @@ export interface Product {
   price: number;
   stockQuantity: number;
   brand?: string;
-  images?: string[];
+  mainImageUrl?: string;
+  imageUrls?: string[];
+  images?: string[]; // Alias for imageUrls for backward compatibility
   categories?: Category[];
   variants?: ProductVariant[];
   createdAt: string;
@@ -60,6 +62,39 @@ export interface PaginatedResponse<T> {
   };
 }
 
+export interface CreateProductInput {
+  name: string;
+  sku: string;
+  description?: string;
+  shortDescription?: string;
+  price: number;
+  compareAtPrice?: number;
+  mainImageUrl?: string;
+  imageUrls?: string[];
+  stockQuantity?: number;
+  trackInventory?: boolean;
+  brand?: string;
+  manufacturer?: string;
+  categoryIds?: string[];
+}
+
+export interface UpdateProductInput {
+  name?: string;
+  sku?: string;
+  description?: string;
+  shortDescription?: string;
+  price?: number;
+  compareAtPrice?: number;
+  mainImageUrl?: string;
+  imageUrls?: string[];
+  stockQuantity?: number;
+  trackInventory?: boolean;
+  isActive?: boolean;
+  brand?: string;
+  manufacturer?: string;
+  categoryIds?: string[];
+}
+
 export const productsApi = {
   async getProducts(filters?: ProductFilters) {
     const params = new URLSearchParams();
@@ -86,6 +121,19 @@ export const productsApi = {
 
   async getCategory(id: string) {
     return apiClient.get<Category>(`/categories/${id}`);
+  },
+
+  // Admin operations
+  async createProduct(data: CreateProductInput) {
+    return apiClient.post<Product>('/products', data);
+  },
+
+  async updateProduct(id: string, data: UpdateProductInput) {
+    return apiClient.put<Product>(`/products/${id}`, data);
+  },
+
+  async deleteProduct(id: string) {
+    return apiClient.delete(`/products/${id}`);
   },
 };
 

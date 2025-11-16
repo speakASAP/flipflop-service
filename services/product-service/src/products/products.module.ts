@@ -11,6 +11,7 @@ import { Product } from '../../../../shared/entities/product.entity';
 import { Category } from '../../../../shared/entities/category.entity';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
+import { CsvImportService } from './csv-import.service';
 import { ImagesController } from './images.controller';
 import { ImagesService } from './images.service';
 import { JwtStrategy } from '../auth/jwt.strategy';
@@ -26,7 +27,7 @@ import { JwtStrategy } from '../auth/jwt.strategy';
     }),
   ],
   controllers: [ProductsController, ImagesController],
-  providers: [ProductsService, ImagesService, JwtStrategy],
-  exports: [ProductsService, ImagesService],
+  providers: [ProductsService, CsvImportService, ImagesService, JwtStrategy],
+  exports: [ProductsService, CsvImportService, ImagesService],
 })
 export class ProductsModule {}

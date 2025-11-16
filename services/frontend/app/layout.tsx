@@ -18,13 +18,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="cs">
-      <body className={inter.className}>
+    <html lang="cs" className="light">
+      <body className={`${inter.className} bg-white text-slate-900 antialiased`}>
         <ErrorBoundary>
           <AuthProvider>
             <Header />
-            <main>{children}</main>
-            <footer className="bg-gray-800 text-white py-8 mt-16">
+            <main className="min-h-screen">{children}</main>
+            <footer className="bg-gradient-to-r from-slate-800 to-slate-900 text-white py-8 mt-16">
               <div className="container mx-auto px-4 text-center">
                 <p>&copy; 2025 flipflop.statex.cz. Všechna práva vyhrazena.</p>
               </div>

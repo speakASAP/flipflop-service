@@ -37,19 +37,19 @@ export default function OrdersPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return 'text-yellow-600';
+        return 'bg-yellow-100 text-yellow-800';
       case 'CONFIRMED':
-        return 'text-blue-600';
+        return 'bg-blue-100 text-blue-800';
       case 'PROCESSING':
-        return 'text-purple-600';
+        return 'bg-purple-100 text-purple-800';
       case 'SHIPPED':
-        return 'text-indigo-600';
+        return 'bg-indigo-100 text-indigo-800';
       case 'DELIVERED':
-        return 'text-green-600';
+        return 'bg-green-100 text-green-800';
       case 'CANCELLED':
-        return 'text-red-600';
+        return 'bg-red-100 text-red-800';
       default:
-        return 'text-gray-600';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -67,59 +67,75 @@ export default function OrdersPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <p>Načítání objednávek...</p>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-pulse">⏳</div>
+          <p className="text-xl font-semibold text-gray-600">Načítání objednávek...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Moje objednávky</h1>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-8 text-slate-900">Moje objednávky</h1>
 
-      {orders.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">Nemáte žádné objednávky</p>
-          <Link
-            href="/products"
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-          >
-            Prohlédnout produkty
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {orders.map((order) => (
+        {orders.length === 0 ? (
+          <div className="max-w-2xl mx-auto text-center bg-white rounded-2xl shadow-xl p-12">
+            <div className="text-8xl mb-6">📦</div>
+            <h2 className="text-3xl font-extrabold text-slate-900 mb-4">Nemáte žádné objednávky</h2>
+            <p className="text-xl text-gray-600 mb-8">Začněte nakupovat a vaše objednávky se zde zobrazí</p>
             <Link
-              key={order.id}
-              href={`/orders/${order.id}`}
-              className="block border rounded-lg p-6 hover:shadow-lg transition"
+              href="/products"
+              className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">
-                    Objednávka #{order.orderNumber}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Datum: {new Date(order.createdAt).toLocaleDateString('cs-CZ')}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Položek: {order.items.length}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className={`font-semibold mb-2 ${getStatusColor(order.status)}`}>
-                    {getStatusText(order.status)}
-                  </p>
-                  <p className="text-xl font-bold text-blue-600">
-                    {order.total.toFixed(2)} Kč
-                  </p>
-                </div>
-              </div>
+              Prohlédnout produkty
             </Link>
-          ))}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {orders.map((order) => (
+              <Link
+                key={order.id}
+                href={`/orders/${order.id}`}
+                className="block bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all transform hover:scale-[1.01]"
+              >
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <h3 className="text-2xl font-extrabold text-slate-900">
+                        Objednávka #{order.orderNumber}
+                      </h3>
+                      <span className={`px-4 py-1.5 rounded-full text-sm font-bold ${getStatusColor(order.status)}`}>
+                        {getStatusText(order.status)}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 mb-2">
+                      📅 Datum: {new Date(order.createdAt).toLocaleDateString('cs-CZ', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                    <p className="text-gray-600">
+                      📦 Položek: {order.items.length}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                      {order.total.toLocaleString('cs-CZ')} Kč
+                    </p>
+                    <p className="text-gray-500 text-sm mt-1">Celkem</p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

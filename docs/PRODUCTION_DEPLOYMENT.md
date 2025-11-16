@@ -186,7 +186,7 @@ docker compose run --rm certbot /scripts/check-cert-expiry.sh flipflop.statex.cz
 
 **Expected Output**:
 
-```
+```text
 ✅ flipflop.statex.cz: Valid for X days
 ```
 
@@ -311,7 +311,7 @@ curl -I https://flipflop.statex.cz
 
 **Expected Response**:
 
-```
+```text
 HTTP/2 200
 server: nginx
 strict-transport-security: max-age=63072000; includeSubDomains; preload

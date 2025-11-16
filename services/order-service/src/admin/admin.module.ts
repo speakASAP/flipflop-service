@@ -8,6 +8,7 @@ import { HttpModule } from '@nestjs/axios';
 import { CompanySettings } from '../../../../shared/entities/company-settings.entity';
 import { AdminSettings } from '../../../../shared/entities/admin-settings.entity';
 import { SettingsModule } from '../../../../shared/settings/settings.module';
+import { OrdersModule } from '../orders/orders.module';
 import { AdminService } from './admin.service';
 import { AdminController } from './admin.controller';
 
@@ -16,6 +17,7 @@ import { AdminController } from './admin.controller';
     TypeOrmModule.forFeature([CompanySettings, AdminSettings]),
     HttpModule,
     SettingsModule,
+    OrdersModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

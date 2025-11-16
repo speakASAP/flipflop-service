@@ -10,6 +10,7 @@ export interface User {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  isAdmin?: boolean;
 }
 
 export interface LoginCredentials {

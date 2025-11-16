@@ -36,6 +36,23 @@ export class UsersService {
     return this.userRepository.findOne({ where: { email } });
   }
 
+  async findAll(): Promise<User[]> {
+    return this.userRepository.find({
+      select: [
+        'id',
+        'email',
+        'firstName',
+        'lastName',
+        'phone',
+        'isAdmin',
+        'isEmailVerified',
+        'createdAt',
+        'updatedAt',
+      ],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findById(id);
 

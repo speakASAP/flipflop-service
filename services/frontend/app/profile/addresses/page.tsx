@@ -118,189 +118,211 @@ export default function AddressesPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <p>Načítání...</p>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-pulse">⏳</div>
+          <p className="text-xl font-semibold text-gray-600">Načítání...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Dodací adresy</h1>
-        <button
-          onClick={() => {
-            resetForm();
-            setEditingId(null);
-            setShowForm(true);
-          }}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          + Přidat adresu
-        </button>
-      </div>
-
-      {showForm && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">
-            {editingId ? 'Upravit adresu' : 'Nová adresa'}
-          </h2>
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-gray-700 mb-2">Jméno</label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                  className="w-full border rounded px-4 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Příjmení</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                  className="w-full border rounded px-4 py-2"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-gray-700 mb-2">Ulice</label>
-                <input
-                  type="text"
-                  name="street"
-                  value={formData.street}
-                  onChange={handleChange}
-                  required
-                  className="w-full border rounded px-4 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Město</label>
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  required
-                  className="w-full border rounded px-4 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">PSČ</label>
-                <input
-                  type="text"
-                  name="postalCode"
-                  value={formData.postalCode}
-                  onChange={handleChange}
-                  required
-                  className="w-full border rounded px-4 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Země</label>
-                <input
-                  type="text"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  required
-                  className="w-full border rounded px-4 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Telefon</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full border rounded px-4 py-2"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="isDefault"
-                    checked={formData.isDefault}
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  <span>Nastavit jako výchozí adresu</span>
-                </label>
-              </div>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-              >
-                {editingId ? 'Uložit změny' : 'Přidat adresu'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  setEditingId(null);
-                  resetForm();
-                }}
-                className="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400"
-              >
-                Zrušit
-              </button>
-            </div>
-          </form>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900">📍 Dodací adresy</h1>
+          <button
+            onClick={() => {
+              resetForm();
+              setEditingId(null);
+              setShowForm(true);
+            }}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            + Přidat adresu
+          </button>
         </div>
-      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {addresses.map((address) => (
-          <div key={address.id} className="bg-white rounded-lg shadow-md p-6">
-            {address.isDefault && (
-              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mb-2 inline-block">
-                Výchozí
-              </span>
-            )}
-            <h3 className="font-semibold mb-2">
-              {address.firstName} {address.lastName}
-            </h3>
-            <p className="text-gray-600 mb-1">{address.street}</p>
-            <p className="text-gray-600 mb-1">
-              {address.city}, {address.postalCode}
-            </p>
-            <p className="text-gray-600 mb-2">{address.country}</p>
-            {address.phone && (
-              <p className="text-gray-600 mb-4">Tel: {address.phone}</p>
-            )}
-            <div className="flex gap-2">
+        {showForm && (
+          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
+            <h2 className="text-2xl font-extrabold mb-6 text-slate-900">
+              {editingId ? '✏️ Upravit adresu' : '➕ Nová adresa'}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-gray-700 mb-2 font-semibold">Jméno</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    required
+                    className="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-2 font-semibold">Příjmení</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    required
+                    className="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-gray-700 mb-2 font-semibold">Ulice</label>
+                  <input
+                    type="text"
+                    name="street"
+                    value={formData.street}
+                    onChange={handleChange}
+                    required
+                    className="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-2 font-semibold">Město</label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    required
+                    className="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-2 font-semibold">PSČ</label>
+                  <input
+                    type="text"
+                    name="postalCode"
+                    value={formData.postalCode}
+                    onChange={handleChange}
+                    required
+                    className="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-2 font-semibold">Země</label>
+                  <input
+                    type="text"
+                    name="country"
+                    value={formData.country}
+                    onChange={handleChange}
+                    required
+                    className="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-2 font-semibold">Telefon</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                    placeholder="+420 123 456 789"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border-2 border-blue-200 cursor-pointer hover:bg-blue-100 transition-all">
+                    <input
+                      type="checkbox"
+                      name="isDefault"
+                      checked={formData.isDefault}
+                      onChange={handleChange}
+                      className="w-5 h-5 text-blue-600 rounded"
+                    />
+                    <span className="font-semibold text-blue-700">Nastavit jako výchozí adresu</span>
+                  </label>
+                </div>
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="submit"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  {editingId ? '💾 Uložit změny' : '➕ Přidat adresu'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingId(null);
+                    resetForm();
+                  }}
+                  className="bg-gray-200 text-gray-700 px-8 py-3 rounded-xl font-bold hover:bg-gray-300 transition-all"
+                >
+                  Zrušit
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {addresses.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {addresses.map((address) => (
+              <div key={address.id} className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all">
+                {address.isDefault && (
+                  <span className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs px-3 py-1.5 rounded-full mb-3 inline-block font-bold shadow-md">
+                    ⭐ Výchozí adresa
+                  </span>
+                )}
+                <h3 className="font-extrabold text-xl text-slate-900 mb-3">
+                  {address.firstName} {address.lastName}
+                </h3>
+                <div className="space-y-2 text-gray-700 mb-4">
+                  <p>{address.street}</p>
+                  <p>
+                    {address.city}, {address.postalCode}
+                  </p>
+                  <p>{address.country}</p>
+                  {address.phone && (
+                    <p className="mt-2">📞 {address.phone}</p>
+                  )}
+                </div>
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => handleEdit(address)}
+                    className="text-blue-600 hover:text-blue-700 font-semibold px-4 py-2 rounded-xl hover:bg-blue-50 transition-all"
+                  >
+                    ✏️ Upravit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(address.id)}
+                    className="text-red-600 hover:text-red-700 font-semibold px-4 py-2 rounded-xl hover:bg-red-50 transition-all"
+                  >
+                    🗑️ Smazat
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          !showForm && (
+            <div className="max-w-2xl mx-auto text-center bg-white rounded-2xl shadow-xl p-12">
+              <div className="text-8xl mb-6">📍</div>
+              <h2 className="text-3xl font-extrabold text-slate-900 mb-4">Nemáte žádné dodací adresy</h2>
+              <p className="text-xl text-gray-600 mb-8">Přidejte adresu pro rychlejší nákup</p>
               <button
-                onClick={() => handleEdit(address)}
-                className="text-blue-600 hover:underline text-sm"
+                onClick={() => {
+                  resetForm();
+                  setEditingId(null);
+                  setShowForm(true);
+                }}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
               >
-                Upravit
-              </button>
-              <button
-                onClick={() => handleDelete(address.id)}
-                className="text-red-600 hover:underline text-sm"
-              >
-                Smazat
+                + Přidat první adresu
               </button>
             </div>
-          </div>
-        ))}
+          )
+        )}
       </div>
-
-      {addresses.length === 0 && !showForm && (
-        <p className="text-center text-gray-500 py-12">
-          Nemáte žádné dodací adresy
-        </p>
-      )}
     </div>
   );
 }

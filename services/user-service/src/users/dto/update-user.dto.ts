@@ -2,7 +2,7 @@
  * Update User DTO
  */
 
-import { IsString, IsOptional, IsEmail } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsBoolean } from 'class-validator';
 
 export class UpdateUserDto {
   @IsEmail()
@@ -20,5 +20,9 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   phone?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isAdmin?: boolean;
 }
 

@@ -11,6 +11,8 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
+  Param,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AdminService } from './admin.service';
@@ -18,6 +20,8 @@ import { UpdateCompanySettingsDto } from './dto/update-company-settings.dto';
 import { ApiResponseUtil } from '../../../../shared/utils/api-response.util';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { OrdersService } from '../orders/orders.service';
+import { OrderStatus, PaymentStatus } from '../../../../shared/entities/order.entity';
 
 @Controller('admin')
 @UseGuards(AuthGuard('jwt'))
@@ -25,6 +29,7 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly httpService: HttpService,
+    private readonly ordersService: OrdersService,
   ) {}
 
   /**
@@ -118,5 +123,67 @@ export class AdminController {
       configurable: variables,
       nonEditable,
     });
+  }
+
+  /**
+   * Get all orders (admin only)
+   */
+  @Get('orders')
+  async getAllOrders(
+    @Request() req,
+    @Query('status') status?: OrderStatus,
+    @Query('paymentStatus') paymentStatus?: PaymentStatus,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    await this.checkAdmin(req.user.id);
+    const orders = await this.ordersService.findAll();
+    
+    // Apply filters
+    let filteredOrders = orders;
+    if (status) {
+      filteredOrders = filteredOrders.filter((o) => o.status === status);
+    }
+    if (paymentStatus) {
+      filteredOrders = filteredOrders.filter((o) => o.paymentStatus === paymentStatus);
+    }
+
+    // Pagination
+    const pageNum = page ? parseInt(String(page)) : 1;
+    const limitNum = limit ? parseInt(String(limit)) : 20;
+    const start = (pageNum - 1) * limitNum;
+    const end = start + limitNum;
+    const paginatedOrders = filteredOrders.slice(start, end);
+
+    return ApiResponseUtil.paginated(
+      paginatedOrders,
+      filteredOrders.length,
+      pageNum,
+      limitNum,
+    );
+  }
+
+  /**
+   * Update order status (admin only)
+   */
+  @Put('orders/:id/status')
+  async updateOrderStatus(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() body: { status?: OrderStatus; paymentStatus?: PaymentStatus; notes?: string },
+  ) {
+    await this.checkAdmin(req.user.id);
+    
+    let order = await this.ordersService.findOne(id);
+    
+    if (body.status) {
+      order = await this.ordersService.updateStatus(id, body.status, body.notes, req.user.id);
+    }
+    
+    if (body.paymentStatus) {
+      order = await this.ordersService.updatePaymentStatus(id, body.paymentStatus);
+    }
+
+    return ApiResponseUtil.success(order);
   }
 }

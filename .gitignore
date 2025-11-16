@@ -1,4 +1,5 @@
 docs/tasks.md
+*.backup
 
 # Dependencies
 node_modules/

@@ -43,7 +43,7 @@ export default function AddToCartButton({
       } else {
         setMessage('Nepodařilo se přidat produkt do košíku');
       }
-    } catch (error) {
+    } catch {
       setMessage('Došlo k chybě');
     } finally {
       setLoading(false);
@@ -55,14 +55,18 @@ export default function AddToCartButton({
       <button
         onClick={handleAddToCart}
         disabled={loading}
-        className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold"
+        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
       >
-        {loading ? 'Přidávání...' : 'Přidat do košíku'}
+        {loading ? 'Přidávání...' : '🛒 Přidat do košíku'}
       </button>
       {message && (
-        <p className={`mt-2 text-sm ${message.includes('přidán') ? 'text-green-600' : 'text-red-600'}`}>
+        <div className={`mt-3 p-3 rounded-xl font-semibold text-sm ${
+          message.includes('přidán') 
+            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 text-green-700' 
+            : 'bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-300 text-red-700'
+        }`}>
           {message}
-        </p>
+        </div>
       )}
     </div>
   );

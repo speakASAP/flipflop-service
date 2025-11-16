@@ -46,9 +46,9 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string> || {}),
     };
 
     if (this.token) {
@@ -68,12 +68,12 @@ class ApiClient {
       }
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         error: {
           code: 'REQUEST_ERROR',
-          message: error.message || 'Network error',
+          message: error instanceof Error ? error.message : 'Network error',
         },
       };
     }
