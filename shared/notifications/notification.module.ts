@@ -1,6 +1,6 @@
 /**
  * Notification Module
- * Provides NotificationService for sending notifications via notification-microservice
+ * Provides NotificationService for sending notifications via notifications-microservice
  */
 
 import { Module } from '@nestjs/common';

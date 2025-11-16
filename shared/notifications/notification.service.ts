@@ -1,6 +1,6 @@
 /**
  * Notification Service
- * Service to send notifications via notification-microservice
+ * Service to send notifications via notifications-microservice
  */
 
 import { Injectable, LoggerService } from '@nestjs/common';
@@ -37,7 +37,7 @@ export class NotificationService {
   ) {
     this.notificationServiceUrl =
       this.configService.get<string>('NOTIFICATION_SERVICE_URL') ||
-      'http://notification-microservice:3010';
+      'https://notifications.statex.cz';
     this.logger = logger;
     this.circuitBreakerService = circuitBreakerService;
     this.retryService = retryService;
@@ -65,7 +65,7 @@ export class NotificationService {
   }
 
   /**
-   * Send notification via notification-microservice with resilience patterns
+   * Send notification via notifications-microservice with resilience patterns
    */
   async sendNotification(
     dto: SendNotificationDto,

@@ -60,7 +60,7 @@ const orderServiceDefinitions = [
     name: 'NOTIFICATION_SERVICE_URL',
     required: false,
     type: 'url',
-    default: 'http://notification-microservice:3010',
+    default: 'https://notifications.statex.cz',
     description: 'Notification microservice URL',
   },
 ];

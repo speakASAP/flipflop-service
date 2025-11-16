@@ -123,7 +123,7 @@ export class HealthService {
     try {
       const notificationServiceUrl =
         this.configService.get<string>('NOTIFICATION_SERVICE_URL') ||
-        'http://notification-microservice:3010';
+        'https://notifications.statex.cz';
 
       const response = await firstValueFrom(
         this.httpService.get(`${notificationServiceUrl}/health`).pipe(

@@ -236,6 +236,6 @@ networks:
     name: ${NGINX_NETWORK_NAME:-nginx-network}
 
 # Note: Notification and Logging microservices are in separate repositories:
-# - ../notification-microservice (Port 3010)
+# - ../notifications-microservice (Port 3368)
 # - ../logging-microservice (Port 3009)
 # They should be started separately and connected to the nginx-network
