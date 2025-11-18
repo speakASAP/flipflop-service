@@ -5,35 +5,10 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { LoggerService } from '@shared/logger/logger.service';
-import {
-  validateAndLog,
-  commonDefinitions,
-  databaseDefinitions,
-  jwtDefinitions,
-} from '@shared/config/env-validator';
-
-// Validate environment variables before starting
-const userServiceDefinitions = [
-  ...commonDefinitions,
-  ...databaseDefinitions,
-  ...jwtDefinitions,
-];
-
-validateAndLog(userServiceDefinitions, 'user-service');
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    logger: new LoggerService(),
-  });
-
-  // Enable CORS
-  app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-    credentials: true,
-  });
-
-  // Global validation pipe
+  const app = await NestFactory.create(AppModule);
+  
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -44,10 +19,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3004;
   await app.listen(port);
-
-  const logger = app.get(LoggerService);
-  logger.log(`User Service is running on: http://localhost:${port}`);
+  console.log(`User Service is running on: http://localhost:${port}`);
 }
 
 bootstrap();
-

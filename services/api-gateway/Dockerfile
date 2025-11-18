@@ -1,41 +1,42 @@
-FROM node:20-alpine AS builder
+FROM node:lts-slim
+
+# Install OpenSSL for Prisma
+RUN apt-get update -y && apt-get install -y openssl libssl-dev && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy package files
-COPY services/api-gateway/package*.json ./
-COPY shared/package.json shared/
-COPY shared/tsconfig.json shared/
+COPY package.json package-lock.json* ./
+COPY shared/package.json shared/package-lock.json* ./shared/
+COPY services/api-gateway/package.json ./services/api-gateway/
 
 # Install dependencies
 RUN npm install
 
 # Copy source code
-COPY services/api-gateway/ ./
-COPY shared/ ./shared/
+COPY shared ./shared
+COPY services/api-gateway ./services/api-gateway
+COPY prisma ./prisma
+COPY tsconfig.json ./
 
-# Build
+# Install shared module dependencies first
+WORKDIR /app/shared
+RUN npm install --legacy-peer-deps
+
+# Generate Prisma Client in shared module (needed for AdminSettings type)
+RUN cp -r ../prisma ./prisma || true
+RUN npx prisma generate --schema=./prisma/schema.prisma || npx prisma generate
+
+# Build shared module
 RUN npm run build
 
-# Production stage
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Copy package files
-COPY services/api-gateway/package*.json ./
-COPY shared/package.json shared/
-
-# Install production dependencies only
-RUN npm install --only=production
-
-# Copy built files
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
+# Build service
+WORKDIR /app/services/api-gateway
+RUN npm run build
 
 # Expose port
 EXPOSE 3001
 
-# Start application
-CMD ["node", "dist/main"]
+# Start service
+CMD ["node", "dist/main.js"]
 

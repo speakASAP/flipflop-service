@@ -4,12 +4,11 @@
  */
 
 import { Injectable, Optional } from '@nestjs/common';
-import { InjectConnection } from '@nestjs/typeorm';
-import { Connection } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
+import { PrismaService } from '../database/prisma.service';
 import { CircuitBreakerService } from '../resilience/circuit-breaker.service';
 import { ResilienceMonitor } from '../resilience/resilience.monitor';
 
@@ -27,6 +26,10 @@ export interface HealthStatus {
       message?: string;
     };
     notification?: {
+      status: 'ok' | 'error';
+      message?: string;
+    };
+    auth?: {
       status: 'ok' | 'error';
       message?: string;
     };
@@ -59,7 +62,7 @@ export interface HealthStatus {
 @Injectable()
 export class HealthService {
   constructor(
-    @InjectConnection() private readonly connection: Connection,
+    private readonly prisma: PrismaService,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     @Optional() private readonly circuitBreakerService?: CircuitBreakerService,
@@ -71,7 +74,7 @@ export class HealthService {
    */
   async checkDatabase(): Promise<{ status: 'ok' | 'error'; message?: string }> {
     try {
-      await this.connection.query('SELECT 1');
+      await this.prisma.$queryRaw`SELECT 1`;
       return { status: 'ok' };
     } catch (error: any) {
       return {
@@ -151,6 +154,40 @@ export class HealthService {
   }
 
   /**
+   * Check auth service health
+   */
+  async checkAuthService(): Promise<{ status: 'ok' | 'error'; message?: string }> {
+    try {
+      const authServiceUrl =
+        this.configService.get<string>('AUTH_SERVICE_URL') ||
+        'https://auth.statex.cz';
+
+      const response = await firstValueFrom(
+        this.httpService.get(`${authServiceUrl}/health`).pipe(
+          timeout(3000),
+          catchError(() => {
+            throw new Error('Auth service unavailable');
+          }),
+        ),
+      );
+
+      if (response.data?.success || response.data?.status === 'ok') {
+        return { status: 'ok' };
+      }
+
+      return {
+        status: 'error',
+        message: 'Auth service returned unhealthy status',
+      };
+    } catch (error: any) {
+      return {
+        status: 'error',
+        message: error.message || 'Auth service unavailable',
+      };
+    }
+  }
+
+  /**
    * Check Redis connection health
    */
   async checkRedis(): Promise<{ status: 'ok' | 'error'; message?: string }> {
@@ -199,6 +236,25 @@ export class HealthService {
         if (overallStatus === 'ok') {
           overallStatus = 'degraded';
         }
+      }
+    }
+
+    // Check auth service (critical for user-service, non-critical for others)
+    try {
+      dependencies.auth = await this.checkAuthService();
+      if (dependencies.auth.status === 'error') {
+        if (serviceName === 'user-service') {
+          overallStatus = 'unhealthy';
+        } else if (overallStatus === 'ok') {
+          overallStatus = 'degraded';
+        }
+      }
+    } catch (error) {
+      dependencies.auth = { status: 'error', message: 'Check failed' };
+      if (serviceName === 'user-service') {
+        overallStatus = 'unhealthy';
+      } else if (overallStatus === 'ok') {
+        overallStatus = 'degraded';
       }
     }
 

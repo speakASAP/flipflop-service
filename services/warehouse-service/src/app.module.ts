@@ -1,0 +1,26 @@
+/**
+ * Warehouse Service App Module
+ */
+
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { WarehouseModule } from './warehouse/warehouse.module';
+import { HealthModule, PrismaModule, LoggerModule, AuthModule } from '@e-commerce/shared';
+import { HealthController } from './health/health.controller';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '../../.env',
+    }),
+    PrismaModule,
+    LoggerModule,
+    AuthModule,
+    HealthModule,
+    WarehouseModule,
+  ],
+  controllers: [HealthController],
+})
+export class AppModule {}
+

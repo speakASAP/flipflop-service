@@ -4,23 +4,22 @@
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { LoggerModule } from '@shared/logger/logger.module';
 import { GatewayModule } from './gateway/gateway.module';
-import { AuthModule } from './auth/auth.module';
+import { HealthModule, LoggerModule, AuthModule } from '@e-commerce/shared';
 import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', '../../.env'],
+      envFilePath: '../../.env',
     }),
     LoggerModule,
-    GatewayModule,
     AuthModule,
+    HealthModule,
+    GatewayModule,
   ],
   controllers: [HealthController],
-  providers: [],
 })
 export class AppModule {}
 

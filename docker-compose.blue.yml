@@ -1,0 +1,222 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: ./services/frontend/Dockerfile
+    container_name: e-commerce-frontend-blue
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+    depends_on:
+      - api-gateway
+    volumes:
+      - ./logs:/app/logs
+      - ./services/frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${FRONTEND_PORT:-3000}
+      - NEXT_PUBLIC_API_URL=${API_URL:-http://localhost:3001}
+    networks:
+      - default
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${FRONTEND_PORT:-3000}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./services/api-gateway/Dockerfile
+    container_name: e-commerce-api-gateway-blue
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${API_GATEWAY_PORT:-3001}:${API_GATEWAY_PORT:-3001}"
+    depends_on:
+      - user-service
+      - product-service
+      - order-service
+      - cart-service
+      - warehouse-service
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${API_GATEWAY_PORT:-3001}
+    networks:
+      - default
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${API_GATEWAY_PORT:-3001}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  user-service:
+    build:
+      context: .
+      dockerfile: ./services/user-service/Dockerfile
+    container_name: e-commerce-user-service-blue
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${USER_SERVICE_PORT:-3004}:${USER_SERVICE_PORT:-3004}"
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${USER_SERVICE_PORT:-3004}
+      - DB_HOST=${DB_HOST:-db-server-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-dbadmin}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-ecommerce}
+    networks:
+      - default
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${USER_SERVICE_PORT:-3004}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  product-service:
+    build:
+      context: .
+      dockerfile: ./services/product-service/Dockerfile
+    container_name: e-commerce-product-service-blue
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${PRODUCT_SERVICE_PORT:-3002}:${PRODUCT_SERVICE_PORT:-3002}"
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${PRODUCT_SERVICE_PORT:-3002}
+      - DB_HOST=${DB_HOST:-db-server-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-dbadmin}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-ecommerce}
+    networks:
+      - default
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PRODUCT_SERVICE_PORT:-3002}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  order-service:
+    build:
+      context: .
+      dockerfile: ./services/order-service/Dockerfile
+    container_name: e-commerce-order-service-blue
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${ORDER_SERVICE_PORT:-3003}:${ORDER_SERVICE_PORT:-3003}"
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${ORDER_SERVICE_PORT:-3003}
+      - DB_HOST=${DB_HOST:-db-server-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-dbadmin}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-ecommerce}
+    networks:
+      - default
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${ORDER_SERVICE_PORT:-3003}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  cart-service:
+    build:
+      context: .
+      dockerfile: ./services/cart-service/Dockerfile
+    container_name: e-commerce-cart-service-blue
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${CART_SERVICE_PORT:-3009}:${CART_SERVICE_PORT:-3009}"
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${CART_SERVICE_PORT:-3009}
+      - DB_HOST=${DB_HOST:-db-server-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-dbadmin}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-ecommerce}
+    networks:
+      - default
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${CART_SERVICE_PORT:-3009}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  warehouse-service:
+    build:
+      context: .
+      dockerfile: ./services/warehouse-service/Dockerfile
+    container_name: e-commerce-warehouse-service-blue
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${WAREHOUSE_SERVICE_PORT:-3005}:${WAREHOUSE_SERVICE_PORT:-3005}"
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${WAREHOUSE_SERVICE_PORT:-3005}
+      - DB_HOST=${DB_HOST:-db-server-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-dbadmin}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-ecommerce}
+    networks:
+      - default
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${WAREHOUSE_SERVICE_PORT:-3005}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  default:
+    driver: bridge
+  nginx-network:
+    external: true
+    name: ${NGINX_NETWORK_NAME:-nginx-network}
+
+# Note: External Shared Production Microservices (used by multiple applications):
+# - ../notifications-microservice (Port 3368, Production: https://notifications.statex.cz)
+# - ../logging-microservice (Port 3268, Production: https://logging.statex.cz)
+# - ../database-server (PostgreSQL + Redis, Docker network: db-server-postgres, db-server-redis)
+# - ../nginx-microservice (Reverse proxy, SSL termination, blue/green deployments)
+# These are shared services managed separately and must be running before deploying this application.
+# They should be started separately and connected to the nginx-network.
+

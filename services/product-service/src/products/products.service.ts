@@ -1,180 +1,284 @@
 /**
  * Products Service
+ * Handles product catalog operations
  */
 
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, Between } from 'typeorm';
-import { Product } from '@shared/entities/product.entity';
-import { Category } from '@shared/entities/category.entity';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
-import { ProductQueryDto } from './dto/product-query.dto';
-import { LoggerService } from '@shared/logger/logger.service';
+import { PrismaService } from '@e-commerce/shared';
+import { LoggerService } from '@e-commerce/shared';
 
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
-    @InjectRepository(Category)
-    private categoryRepository: Repository<Category>,
-    private logger: LoggerService,
+    private readonly prisma: PrismaService,
+    private readonly logger: LoggerService,
   ) {}
 
-  async create(createProductDto: CreateProductDto): Promise<Product> {
-    const product = this.productRepository.create({
-      ...createProductDto,
-      stockQuantity: createProductDto.stockQuantity || 0,
-      trackInventory: createProductDto.trackInventory ?? false,
-      isActive: true,
-    });
+  /**
+   * Get products with pagination and filtering
+   */
+  async getProducts(filters: any) {
+    const page = filters.page || 1;
+    const limit = filters.limit || 20;
+    const skip = (page - 1) * limit;
 
-    // Handle categories if provided
-    if (createProductDto.categoryIds && createProductDto.categoryIds.length > 0) {
-      const categories = await this.categoryRepository.findBy({
-        id: createProductDto.categoryIds[0] as any,
-      });
-      // For multiple IDs, use In operator
-      if (createProductDto.categoryIds.length > 1) {
-        const allCategories = await this.categoryRepository
-          .createQueryBuilder('category')
-          .where('category.id IN (:...ids)', { ids: createProductDto.categoryIds })
-          .getMany();
-        product.categories = allCategories;
-      } else {
-        product.categories = categories;
+    const where: any = {
+      isActive: true,
+    };
+
+    if (filters.search) {
+      where.OR = [
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { description: { contains: filters.search, mode: 'insensitive' } },
+        { sku: { contains: filters.search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (filters.categoryId) {
+      where.categories = {
+        some: {
+          categoryId: filters.categoryId,
+        },
+      };
+    }
+
+    if (filters.brand) {
+      where.brand = filters.brand;
+    }
+
+    if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+      where.price = {};
+      if (filters.minPrice !== undefined) {
+        where.price.gte = filters.minPrice;
+      }
+      if (filters.maxPrice !== undefined) {
+        where.price.lte = filters.maxPrice;
       }
     }
 
-    const savedProduct = await this.productRepository.save(product);
-
-    this.logger.log(`Product created: ${savedProduct.id}`, {
-      productId: savedProduct.id,
-      sku: savedProduct.sku,
-    });
-
-    return savedProduct;
-  }
-
-  async findAll(query: ProductQueryDto) {
-    const {
-      page = 1,
-      limit = 20,
-      search,
-      categoryIds,
-      sortBy = 'createdAt',
-      sortOrder = 'DESC',
-      minPrice,
-      maxPrice,
-      brand,
-    } = query;
-
-    const queryBuilder = this.productRepository
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.categories', 'category')
-      .where('product.isActive = :isActive', { isActive: true });
-
-    // Search
-    if (search) {
-      queryBuilder.andWhere(
-        '(product.name ILIKE :search OR product.description ILIKE :search OR product.sku ILIKE :search)',
-        { search: `%${search}%` },
-      );
-    }
-
-    // Categories filter
-    if (categoryIds && categoryIds.length > 0) {
-      queryBuilder.andWhere('category.id IN (:...categoryIds)', {
-        categoryIds,
-      });
-    }
-
-    // Price range
-    if (minPrice !== undefined) {
-      queryBuilder.andWhere('product.price >= :minPrice', { minPrice });
-    }
-    if (maxPrice !== undefined) {
-      queryBuilder.andWhere('product.price <= :maxPrice', { maxPrice });
-    }
-
-    // Brand filter
-    if (brand) {
-      queryBuilder.andWhere('product.brand = :brand', { brand });
-    }
-
-    // Sorting
-    queryBuilder.orderBy(`product.${sortBy}`, sortOrder);
-
-    // Pagination
-    const skip = (page - 1) * limit;
-    queryBuilder.skip(skip).take(limit);
-
-    const [products, total] = await queryBuilder.getManyAndCount();
+    const [items, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        include: {
+          product_categories: {
+            include: {
+              categories: true,
+            },
+          },
+          product_variants: {
+            where: { isActive: true },
+          },
+        },
+        skip,
+        take: limit,
+        orderBy: filters.sortBy
+          ? { [filters.sortBy]: filters.sortOrder || 'asc' }
+          : { createdAt: 'desc' },
+      }),
+      this.prisma.product.count({ where }),
+    ]);
 
     return {
-      products,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      items: items.map((product) => this.mapProduct(product)),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page * limit < total,
+        hasPrev: page > 1,
+      },
     };
   }
 
-  async findOne(id: string): Promise<Product> {
-    const product = await this.productRepository.findOne({
+  /**
+   * Get product by ID
+   */
+  async getProduct(id: string) {
+    const product = await this.prisma.product.findUnique({
       where: { id },
-      relations: ['categories', 'variants'],
+      include: {
+        product_categories: {
+          include: {
+            categories: true,
+          },
+        },
+        product_variants: {
+          where: { isActive: true },
+        },
+      },
     });
 
     if (!product) {
-      throw new NotFoundException(`Product with id ${id} not found`);
+      throw new NotFoundException('Product not found');
     }
 
-    return product;
+    return this.mapProduct(product);
   }
 
-  async findBySku(sku: string): Promise<Product | null> {
-    return this.productRepository.findOne({
-      where: { sku },
-      relations: ['categories'],
+  /**
+   * Get categories
+   */
+  async getCategories() {
+    const categories = await this.prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: 'asc' },
     });
+
+    return categories.map((cat) => ({
+      id: cat.id,
+      name: cat.name,
+      description: cat.description,
+      parentId: cat.parentId || undefined,
+    }));
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
-    const product = await this.findOne(id);
+  /**
+   * Get category by ID
+   */
+  async getCategory(id: string) {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+    });
 
-    Object.assign(product, updateProductDto);
-
-    // Handle categories update
-    if (updateProductDto.categoryIds !== undefined) {
-      if (updateProductDto.categoryIds.length > 0) {
-        const categories = await this.categoryRepository
-          .createQueryBuilder('category')
-          .where('category.id IN (:...ids)', { ids: updateProductDto.categoryIds })
-          .getMany();
-        product.categories = categories;
-      } else {
-        product.categories = [];
-      }
+    if (!category) {
+      throw new NotFoundException('Category not found');
     }
 
-    const updatedProduct = await this.productRepository.save(product);
-
-    this.logger.log(`Product updated: ${id}`, {
-      productId: id,
-    });
-
-    return updatedProduct;
+    return {
+      id: category.id,
+      name: category.name,
+      description: category.description,
+      parentId: category.parentId || undefined,
+    };
   }
 
-  async remove(id: string): Promise<void> {
-    const product = await this.findOne(id);
-    await this.productRepository.remove(product);
-
-    this.logger.log(`Product deleted: ${id}`, {
-      productId: id,
+  /**
+   * Create product (admin)
+   */
+  async createProduct(dto: any) {
+    const product = await this.prisma.product.create({
+      data: {
+        name: dto.name,
+        sku: dto.sku,
+        description: dto.description,
+        shortDescription: dto.shortDescription,
+        price: dto.price,
+        compareAtPrice: dto.compareAtPrice,
+        mainImageUrl: dto.mainImageUrl,
+        imageUrls: dto.imageUrls,
+        stockQuantity: dto.stockQuantity || 0,
+        trackInventory: dto.trackInventory || false,
+        brand: dto.brand,
+        manufacturer: dto.manufacturer,
+        product_categories: dto.categoryIds
+          ? {
+              create: dto.categoryIds.map((catId: string) => ({
+                categories: { connect: { id: catId } },
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        product_categories: {
+          include: {
+            categories: true,
+          },
+        },
+      },
     });
+
+    this.logger.log('Product created', { productId: product.id });
+    return this.mapProduct(product);
+  }
+
+  /**
+   * Update product (admin)
+   */
+  async updateProduct(id: string, dto: any) {
+    const product = await this.prisma.product.update({
+      where: { id },
+      data: {
+        name: dto.name,
+        sku: dto.sku,
+        description: dto.description,
+        shortDescription: dto.shortDescription,
+        price: dto.price,
+        compareAtPrice: dto.compareAtPrice,
+        mainImageUrl: dto.mainImageUrl,
+        imageUrls: dto.imageUrls,
+        stockQuantity: dto.stockQuantity,
+        trackInventory: dto.trackInventory,
+        isActive: dto.isActive,
+        brand: dto.brand,
+        manufacturer: dto.manufacturer,
+        product_categories: dto.categoryIds
+          ? {
+              deleteMany: {},
+              create: dto.categoryIds.map((catId: string) => ({
+                categories: { connect: { id: catId } },
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        product_categories: {
+          include: {
+            categories: true,
+          },
+        },
+      },
+    });
+
+    this.logger.log('Product updated', { productId: product.id });
+    return this.mapProduct(product);
+  }
+
+  /**
+   * Delete product (admin)
+   */
+  async deleteProduct(id: string) {
+    await this.prisma.product.delete({
+      where: { id },
+    });
+
+    this.logger.log('Product deleted', { productId: id });
+    return { success: true };
+  }
+
+  /**
+   * Map product to response format
+   */
+  private mapProduct(product: any) {
+    return {
+      id: product.id,
+      name: product.name,
+      sku: product.sku,
+      description: product.description,
+      price: Number(product.price),
+      stockQuantity: product.stockQuantity,
+      brand: product.brand,
+      mainImageUrl: product.mainImageUrl,
+      imageUrls: (product.imageUrls as string[]) || [],
+      images: (product.imageUrls as string[]) || [],
+      categories: product.product_categories?.map((pc: any) => ({
+        id: pc.categories.id,
+        name: pc.categories.name,
+        description: pc.categories.description,
+        parentId: pc.categories.parentId || undefined,
+      })),
+      variants: product.product_variants?.map((v: any) => ({
+        id: v.id,
+        productId: v.productId,
+        name: v.name,
+        sku: v.sku,
+        price: Number(v.price),
+        stockQuantity: v.stockQuantity,
+        attributes: v.options as Record<string, string> | undefined,
+      })),
+      createdAt: product.createdAt.toISOString(),
+      updatedAt: product.updatedAt.toISOString(),
+    };
   }
 }
 

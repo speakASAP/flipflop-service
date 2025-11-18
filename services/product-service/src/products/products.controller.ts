@@ -1,5 +1,6 @@
 /**
  * Products Controller
+ * Handles HTTP requests for product operations
  */
 
 import {
@@ -8,101 +9,73 @@ import {
   Post,
   Put,
   Delete,
-  Body,
   Param,
   Query,
-  HttpCode,
-  HttpStatus,
+  Body,
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ProductsService } from './products.service';
-import { CsvImportService } from './csv-import.service';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
-import { ProductQueryDto } from './dto/product-query.dto';
-import { ApiResponseUtil } from '@shared/utils/api-response.util';
+import { JwtAuthGuard, ApiResponse } from '@e-commerce/shared';
 
 @Controller('products')
 export class ProductsController {
-  constructor(
-    private productsService: ProductsService,
-    private csvImportService: CsvImportService,
-  ) {}
-
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createProductDto: CreateProductDto) {
-    const product = await this.productsService.create(createProductDto);
-    return ApiResponseUtil.success(product);
-  }
+  constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  async findAll(@Query() query: ProductQueryDto) {
-    const result = await this.productsService.findAll(query);
-    return ApiResponseUtil.paginated(
-      result.products,
-      result.total,
-      result.page,
-      result.limit,
-    );
+  async getProducts(@Query() query: any) {
+    const result = await this.productsService.getProducts(query);
+    return ApiResponse.success(result);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const product = await this.productsService.findOne(id);
-    return ApiResponseUtil.success(product);
+  async getProduct(@Param('id') id: string) {
+    const product = await this.productsService.getProduct(id);
+    return ApiResponse.success(product);
+  }
+}
+
+@Controller('categories')
+export class CategoriesController {
+  constructor(private readonly productsService: ProductsService) {}
+
+  @Get()
+  async getCategories() {
+    const categories = await this.productsService.getCategories();
+    return ApiResponse.success(categories);
+  }
+
+  @Get(':id')
+  async getCategory(@Param('id') id: string) {
+    const category = await this.productsService.getCategory(id);
+    return ApiResponse.success(category);
+  }
+}
+
+@Controller('products')
+@UseGuards(JwtAuthGuard)
+export class AdminProductsController {
+  constructor(private readonly productsService: ProductsService) {}
+
+  @Post()
+  async createProduct(@Request() req: any, @Body() dto: any) {
+    // TODO: Add admin check
+    const product = await this.productsService.createProduct(dto);
+    return ApiResponse.success(product);
   }
 
   @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() updateProductDto: UpdateProductDto,
-  ) {
-    const product = await this.productsService.update(id, updateProductDto);
-    return ApiResponseUtil.success(product);
+  async updateProduct(@Request() req: any, @Param('id') id: string, @Body() dto: any) {
+    // TODO: Add admin check
+    const product = await this.productsService.updateProduct(id, dto);
+    return ApiResponse.success(product);
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string) {
-    await this.productsService.remove(id);
-    return ApiResponseUtil.success({ message: 'Product deleted' });
-  }
-
-  /**
-   * Preview CSV file
-   */
-  @Post('import/preview')
-  @UseGuards(AuthGuard('jwt'))
-  async previewCsv(@Body() body: { csvContent: string }) {
-    const preview = this.csvImportService.previewCsv(body.csvContent);
-    return ApiResponseUtil.success(preview);
-  }
-
-  /**
-   * Import products from CSV
-   */
-  @Post('import')
-  @UseGuards(AuthGuard('jwt'))
-  async importCsv(
-    @Body()
-    body: {
-      csvContent: string;
-      fieldMapping: any;
-      defaultProfitMargin?: number;
-      updateExisting?: boolean;
-      skipErrors?: boolean;
-    },
-  ) {
-    const result = await this.csvImportService.importProducts(body.csvContent, {
-      fieldMapping: body.fieldMapping,
-      defaultProfitMargin: body.defaultProfitMargin,
-      updateExisting: body.updateExisting ?? false,
-      skipErrors: body.skipErrors ?? true,
-    });
-    return ApiResponseUtil.success(result);
+  async deleteProduct(@Request() req: any, @Param('id') id: string) {
+    // TODO: Add admin check
+    const result = await this.productsService.deleteProduct(id);
+    return ApiResponse.success(result);
   }
 }
 

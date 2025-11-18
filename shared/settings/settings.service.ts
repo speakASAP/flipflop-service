@@ -4,11 +4,9 @@
  */
 
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { AdminSettings } from '../entities/admin-settings.entity';
-import { User } from '../entities/user.entity';
+import { PrismaService } from '../database/prisma.service';
+import { AdminSettings, Prisma } from '@prisma/client';
 
 export interface MergedSettings {
   [key: string]: string | number | boolean | undefined;
@@ -21,14 +19,19 @@ export class SettingsService implements OnModuleInit {
   private readonly CACHE_TTL = 60000; // 1 minute cache
 
   constructor(
-    @InjectRepository(AdminSettings)
-    private adminSettingsRepository: Repository<AdminSettings>,
     private configService: ConfigService,
+    private prisma: PrismaService,
   ) {}
 
   async onModuleInit() {
     // Load admin settings on startup
-    await this.loadAdminSettings();
+    // Handle database connection errors gracefully
+    try {
+      await this.loadAdminSettings();
+    } catch (error: any) {
+      // If database is not available, log warning but don't fail startup
+      console.warn('Could not load admin settings on startup:', error.message);
+    }
   }
 
   /**
@@ -41,9 +44,8 @@ export class SettingsService implements OnModuleInit {
     }
 
     try {
-      const settings = await this.adminSettingsRepository.findOne({
-        where: {},
-        order: { createdAt: 'ASC' },
+      const settings = await this.prisma.adminSettings.findFirst({
+        orderBy: { createdAt: 'asc' },
       });
 
       this.adminSettingsCache = settings;
@@ -84,8 +86,8 @@ export class SettingsService implements OnModuleInit {
 
     // 3. Apply admin settings (highest priority)
     const adminSettings = await this.loadAdminSettings();
-    if (adminSettings?.envOverrides) {
-      Object.assign(merged, adminSettings.envOverrides);
+    if (adminSettings?.envOverrides && typeof adminSettings.envOverrides === 'object') {
+      Object.assign(merged, adminSettings.envOverrides as Record<string, any>);
     }
 
     return merged;
@@ -108,22 +110,22 @@ export class SettingsService implements OnModuleInit {
    * Get admin settings
    */
   async getAdminSettings(): Promise<AdminSettings> {
-    let settings = await this.adminSettingsRepository.findOne({
-      where: {},
-      order: { createdAt: 'ASC' },
+    let settings = await this.prisma.adminSettings.findFirst({
+      orderBy: { createdAt: 'asc' },
     });
 
     if (!settings) {
       // Create default admin settings
-      settings = this.adminSettingsRepository.create({
-        envOverrides: {},
-        features: {},
-        business: {},
-        integrations: {},
-        system: {},
+      settings = await this.prisma.adminSettings.create({
+        data: {
+          envOverrides: {},
+          features: {},
+          business: {},
+          integrations: {},
+          system: {},
+        },
       });
-      settings = await this.adminSettingsRepository.save(settings);
-      this.invalidateCache();
+      await this.invalidateCache();
     }
 
     return settings;
@@ -132,62 +134,56 @@ export class SettingsService implements OnModuleInit {
   /**
    * Update admin settings
    */
-  async updateAdminSettings(updates: Partial<AdminSettings>): Promise<AdminSettings> {
+  async updateAdminSettings(updates: Prisma.AdminSettingsUpdateInput): Promise<AdminSettings> {
     let settings = await this.getAdminSettings();
 
-    // Merge updates
-    if (updates.envOverrides) {
-      settings.envOverrides = { ...settings.envOverrides, ...updates.envOverrides };
-    }
-    if (updates.features) {
-      settings.features = { ...settings.features, ...updates.features };
-    }
-    if (updates.business) {
-      settings.business = { ...settings.business, ...updates.business };
-    }
-    if (updates.integrations) {
-      settings.integrations = { ...settings.integrations, ...updates.integrations };
-    }
-    if (updates.system) {
-      settings.system = { ...settings.system, ...updates.system };
-    }
+    // Use Prisma update with merge
+    const updated = await this.prisma.adminSettings.update({
+      where: { id: settings.id },
+      data: updates,
+    });
 
-    const saved = await this.adminSettingsRepository.save(settings);
     await this.invalidateCache();
-    return saved;
+    return updated;
   }
 
   /**
    * Get user preferences (from user entity)
-   * Note: This method requires User repository to be passed in
+   * Note: This method requires Prisma to access user
    * For direct access, use the UsersService instead
    */
-  async getUserPreferences(userId: string, userRepository: Repository<User>): Promise<Record<string, any>> {
-    const user = await userRepository.findOne({
+  async getUserPreferences(userId: string): Promise<Record<string, any>> {
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: ['id', 'preferences'],
+      select: { id: true, preferences: true },
     });
 
-    return user?.preferences || {};
+    return (user?.preferences as Record<string, any>) || {};
   }
 
   /**
    * Update user preferences
-   * Note: This method requires User repository to be passed in
+   * Note: This method requires Prisma to access user
    * For direct access, use the UsersService instead
    */
   async updateUserPreferences(
     userId: string,
     preferences: Record<string, any>,
-    userRepository: Repository<User>,
-  ): Promise<User> {
-    const user = await userRepository.findOne({ where: { id: userId } });
+  ): Promise<any> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw new Error('User not found');
     }
 
-    user.preferences = { ...(user.preferences || {}), ...preferences };
-    return await userRepository.save(user);
+    const currentPreferences = (user.preferences as Record<string, any>) || {};
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        preferences: { ...currentPreferences, ...preferences },
+      },
+    });
+
+    return updated;
   }
 
   /**

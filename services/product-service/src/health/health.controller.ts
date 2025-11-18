@@ -1,19 +1,18 @@
 /**
- * Health Check Controller
+ * Health Controller
  */
 
 import { Controller, Get } from '@nestjs/common';
-import { ApiResponseUtil } from '@shared/utils/api-response.util';
+import { HealthService } from '@e-commerce/shared';
 
 @Controller('health')
 export class HealthController {
+  constructor(private readonly healthService: HealthService) {}
+
   @Get()
-  health() {
-    return ApiResponseUtil.success({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      service: 'product-service',
-    });
+  async getHealth() {
+    const status = await this.healthService.getHealthStatus('product-service');
+    return status;
   }
 }
 

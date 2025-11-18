@@ -4,8 +4,8 @@
  */
 
 // Database
-export * from './database/database.config';
-export * from './database/database.module';
+export * from './database/prisma.module';
+export * from './database/prisma.service';
 
 // Redis
 export * from './redis/redis.config';
@@ -20,8 +20,16 @@ export * from './notifications/notification.module';
 export * from './notifications/notification.service';
 export * from './notifications/notification.interface';
 
-// Entities
-export * from './entities';
+// Auth
+export * from './auth/auth.module';
+export * from './auth/auth.service';
+export * from './auth/auth.interface';
+export * from './auth/jwt-auth.guard';
+
+// Payments
+export * from './payments/payment.module';
+export * from './payments/payment.service';
+export * from './payments/payment.interface';
 
 // Types
 export * from './types/common.types';
@@ -32,6 +40,9 @@ export * from './interfaces/logger.interface';
 // Utils
 export * from './utils/api-response.util';
 export * from './utils/error-handler.util';
+
+// Export ApiResponse helper
+export { ApiResponseUtil as ApiResponse } from './utils/api-response.util';
 
 // Health
 export * from './health/health.module';

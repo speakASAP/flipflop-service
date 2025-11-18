@@ -4,14 +4,16 @@
  */
 
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
+import { PrismaModule } from '../database/prisma.module';
 import { HealthService } from './health.service';
 import { ResilienceModule } from '../resilience/resilience.module';
 
 @Module({
   imports: [
-    TypeOrmModule,
+    ConfigModule,
+    PrismaModule,
     HttpModule,
     ResilienceModule, // Import resilience module for optional dependencies
   ],

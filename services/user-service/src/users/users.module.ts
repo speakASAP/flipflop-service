@@ -3,17 +3,12 @@
  */
 
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from '@shared/entities/user.entity';
-import { SettingsModule } from '@shared/settings/settings.module';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { PrismaModule, AuthModule } from '@e-commerce/shared';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User]),
-    SettingsModule,
-  ],
+  imports: [PrismaModule, AuthModule],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],

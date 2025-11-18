@@ -1,28 +1,25 @@
-/**
- * Create Order DTO
- */
-
-import { IsString, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsNumber, Min } from 'class-validator';
 
 export class CreateOrderDto {
   @IsString()
-  @IsNotEmpty()
   deliveryAddressId: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   paymentMethod?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   notes?: string;
 
-  @IsNumber()
   @IsOptional()
+  @IsNumber()
+  @Min(0)
   shippingCost?: number;
 
-  @IsNumber()
   @IsOptional()
+  @IsNumber()
+  @Min(0)
   discount?: number;
 }
 

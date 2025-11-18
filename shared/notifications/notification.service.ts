@@ -3,7 +3,8 @@
  * Service to send notifications via notifications-microservice
  */
 
-import { Injectable, LoggerService } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { LoggerService } from '../logger/logger.service';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';

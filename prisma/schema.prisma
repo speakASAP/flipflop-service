@@ -1,0 +1,364 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String            @id(map: "PK_a3ffb1c0c8416b9fc6f907b7433") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email              String            @unique(map: "IDX_users_email") @db.VarChar(255)
+  password           String            @db.VarChar(255)
+  firstName          String?           @db.VarChar(100)
+  lastName           String?           @db.VarChar(100)
+  phone              String?           @db.VarChar(20)
+  isEmailVerified    Boolean           @default(false)
+  isAdmin            Boolean           @default(false)
+  preferences        Json?
+  createdAt          DateTime          @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime          @default(now()) @db.Timestamp(6)
+  cart_items         CartItem[]
+  delivery_addresses DeliveryAddress[]
+  orders             Order[]
+  payment_methods    PaymentMethod[]
+
+  @@map("users")
+}
+
+model Category {
+  id                 String            @id(map: "PK_24dbc6126a28ff948da33e97d3b") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String            @db.VarChar(255)
+  slug               String            @unique(map: "IDX_categories_slug") @db.VarChar(255)
+  description        String?
+  imageUrl           String?           @db.VarChar(500)
+  parentId           String?           @db.Uuid
+  sortOrder          Int               @default(0)
+  isActive           Boolean           @default(true)
+  createdAt          DateTime          @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime          @default(now()) @db.Timestamp(6)
+  product_categories ProductCategory[]
+
+  @@map("categories")
+}
+
+model Product {
+  id                 String            @id(map: "PK_0806c755e0aca124e67c0cf6d7d") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String            @db.VarChar(255)
+  sku                String            @unique(map: "IDX_products_sku") @db.VarChar(255)
+  description        String?
+  shortDescription   String?
+  price              Decimal           @db.Decimal(10, 2)
+  compareAtPrice     Decimal?          @db.Decimal(10, 2)
+  mainImageUrl       String?           @db.VarChar(500)
+  imageUrls          Json?
+  videoUrls          Json?
+  stockQuantity      Int               @default(0)
+  trackInventory     Boolean           @default(false)
+  isActive           Boolean           @default(true)
+  brand              String?           @db.VarChar(100)
+  manufacturer       String?           @db.VarChar(100)
+  attributes         Json?
+  rating             Decimal?          @db.Decimal(5, 2)
+  reviewCount        Int               @default(0)
+  seoTitle           String?           @db.VarChar(255)
+  seoDescription     String?
+  seoKeywords        String?           @db.VarChar(255)
+  createdAt          DateTime          @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime          @default(now()) @db.Timestamp(6)
+  cart_items         CartItem[]
+  order_items        OrderItem[]
+  product_categories ProductCategory[]
+  product_variants   ProductVariant[]
+  supplier_products  SupplierProduct[]
+
+  @@index([isActive], map: "IDX_products_isActive")
+  @@index([name], map: "IDX_products_name")
+  @@map("products")
+}
+
+model ProductCategory {
+  productId  String   @db.Uuid
+  categoryId String   @db.Uuid
+  products   Product  @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6156a79599e274ee9d83b1de139")
+  categories Category @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_fdef3adba0c284fd103d0fd3697")
+
+  @@id([productId, categoryId], map: "PK_e65c1adebf00d61f1c84a4f3950")
+  @@map("product_categories")
+}
+
+model ProductVariant {
+  id             String      @id(map: "PK_281e3f2c55652d6a22c0aa59fd7") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId      String      @db.Uuid
+  sku            String      @db.VarChar(255)
+  name           String?     @db.VarChar(100)
+  options        Json
+  price          Decimal     @db.Decimal(10, 2)
+  compareAtPrice Decimal?    @db.Decimal(10, 2)
+  stockQuantity  Int         @default(0)
+  imageUrl       String?     @db.VarChar(500)
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now()) @db.Timestamp(6)
+  updatedAt      DateTime    @default(now()) @db.Timestamp(6)
+  cart_items     CartItem[]
+  order_items    OrderItem[]
+  products       Product     @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_f515690c571a03400a9876600b5")
+
+  @@unique([productId, sku], map: "IDX_product_variants_product_sku")
+  @@map("product_variants")
+}
+
+model Supplier {
+  id                String            @id(map: "PK_b70ac51766a9e3144f778cfe81e") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String            @db.VarChar(255)
+  contactEmail      String?           @db.VarChar(255)
+  contactPhone      String?           @db.VarChar(50)
+  address           String?
+  apiUrl            String?           @db.VarChar(100)
+  apiKey            String?           @db.VarChar(255)
+  apiSecret         String?           @db.VarChar(255)
+  apiConfig         Json?
+  isActive          Boolean           @default(true)
+  autoSyncProducts  Boolean           @default(false)
+  autoForwardOrders Boolean           @default(false)
+  createdAt         DateTime          @default(now()) @db.Timestamp(6)
+  updatedAt         DateTime          @default(now()) @db.Timestamp(6)
+  supplier_products SupplierProduct[]
+
+  @@index([name], map: "IDX_suppliers_name")
+  @@map("suppliers")
+}
+
+model SupplierProduct {
+  id            String    @id(map: "PK_651e91706e362ef7393457c347e") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplierId    String    @db.Uuid
+  productId     String    @db.Uuid
+  supplierSku   String    @db.VarChar(255)
+  supplierPrice Decimal   @db.Decimal(10, 2)
+  profitMargin  Decimal?  @db.Decimal(5, 2)
+  supplierStock Int?
+  supplierData  Json?
+  lastSyncedAt  DateTime? @db.Timestamp(6)
+  createdAt     DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime  @default(now()) @db.Timestamp(6)
+  suppliers     Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_1a3ae86a8f5e4d73e016c84b7b5")
+  products      Product   @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_6a98789744d3ea18d196011c510")
+
+  @@unique([supplierId, supplierSku], map: "IDX_supplier_products_supplier_sku")
+  @@map("supplier_products")
+}
+
+model DeliveryAddress {
+  id         String   @id(map: "PK_138238d6ec62ef07449c2a8fb11") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @db.Uuid
+  firstName  String   @db.VarChar(100)
+  lastName   String   @db.VarChar(100)
+  street     String   @db.VarChar(255)
+  city       String   @db.VarChar(100)
+  postalCode String   @db.VarChar(20)
+  country    String   @db.VarChar(100)
+  phone      String?  @db.VarChar(50)
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now()) @db.Timestamp(6)
+  updatedAt  DateTime @default(now()) @db.Timestamp(6)
+  users      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_3d7fbb314ae1c5612cefb73742c")
+  orders     Order[]
+
+  @@index([userId], map: "IDX_delivery_addresses_userId")
+  @@map("delivery_addresses")
+}
+
+model Order {
+  id                   String               @id(map: "PK_710e2d4957aa5878dfe94e4ac2f") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderNumber          String               @unique(map: "IDX_orders_orderNumber") @db.VarChar(50)
+  userId               String               @db.Uuid
+  deliveryAddressId    String               @db.Uuid
+  status               OrderStatus          @default(pending)
+  paymentStatus        PaymentStatus        @default(pending)
+  paymentMethod        String?              @db.VarChar(50)
+  paymentTransactionId String?              @db.VarChar(255)
+  subtotal             Decimal              @db.Decimal(10, 2)
+  tax                  Decimal              @default(0) @db.Decimal(10, 2)
+  shippingCost         Decimal              @default(0) @db.Decimal(10, 2)
+  discount             Decimal              @default(0) @db.Decimal(10, 2)
+  total                Decimal              @db.Decimal(10, 2)
+  trackingNumber       String?              @db.VarChar(100)
+  shippingProvider     String?              @db.VarChar(255)
+  notes                String?
+  metadata             Json?
+  createdAt            DateTime             @default(now()) @db.Timestamp(6)
+  updatedAt            DateTime             @default(now()) @db.Timestamp(6)
+  invoices             Invoice[]
+  order_items          OrderItem[]
+  order_status_history OrderStatusHistory[]
+  users                User                 @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_151b79a83ba240b0cb31b2302d1")
+  delivery_addresses   DeliveryAddress      @relation(fields: [deliveryAddressId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "FK_749e5d7152b6cde429099a99530")
+  proforma_invoices    ProformaInvoice[]
+
+  @@index([status], map: "IDX_orders_status")
+  @@index([userId], map: "IDX_orders_userId")
+  @@map("orders")
+}
+
+model OrderItem {
+  id               String          @id(map: "PK_005269d8574e6fac0493715c308") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId          String          @db.Uuid
+  productId        String          @db.Uuid
+  variantId        String?         @db.Uuid
+  productName      String          @db.VarChar(255)
+  productSku       String          @db.VarChar(255)
+  quantity         Int
+  unitPrice        Decimal         @db.Decimal(10, 2)
+  totalPrice       Decimal         @db.Decimal(10, 2)
+  profitMargin     Decimal?        @db.Decimal(10, 2)
+  createdAt        DateTime        @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime        @default(now()) @db.Timestamp(6)
+  product_variants ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_516736b9807228bb17b2d0a3e2a")
+  products         Product         @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_cdb99c05982d5191ac8465ac010")
+  orders           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_f1d359a55923bb45b057fbdab0d")
+
+  @@index([orderId], map: "IDX_order_items_orderId")
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id        String      @id(map: "PK_e6c66d853f155531985fc4f6ec8") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId   String      @db.Uuid
+  status    OrderStatus
+  notes     String?
+  changedBy String?     @db.VarChar(100)
+  createdAt DateTime    @default(now()) @db.Timestamp(6)
+  orders    Order       @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_689db3835e5550e68d26ca32676")
+
+  @@index([orderId], map: "IDX_order_status_history_orderId")
+  @@map("order_status_history")
+}
+
+model CartItem {
+  id               String          @id(map: "PK_6fccf5ec03c172d27a28a82928b") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String          @db.Uuid
+  productId        String          @db.Uuid
+  variantId        String?         @db.Uuid
+  quantity         Int
+  price            Decimal         @db.Decimal(10, 2)
+  createdAt        DateTime        @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime        @default(now()) @db.Timestamp(6)
+  product_variants ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_5a27845bc2d79be6f1fa3d2c036")
+  products         Product         @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_72679d98b31c737937b8932ebe6")
+  users            User            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_84e765378a5f03ad9900df3a9ba")
+
+  @@unique([userId, productId, variantId], map: "IDX_cart_items_user_product_variant")
+  @@map("cart_items")
+}
+
+model Invoice {
+  id            String    @id(map: "PK_668cef7c22a427fd822cc1be3ce") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId       String    @db.Uuid
+  invoiceNumber String    @unique(map: "IDX_invoices_invoiceNumber") @db.VarChar(50)
+  fileUrl       String?   @db.VarChar(500)
+  invoiceData   Json
+  issuedAt      DateTime  @db.Timestamp(6)
+  paidAt        DateTime? @db.Timestamp(6)
+  createdAt     DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime  @default(now()) @db.Timestamp(6)
+  orders        Order     @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_a58a78a0e0031dd93a2f56f1e8e")
+
+  @@index([orderId], map: "IDX_invoices_orderId")
+  @@map("invoices")
+}
+
+model ProformaInvoice {
+  id             String    @id(map: "PK_abbc44d14d9bde2452c5e7c715b") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId        String    @db.Uuid
+  proformaNumber String    @unique(map: "IDX_proforma_invoices_proformaNumber") @db.VarChar(50)
+  fileUrl        String?   @db.VarChar(500)
+  invoiceData    Json
+  issuedAt       DateTime  @db.Timestamp(6)
+  expiresAt      DateTime? @db.Timestamp(6)
+  createdAt      DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt      DateTime  @default(now()) @db.Timestamp(6)
+  orders         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_cd5d7e1c60252a8705c73fd52f6")
+
+  @@index([orderId], map: "IDX_proforma_invoices_orderId")
+  @@map("proforma_invoices")
+}
+
+model PaymentMethod {
+  id        String   @id(map: "PK_34f9b8c6dfb4ac3559f7e2820d1") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  type      String   @db.VarChar(50)
+  provider  String?  @db.VarChar(255)
+  metadata  Json?
+  isDefault Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @db.Timestamp(6)
+  users     User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_580f1dbf7bceb9c2cde8baf7ff4")
+
+  @@index([userId], map: "IDX_payment_methods_userId")
+  @@map("payment_methods")
+}
+
+model CompanySettings {
+  id         String   @id(map: "PK_036b4634217db79c17305442dbe") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String   @default("FlipFlop.cz") @db.VarChar(255)
+  address    String?  @db.VarChar(255)
+  city       String?  @db.VarChar(255)
+  postalCode String?  @db.VarChar(20)
+  country    String?  @db.VarChar(100)
+  ico        String?  @db.VarChar(50)
+  dic        String?  @db.VarChar(50)
+  phone      String?  @db.VarChar(50)
+  email      String?  @db.VarChar(255)
+  website    String?  @db.VarChar(255)
+  logoUrl    String?  @db.VarChar(500)
+  notes      String?
+  createdAt  DateTime @default(now()) @db.Timestamp(6)
+  updatedAt  DateTime @default(now()) @db.Timestamp(6)
+
+  @@map("company_settings")
+}
+
+model AdminSettings {
+  id           String   @id(map: "PK_8eeabc518a2e33306f19fa557cc") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  envOverrides Json?    @default("{}")
+  features     Json?    @default("{}")
+  business     Json?    @default("{}")
+  integrations Json?    @default("{}")
+  system       Json?    @default("{}")
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([id], map: "IDX_admin_settings_id")
+  @@map("admin_settings")
+}
+
+model migrations {
+  id        Int    @id @default(autoincrement())
+  timestamp BigInt
+  name      String @db.VarChar(255)
+
+  @@unique([timestamp, name])
+}
+
+enum OrderStatus {
+  pending
+  confirmed
+  processing
+  shipped
+  delivered
+  cancelled
+  refunded
+
+  @@map("order_status_enum")
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  refunded
+
+  @@map("payment_status_enum")
+}
