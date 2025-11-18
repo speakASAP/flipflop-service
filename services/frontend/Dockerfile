@@ -42,5 +42,6 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+# Next.js standalone output structure may vary, try both paths
+CMD ["sh", "-c", "if [ -f server.js ]; then node server.js; else node .next/standalone/server.js; fi"]
 
