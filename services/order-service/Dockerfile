@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:lts-slim
 
 WORKDIR /app
 
@@ -36,4 +36,3 @@ EXPOSE 3003
 
 # Start service
 CMD ["node", "dist/main.js"]
-
