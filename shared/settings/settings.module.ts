@@ -5,12 +5,14 @@
 
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PrismaModule } from '../database/prisma.module';
 import { SettingsService } from './settings.service';
 import { EnhancedConfigService } from './enhanced-config.service';
 
 @Module({
   imports: [
     ConfigModule,
+    PrismaModule,
   ],
   providers: [
     SettingsService,

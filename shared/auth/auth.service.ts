@@ -3,7 +3,7 @@
  * Service to handle authentication via auth-microservice
  */
 
-import { Injectable, LoggerService, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -15,6 +15,7 @@ import {
   RefreshTokenDto,
   AuthUser,
 } from './auth.interface';
+import { LoggerService } from '../logger/logger.service';
 import { CircuitBreakerService } from '../resilience/circuit-breaker.service';
 import { RetryService } from '../resilience/retry.service';
 import { ResilienceMonitor } from '../resilience/resilience.monitor';

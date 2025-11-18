@@ -4,10 +4,9 @@
  */
 
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { AdminSettings } from '../entities/admin-settings.entity';
-import { User } from '../entities/user.entity';
+import { PrismaService } from '../database/prisma.service';
+import { AdminSettings, Prisma } from '@prisma/client';
 
 export interface MergedSettings {
   [key: string]: string | number | boolean | undefined;
@@ -19,99 +18,17 @@ export class SettingsService implements OnModuleInit {
   private cacheExpiry: number = 0;
   private readonly CACHE_TTL = 60000; // 1 minute cache
 
-  private _adminSettingsRepository: Repository<AdminSettings> | null = null;
-  private _dataSource: DataSource | null = null;
-
   constructor(
     private configService: ConfigService,
+    private prisma: PrismaService,
   ) {}
-
-  /**
-   * Get DataSource from TypeORM connection manager
-   */
-  private getDataSource(): DataSource | null {
-    if (this._dataSource && this._dataSource.isInitialized) {
-      return this._dataSource;
-    }
-
-    try {
-      // Get DataSource from TypeORM's connection manager
-      // TypeORM stores connections in a global connection manager
-      const { getConnectionManager } = require('typeorm');
-      const connectionManager = getConnectionManager();
-      
-      // Try to get the default connection
-      let connection: DataSource | null = null;
-      
-      // First try to get by name 'default'
-      try {
-        connection = connectionManager.get('default') as DataSource;
-      } catch (error) {
-        // Default connection not found, try to get any connection
-        const connections = connectionManager.connections;
-        if (connections && connections.length > 0) {
-          connection = connections[0] as DataSource;
-        }
-      }
-      
-      if (connection) {
-        // Check if connection is initialized/connected
-        // In TypeORM, DataSource has isInitialized property
-        if (connection.isInitialized !== undefined) {
-          if (connection.isInitialized) {
-            this._dataSource = connection;
-            return this._dataSource;
-          }
-        } else {
-          // Older TypeORM versions use isConnected
-          if ((connection as any).isConnected) {
-            this._dataSource = connection;
-            return this._dataSource;
-          }
-        }
-      }
-    } catch (error) {
-      // DataSource not available - connection manager not initialized yet
-      return null;
-    }
-    
-    return null;
-  }
-
-  /**
-   * Get repository lazily - creates it if DataSource is available
-   */
-  private get adminSettingsRepository(): Repository<AdminSettings> | null {
-    if (this._adminSettingsRepository) {
-      return this._adminSettingsRepository;
-    }
-    
-    const dataSource = this.getDataSource();
-    if (dataSource && dataSource.isInitialized) {
-      try {
-        this._adminSettingsRepository = dataSource.getRepository(AdminSettings);
-        return this._adminSettingsRepository;
-      } catch (error) {
-        // Repository creation failed
-        return null;
-      }
-    }
-    
-    return null;
-  }
 
   async onModuleInit() {
     // Load admin settings on startup
     // Handle database connection errors gracefully
     try {
-      // Try to get DataSource and initialize repository if available
-      const dataSource = this.getDataSource();
-      if (dataSource) {
-        await this.loadAdminSettings();
-      } else {
-        console.warn('Database connection not available - admin settings will use defaults');
-      }
-    } catch (error) {
+      await this.loadAdminSettings();
+    } catch (error: any) {
       // If database is not available, log warning but don't fail startup
       console.warn('Could not load admin settings on startup:', error.message);
     }
@@ -121,19 +38,14 @@ export class SettingsService implements OnModuleInit {
    * Load admin settings from database (with caching)
    */
   private async loadAdminSettings(): Promise<AdminSettings | null> {
-    if (!this.adminSettingsRepository) {
-      return null;
-    }
-
     const now = Date.now();
     if (this.adminSettingsCache && now < this.cacheExpiry) {
       return this.adminSettingsCache;
     }
 
     try {
-      const settings = await this.adminSettingsRepository.findOne({
-        where: {},
-        order: { createdAt: 'ASC' },
+      const settings = await this.prisma.adminSettings.findFirst({
+        orderBy: { createdAt: 'asc' },
       });
 
       this.adminSettingsCache = settings;
@@ -174,8 +86,8 @@ export class SettingsService implements OnModuleInit {
 
     // 3. Apply admin settings (highest priority)
     const adminSettings = await this.loadAdminSettings();
-    if (adminSettings?.envOverrides) {
-      Object.assign(merged, adminSettings.envOverrides);
+    if (adminSettings?.envOverrides && typeof adminSettings.envOverrides === 'object') {
+      Object.assign(merged, adminSettings.envOverrides as Record<string, any>);
     }
 
     return merged;
@@ -198,36 +110,22 @@ export class SettingsService implements OnModuleInit {
    * Get admin settings
    */
   async getAdminSettings(): Promise<AdminSettings> {
-    if (!this.adminSettingsRepository) {
-      // Return default settings if repository is not available
-      return {
-        id: '',
-        envOverrides: {},
-        features: {},
-        business: {},
-        integrations: {},
-        system: {},
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as AdminSettings;
-    }
-
-    let settings = await this.adminSettingsRepository.findOne({
-      where: {},
-      order: { createdAt: 'ASC' },
+    let settings = await this.prisma.adminSettings.findFirst({
+      orderBy: { createdAt: 'asc' },
     });
 
     if (!settings) {
       // Create default admin settings
-      settings = this.adminSettingsRepository.create({
-        envOverrides: {},
-        features: {},
-        business: {},
-        integrations: {},
-        system: {},
+      settings = await this.prisma.adminSettings.create({
+        data: {
+          envOverrides: {},
+          features: {},
+          business: {},
+          integrations: {},
+          system: {},
+        },
       });
-      settings = await this.adminSettingsRepository.save(settings);
-      this.invalidateCache();
+      await this.invalidateCache();
     }
 
     return settings;
@@ -236,69 +134,56 @@ export class SettingsService implements OnModuleInit {
   /**
    * Update admin settings
    */
-  async updateAdminSettings(updates: Partial<AdminSettings>): Promise<AdminSettings> {
-    if (!this.adminSettingsRepository) {
-      throw new Error('Database connection not available');
-    }
-
+  async updateAdminSettings(updates: Prisma.AdminSettingsUpdateInput): Promise<AdminSettings> {
     let settings = await this.getAdminSettings();
 
-    // Merge updates
-    if (updates.envOverrides) {
-      settings.envOverrides = { ...settings.envOverrides, ...updates.envOverrides };
-    }
-    if (updates.features) {
-      settings.features = { ...settings.features, ...updates.features };
-    }
-    if (updates.business) {
-      settings.business = { ...settings.business, ...updates.business };
-    }
-    if (updates.integrations) {
-      settings.integrations = { ...settings.integrations, ...updates.integrations };
-    }
-    if (updates.system) {
-      settings.system = { ...settings.system, ...updates.system };
-    }
+    // Use Prisma update with merge
+    const updated = await this.prisma.adminSettings.update({
+      where: { id: settings.id },
+      data: updates,
+    });
 
-    if (!this.adminSettingsRepository) {
-      throw new Error('Database connection not available');
-    }
-    const saved = await this.adminSettingsRepository.save(settings);
     await this.invalidateCache();
-    return saved;
+    return updated;
   }
 
   /**
    * Get user preferences (from user entity)
-   * Note: This method requires User repository to be passed in
+   * Note: This method requires Prisma to access user
    * For direct access, use the UsersService instead
    */
-  async getUserPreferences(userId: string, userRepository: Repository<User>): Promise<Record<string, any>> {
-    const user = await userRepository.findOne({
+  async getUserPreferences(userId: string): Promise<Record<string, any>> {
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: ['id', 'preferences'],
+      select: { id: true, preferences: true },
     });
 
-    return user?.preferences || {};
+    return (user?.preferences as Record<string, any>) || {};
   }
 
   /**
    * Update user preferences
-   * Note: This method requires User repository to be passed in
+   * Note: This method requires Prisma to access user
    * For direct access, use the UsersService instead
    */
   async updateUserPreferences(
     userId: string,
     preferences: Record<string, any>,
-    userRepository: Repository<User>,
-  ): Promise<User> {
-    const user = await userRepository.findOne({ where: { id: userId } });
+  ): Promise<any> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw new Error('User not found');
     }
 
-    user.preferences = { ...(user.preferences || {}), ...preferences };
-    return await userRepository.save(user);
+    const currentPreferences = (user.preferences as Record<string, any>) || {};
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        preferences: { ...currentPreferences, ...preferences },
+      },
+    });
+
+    return updated;
   }
 
   /**

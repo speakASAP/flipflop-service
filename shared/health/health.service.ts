@@ -4,12 +4,11 @@
  */
 
 import { Injectable, Optional } from '@nestjs/common';
-import { InjectConnection } from '@nestjs/typeorm';
-import { Connection } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
+import { PrismaService } from '../database/prisma.service';
 import { CircuitBreakerService } from '../resilience/circuit-breaker.service';
 import { ResilienceMonitor } from '../resilience/resilience.monitor';
 
@@ -63,7 +62,7 @@ export interface HealthStatus {
 @Injectable()
 export class HealthService {
   constructor(
-    @InjectConnection() private readonly connection: Connection,
+    private readonly prisma: PrismaService,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     @Optional() private readonly circuitBreakerService?: CircuitBreakerService,
@@ -75,7 +74,7 @@ export class HealthService {
    */
   async checkDatabase(): Promise<{ status: 'ok' | 'error'; message?: string }> {
     try {
-      await this.connection.query('SELECT 1');
+      await this.prisma.$queryRaw`SELECT 1`;
       return { status: 'ok' };
     } catch (error: any) {
       return {
