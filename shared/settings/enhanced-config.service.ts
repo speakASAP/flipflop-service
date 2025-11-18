@@ -52,7 +52,10 @@ export class EnhancedConfigService {
     }
 
     // Fallback to ConfigService (reads from .env)
-    return this.configService.get<T>(key, defaultValue);
+    if (defaultValue !== undefined) {
+      return this.configService.get<T>(key, defaultValue);
+    }
+    return this.configService.get<T>(key) as T;
   }
 
   /**
@@ -62,7 +65,10 @@ export class EnhancedConfigService {
   getSync<T = any>(key: string, defaultValue?: T): T {
     // In synchronous context, can only use .env
     // Settings service requires async database access
-    return this.configService.get<T>(key, defaultValue);
+    if (defaultValue !== undefined) {
+      return this.configService.get<T>(key, defaultValue);
+    }
+    return this.configService.get<T>(key) as T;
   }
 
   /**
