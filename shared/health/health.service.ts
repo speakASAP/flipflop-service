@@ -30,6 +30,10 @@ export interface HealthStatus {
       status: 'ok' | 'error';
       message?: string;
     };
+    auth?: {
+      status: 'ok' | 'error';
+      message?: string;
+    };
     redis?: {
       status: 'ok' | 'error';
       message?: string;
@@ -151,6 +155,40 @@ export class HealthService {
   }
 
   /**
+   * Check auth service health
+   */
+  async checkAuthService(): Promise<{ status: 'ok' | 'error'; message?: string }> {
+    try {
+      const authServiceUrl =
+        this.configService.get<string>('AUTH_SERVICE_URL') ||
+        'https://auth.statex.cz';
+
+      const response = await firstValueFrom(
+        this.httpService.get(`${authServiceUrl}/health`).pipe(
+          timeout(3000),
+          catchError(() => {
+            throw new Error('Auth service unavailable');
+          }),
+        ),
+      );
+
+      if (response.data?.success || response.data?.status === 'ok') {
+        return { status: 'ok' };
+      }
+
+      return {
+        status: 'error',
+        message: 'Auth service returned unhealthy status',
+      };
+    } catch (error: any) {
+      return {
+        status: 'error',
+        message: error.message || 'Auth service unavailable',
+      };
+    }
+  }
+
+  /**
    * Check Redis connection health
    */
   async checkRedis(): Promise<{ status: 'ok' | 'error'; message?: string }> {
@@ -199,6 +237,25 @@ export class HealthService {
         if (overallStatus === 'ok') {
           overallStatus = 'degraded';
         }
+      }
+    }
+
+    // Check auth service (critical for user-service, non-critical for others)
+    try {
+      dependencies.auth = await this.checkAuthService();
+      if (dependencies.auth.status === 'error') {
+        if (serviceName === 'user-service') {
+          overallStatus = 'unhealthy';
+        } else if (overallStatus === 'ok') {
+          overallStatus = 'degraded';
+        }
+      }
+    } catch (error) {
+      dependencies.auth = { status: 'error', message: 'Check failed' };
+      if (serviceName === 'user-service') {
+        overallStatus = 'unhealthy';
+      } else if (overallStatus === 'ok') {
+        overallStatus = 'degraded';
       }
     }
 

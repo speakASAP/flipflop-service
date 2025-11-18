@@ -28,7 +28,10 @@ export const databaseConfig: TypeOrmModuleOptions = {
   logging: process.env.NODE_ENV === 'development',
   extra: {
     max: 20, // Maximum number of connections in the pool
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000, // Increased timeout for connection establishment
   },
+  // Retry connection on failure
+  retryAttempts: 3,
+  retryDelay: 3000,
 };
 

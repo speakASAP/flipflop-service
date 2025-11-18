@@ -3,17 +3,13 @@
  * Provides SettingsService and EnhancedConfigService
  */
 
-import { Module, Global } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SettingsService } from './settings.service';
 import { EnhancedConfigService } from './enhanced-config.service';
-import { AdminSettings } from '../entities/admin-settings.entity';
 
-@Global()
 @Module({
   imports: [
-    TypeOrmModule.forFeature([AdminSettings]),
     ConfigModule,
   ],
   providers: [

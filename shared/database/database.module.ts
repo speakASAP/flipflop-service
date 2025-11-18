@@ -5,6 +5,7 @@
 
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { databaseConfig } from './database.config';
 import * as entities from '../entities';
 
@@ -15,9 +16,14 @@ const entityClasses = Object.values(entities).filter(
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      ...databaseConfig,
-      entities: entityClasses,
+    TypeOrmModule.forRootAsync({
+      useFactory: async () => {
+        // Ensure connection is established
+        return {
+          ...databaseConfig,
+          entities: entityClasses,
+        };
+      },
     }),
   ],
   exports: [TypeOrmModule],

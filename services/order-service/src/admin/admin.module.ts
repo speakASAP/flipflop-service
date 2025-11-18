@@ -6,7 +6,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
 import { CompanySettings } from '@shared/entities/company-settings.entity';
-import { AdminSettings } from '@shared/entities/admin-settings.entity';
 import { SettingsModule } from '@shared/settings/settings.module';
 import { OrdersModule } from '../orders/orders.module';
 import { AdminService } from './admin.service';
@@ -14,7 +13,8 @@ import { AdminController } from './admin.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CompanySettings, AdminSettings]),
+    TypeOrmModule.forFeature([CompanySettings]),
+    // AdminSettings is handled by SettingsModule, not needed here
     HttpModule,
     SettingsModule,
     OrdersModule,

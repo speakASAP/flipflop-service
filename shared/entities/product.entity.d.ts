@@ -1,0 +1,35 @@
+import { Category } from './category.entity';
+import { ProductVariant } from './product-variant.entity';
+import { SupplierProduct } from './supplier-product.entity';
+import { OrderItem } from './order-item.entity';
+import { CartItem } from './cart-item.entity';
+export declare class Product {
+    id: string;
+    name: string;
+    sku: string;
+    description: string;
+    shortDescription: string;
+    price: number;
+    compareAtPrice: number;
+    mainImageUrl: string;
+    imageUrls: string[];
+    videoUrls: string[];
+    stockQuantity: number;
+    trackInventory: boolean;
+    isActive: boolean;
+    brand: string;
+    manufacturer: string;
+    attributes: Record<string, any>;
+    rating: number;
+    reviewCount: number;
+    seoTitle: string;
+    seoDescription: string;
+    seoKeywords: string;
+    categories: Category[];
+    variants: ProductVariant[];
+    supplierProducts: SupplierProduct[];
+    orderItems: OrderItem[];
+    cartItems: CartItem[];
+    createdAt: Date;
+    updatedAt: Date;
+}

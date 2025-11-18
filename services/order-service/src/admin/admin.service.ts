@@ -17,8 +17,7 @@ export class AdminService {
   constructor(
     @InjectRepository(CompanySettings)
     private companySettingsRepository: Repository<CompanySettings>,
-    @InjectRepository(AdminSettings)
-    private adminSettingsRepository: Repository<AdminSettings>,
+    // AdminSettings is handled by SettingsService, no need to inject repository here
     private settingsService: SettingsService,
     private logger: LoggerService,
   ) {}

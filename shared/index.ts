@@ -20,6 +20,11 @@ export * from './notifications/notification.module';
 export * from './notifications/notification.service';
 export * from './notifications/notification.interface';
 
+// Auth
+export * from './auth/auth.module';
+export * from './auth/auth.service';
+export * from './auth/auth.interface';
+
 // Entities
 export * from './entities';
 
