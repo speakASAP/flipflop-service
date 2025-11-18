@@ -1,11 +1,4 @@
-FROM node:lts-slim
-
-WORKDIR /app
-
-# Install system dependencies (OpenSSL + build tools if needed)
-RUN apt-get update -y && \
-    apt-get install -y openssl libssl-dev && \
-    rm -rf /var/lib/apt/lists/*
+FROM node:lts-slim AS base
 
 # Install dependencies only when needed
 FROM base AS deps

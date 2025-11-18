@@ -1,11 +1,9 @@
 FROM node:lts-slim
 
-WORKDIR /app
+# Install OpenSSL for Prisma
+RUN apt-get update -y && apt-get install -y openssl libssl-dev && rm -rf /var/lib/apt/lists/*
 
-# Install system dependencies (OpenSSL + build tools if needed)
-RUN apt-get update -y && \
-    apt-get install -y openssl libssl-dev && \
-    rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
