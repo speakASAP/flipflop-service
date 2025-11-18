@@ -20,12 +20,11 @@ COPY tsconfig.json ./
 WORKDIR /app/shared
 RUN npm install --legacy-peer-deps
 
-# Generate Prisma Client (needed for AdminSettings type)
-WORKDIR /app
-RUN npx prisma generate --schema=./prisma/schema.prisma
+# Generate Prisma Client in shared module (needed for AdminSettings type)
+RUN cp -r ../prisma ./prisma || true
+RUN npx prisma generate --schema=./prisma/schema.prisma || npx prisma generate
 
 # Build shared module
-WORKDIR /app/shared
 RUN npm run build
 
 # Build service
