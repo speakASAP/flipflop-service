@@ -32,6 +32,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
+# Next.js standalone output: copy the entire standalone directory structure
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
@@ -42,6 +43,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Next.js standalone output structure may vary, try both paths
-CMD ["sh", "-c", "if [ -f server.js ]; then node server.js; else node .next/standalone/server.js; fi"]
-
+# Find and run server.js from the standalone output
+CMD ["sh", "-c", "SERVER_FILE=$(find . -name 'server.js' -type f | head -1) && if [ -n \"$SERVER_FILE\" ]; then node \"$SERVER_FILE\"; else echo 'Error: server.js not found' && ls -la && exit 1; fi"]
