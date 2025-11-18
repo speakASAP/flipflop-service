@@ -19,8 +19,9 @@ COPY tsconfig.json ./
 # Generate Prisma Client
 RUN npx prisma generate
 
-# Build shared module
+# Install and build shared module dependencies
 WORKDIR /app/shared
+RUN npm install --legacy-peer-deps
 RUN npm run build
 
 # Build service
