@@ -39,4 +39,4 @@ RUN npm run build
 EXPOSE 3009
 
 # Start service
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/services/cart-service/src/main.js"]

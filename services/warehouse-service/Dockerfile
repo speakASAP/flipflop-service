@@ -39,5 +39,5 @@ RUN npm run build
 EXPOSE 3005
 
 # Start service
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/services/warehouse-service/src/main.js"]
 

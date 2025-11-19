@@ -39,5 +39,5 @@ RUN npm run build
 EXPOSE 3001
 
 # Start service
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/services/api-gateway/src/main.js"]
 
