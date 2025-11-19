@@ -43,5 +43,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Find and run server.js from the standalone output
-CMD ["sh", "-c", "SERVER_FILE=$(find . -name 'server.js' -type f | head -1) && if [ -n \"$SERVER_FILE\" ]; then node \"$SERVER_FILE\"; else echo 'Error: server.js not found' && ls -la && exit 1; fi"]
+# Run server.js from the standalone output
+CMD ["node", "server.js"]
