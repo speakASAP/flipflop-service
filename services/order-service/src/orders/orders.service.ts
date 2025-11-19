@@ -8,7 +8,7 @@ import { PrismaService } from '@e-commerce/shared';
 import { LoggerService } from '@e-commerce/shared';
 import { PaymentService } from '@e-commerce/shared';
 import { NotificationService } from '@e-commerce/shared';
-import { OrderStatus, PaymentStatus } from '@prisma/client';
+import { OrderStatus, PaymentStatus } from '@e-commerce/shared';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

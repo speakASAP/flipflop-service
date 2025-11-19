@@ -6,6 +6,8 @@
 // Database
 export * from './database/prisma.module';
 export * from './database/prisma.service';
+// Export Prisma types
+export { OrderStatus, PaymentStatus, Prisma } from '@prisma/client';
 
 // Redis
 export * from './redis/redis.config';
