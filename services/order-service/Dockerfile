@@ -38,4 +38,4 @@ RUN npm run build
 EXPOSE 3003
 
 # Start service
-CMD ["node", "dist/services/order-service/src/main.js"]
+CMD ["node", "dist/main.js"]

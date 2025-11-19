@@ -4,7 +4,7 @@
   "description": "Order Service for E-commerce Platform",
   "main": "dist/main.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
     "start:watch": "ts-node-dev --respawn src/main.ts"
@@ -26,7 +26,7 @@
     "@types/node": "^20.10.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "tsc-alias": "^1.8.16"
   }
 }
-

@@ -13,6 +13,9 @@ services:
       - api-gateway
     volumes:
       - ./logs:/app/logs
+      - ./services/frontend:/app
+      - /app/node_modules
+      - /app/.next
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=${FRONTEND_PORT:-3000}
