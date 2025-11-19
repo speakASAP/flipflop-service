@@ -38,5 +38,5 @@ RUN npm run build
 EXPOSE 3002
 
 # Start service
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/services/product-service/src/main.js"]
 
