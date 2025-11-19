@@ -32,6 +32,7 @@ RUN npm run build
 
 # Build service
 WORKDIR /app/services/order-service
+RUN npm install --include=dev
 RUN npm run build
 
 # Expose port
