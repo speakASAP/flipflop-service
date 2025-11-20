@@ -38,5 +38,8 @@ RUN npm run build
 # Expose port
 EXPOSE 3009
 
+# Set NODE_PATH to include shared node_modules for runtime module resolution
+ENV NODE_PATH=/app/shared/node_modules:/app/node_modules
+
 # Start service
 CMD ["node", "dist/services/cart-service/src/main.js"]

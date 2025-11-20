@@ -38,6 +38,9 @@ RUN npm run build
 # Expose port
 EXPOSE 3005
 
+# Set NODE_PATH to include shared node_modules for runtime module resolution
+ENV NODE_PATH=/app/shared/node_modules:/app/node_modules
+
 # Start service
 CMD ["node", "dist/services/warehouse-service/src/main.js"]
 

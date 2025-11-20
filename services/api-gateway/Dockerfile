@@ -40,6 +40,9 @@ RUN cp -r ../shared/dist ./dist/shared || true
 # Expose port
 EXPOSE 3011
 
+# Set NODE_PATH to include shared node_modules for runtime module resolution
+ENV NODE_PATH=/app/shared/node_modules:/app/node_modules
+
 # Start service
 CMD ["node", "dist/services/api-gateway/src/main.js"]
 
