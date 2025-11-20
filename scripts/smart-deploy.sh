@@ -174,7 +174,7 @@ deploy_service() {
             health_endpoint="/"
             ;;
         api-gateway)
-            port="3001"
+            port="3011"
             ;;
         product-service)
             port="3002"
