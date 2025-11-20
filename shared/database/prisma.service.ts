@@ -22,14 +22,20 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       const dbPassword = process.env.DB_PASSWORD || '';
       const dbName = process.env.DB_NAME || 'ecommerce';
       
-      // URL encode password to handle special characters
+      // URL encode password to handle special characters (/, +, =)
       const encodedPassword = encodeURIComponent(dbPassword);
       
       databaseUrl = `postgresql://${dbUser}:${encodedPassword}@${dbHost}:${dbPort}/${dbName}?schema=public`;
       process.env.DATABASE_URL = databaseUrl;
     }
 
+    // Pass datasources explicitly to PrismaClient to ensure correct URL is used
     super({
+      datasources: {
+        db: {
+          url: databaseUrl,
+        },
+      },
       log: [
         { emit: 'event', level: 'query' },
         { emit: 'event', level: 'error' },
