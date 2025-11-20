@@ -11,8 +11,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
-    // Construct DATABASE_URL from DB_* variables if not set
-    if (!process.env.DATABASE_URL) {
+    // Construct DATABASE_URL from DB_* variables if not set or invalid
+    let databaseUrl = process.env.DATABASE_URL;
+    
+    // Check if DATABASE_URL is invalid (contains duplicate key or doesn't start with postgresql://)
+    if (!databaseUrl || !databaseUrl.startsWith('postgresql://') || databaseUrl.includes('DATABASE_URL=')) {
       const dbHost = process.env.DB_HOST || 'db-server-postgres';
       const dbPort = process.env.DB_PORT || '5432';
       const dbUser = process.env.DB_USER || 'dbadmin';
@@ -22,7 +25,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       // URL encode password to handle special characters
       const encodedPassword = encodeURIComponent(dbPassword);
       
-      process.env.DATABASE_URL = `postgresql://${dbUser}:${encodedPassword}@${dbHost}:${dbPort}/${dbName}?schema=public`;
+      databaseUrl = `postgresql://${dbUser}:${encodedPassword}@${dbHost}:${dbPort}/${dbName}?schema=public`;
+      process.env.DATABASE_URL = databaseUrl;
     }
 
     super({
