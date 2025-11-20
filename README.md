@@ -23,8 +23,10 @@ The platform consists of 9 microservices:
 1. **Auth Microservice** (`https://auth.statex.cz`) - Centralized authentication service (user registration, login, JWT tokens, password reset)
 2. **Notification Microservice** (`https://notifications.statex.cz`) - Multi-channel notifications (Email, Telegram, WhatsApp)
 3. **Logging Microservice** (`https://logging.statex.cz`) - Centralized logging service
-4. **Database Server** (`db-server-postgres`) - Shared PostgreSQL database server
-5. **Nginx Microservice** - Reverse proxy and SSL termination for all applications
+4. **Payment Microservice** (`https://payments.statex.cz`) - Centralized payment processing (PayPal, Stripe, PayU, Fio Banka, ComGate)
+5. **Database Server** (`db-server-postgres`) - Shared PostgreSQL database server
+6. **Redis Server** (`db-server-redis`) - Shared Redis cache server
+7. **Nginx Microservice** - Reverse proxy and SSL termination for all applications
 
 ## 🛠️ Technology Stack
 
@@ -40,16 +42,18 @@ The platform consists of 9 microservices:
 ## ✨ Features
 
 ✅ **Centralized Authentication** - Uses shared auth-microservice for all authentication operations
+✅ **Centralized Payments** - Uses shared payment-microservice for payment processing
+✅ **Centralized Notifications** - Uses shared notifications-microservice for multi-channel notifications
+✅ **Centralized Logging** - Uses shared logging-microservice for centralized log collection
 ✅ User authentication and authorization (JWT via auth-microservice)
 ✅ Product catalog with search and filtering
 ✅ Shopping cart and checkout
-✅ Payment processing (PayU)
+✅ Payment processing via payment-microservice (PayU, PayPal, Stripe, etc.)
 ✅ Order management and tracking
 ✅ Supplier integration and product synchronization
 ✅ AI shopping assistant
 ✅ Analytics and reporting
-✅ Multi-channel notifications (Email, Telegram, WhatsApp)
-✅ Centralized logging
+✅ Multi-channel notifications (Email, Telegram, WhatsApp via notifications-microservice)
 ✅ API Gateway with request routing
 
 ## 📦 Project Structure
@@ -111,12 +115,28 @@ Configure services via `.env` files.
 - `AUTH_SERVICE_URL` - Auth microservice URL (REQUIRED)
   - Production: `https://auth.statex.cz`
   - Docker/Development: `http://auth-microservice:3370`
-- `DB_HOST`, `DB_PASSWORD` - Database configuration
-- `PAYU_*` - PayU payment gateway credentials
+- `NOTIFICATION_SERVICE_URL` - Notification microservice URL (REQUIRED)
+  - Production: `https://notifications.statex.cz`
+  - Docker/Development: `http://notifications-microservice:3368`
+- `LOGGING_SERVICE_URL` - Logging microservice URL (REQUIRED)
+  - Production: `https://logging.statex.cz`
+  - Docker/Development: `http://logging-microservice:3268`
+- `PAYMENT_SERVICE_URL` - Payment microservice URL (REQUIRED)
+  - Production: `https://payments.statex.cz`
+  - Docker/Development: `http://payment-microservice:3468`
+- `PAYMENT_API_KEY` - API key for payment microservice (REQUIRED)
+- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` - Database configuration
+- `REDIS_HOST`, `REDIS_PORT` - Redis cache configuration
 - `OPENROUTER_API_KEY` - OpenRouter API key
-- `SENDGRID_API_KEY` - SendGrid email API key
 
-**Note**: JWT tokens are managed by auth-microservice. Services use the shared `AuthService` from `shared/auth/auth.service.ts` to interact with auth-microservice.
+**Note**:
+
+- JWT tokens are managed by auth-microservice. Services use the shared `AuthService` from `shared/auth/auth.service.ts` to interact with auth-microservice.
+- Payments are processed via payment-microservice. Services use the shared `PaymentService` from `shared/payments/payment.service.ts`.
+- Notifications are sent via notifications-microservice. Services use the shared `NotificationService` from `shared/notifications/notification.service.ts`.
+- Logs are sent to logging-microservice. Services use the shared `LoggerService` from `shared/logger/logger.service.ts`.
+
+See [docs/ENV_VARIABLES.md](./docs/ENV_VARIABLES.md) for complete environment variable reference.
 
 ## 📝 License
 

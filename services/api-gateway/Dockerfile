@@ -34,6 +34,8 @@ RUN npm run build
 WORKDIR /app/services/api-gateway
 RUN npm install --include=dev
 RUN npm run build
+# Copy compiled shared module to api-gateway dist to ensure proper module resolution
+RUN cp -r ../shared/dist ./dist/shared || true
 
 # Expose port
 EXPOSE 3011

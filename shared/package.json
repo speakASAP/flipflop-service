@@ -2,7 +2,7 @@
   "name": "@e-commerce/shared",
   "version": "1.0.0",
   "description": "Shared utilities, types, and modules for e-commerce microservices",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
