@@ -8,7 +8,7 @@ The platform consists of 9 microservices:
 
 ### Main Platform Services
 
-1. **API Gateway** (3001) - Request routing and authentication
+1. **API Gateway** (3011) - Request routing and authentication
 2. **User Service** (3004) - Authentication and user management
 3. **Product Service** (3002) - Product catalog and categories
 4. **Order Service** (3003) - Shopping cart, orders, and payments
@@ -76,7 +76,7 @@ e-commerce/
 
 ## 🌐 API Endpoints
 
-All API requests go through the API Gateway at `http://localhost:3001/api`
+All API requests go through the API Gateway at `http://localhost:3011/api`
 
 **Main endpoints:**
 

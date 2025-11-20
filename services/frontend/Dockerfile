@@ -15,7 +15,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY services/frontend ./
 
 # Set environment variables for build
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3011/api}
 
 RUN npm run build
 

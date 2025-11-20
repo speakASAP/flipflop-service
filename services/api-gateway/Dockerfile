@@ -36,7 +36,7 @@ RUN npm install --include=dev
 RUN npm run build
 
 # Expose port
-EXPOSE 3001
+EXPOSE 3011
 
 # Start service
 CMD ["node", "dist/services/api-gateway/src/main.js"]

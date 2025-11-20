@@ -16,7 +16,7 @@ nginx-microservice handles blue/green deployments.
 Read docs/SMART_DEPLOYMENT.md
 
 Use the same nginx and database setup to manage flipflop.statex.cz:
-Run: ssh statex "cd nginx-microservice && ./scripts/blue-green/deploy.sh e-commerce"
+Run: ssh statex "cd nginx-microservice && ./scripts/blue-green/deploy-smart.sh e-commerce"
 
 database-server is the PostgreSQL database for the app.
 
