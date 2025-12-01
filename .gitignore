@@ -1,8 +1,5 @@
-docs/tasks.md
 *.backup
 *.backup.local
-.env.backup.local
-.env.backup
 
 # Dependencies
 node_modules/
@@ -26,11 +23,8 @@ logs/
 *.pid.lock
 
 # Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env*
+!.env.example
 
 # IDE
 .vscode/
