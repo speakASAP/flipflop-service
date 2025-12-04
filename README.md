@@ -8,13 +8,36 @@ The platform consists of 9 microservices:
 
 ### Main Platform Services
 
-1. **API Gateway** (3011) - Request routing and authentication
-2. **User Service** (3004) - Authentication and user management
-3. **Product Service** (3002) - Product catalog and categories
-4. **Order Service** (3003) - Shopping cart, orders, and payments
-5. **Supplier Service** (3006) - Supplier integration and product sync
-6. **AI Service** (3007) - AI shopping assistant (OpenRouter/Gemini)
-7. **Analytics Service** (3008) - Sales and revenue analytics
+1. **API Gateway** (${API_GATEWAY_PORT:-3511}) - Request routing and authentication
+2. **User Service** (${USER_SERVICE_PORT:-3504}) - Authentication and user management
+3. **Product Service** (${PRODUCT_SERVICE_PORT:-3502}) - Product catalog and categories
+4. **Order Service** (${ORDER_SERVICE_PORT:-3503}) - Shopping cart, orders, and payments
+5. **Supplier Service** (${SUPPLIER_SERVICE_PORT:-3506}) - Supplier integration and product sync
+6. **AI Service** (${AI_SERVICE_PORT:-3507}) - AI shopping assistant (OpenRouter/Gemini)
+7. **Analytics Service** (${ANALYTICS_SERVICE_PORT:-3508}) - Sales and revenue analytics
+
+**Note**: All ports are configured in `e-commerce/.env`. The values shown are defaults.
+
+## 🔌 Port Configuration
+
+**Port Range**: 35xx (e-commerce application)
+
+Services use host ports in the 35xx range, mapping to standard container ports:
+
+| Service | Host Port | Container Port | .env Variable | Description |
+|---------|-----------|----------------|---------------|-------------|
+| **Frontend** | `${FRONTEND_PORT:-3500}` | `3000` | `FRONTEND_PORT` (e-commerce/.env) | Next.js frontend application |
+| **API Gateway** | `${API_GATEWAY_PORT:-3511}` | `3011` | `API_GATEWAY_PORT` (e-commerce/.env) | Main API gateway for routing |
+| **Product Service** | `${PRODUCT_SERVICE_PORT:-3502}` | `3002` | `PRODUCT_SERVICE_PORT` (e-commerce/.env) | Product catalog management |
+| **Order Service** | `${ORDER_SERVICE_PORT:-3503}` | `3003` | `ORDER_SERVICE_PORT` (e-commerce/.env) | Order processing |
+| **User Service** | `${USER_SERVICE_PORT:-3504}` | `3004` | `USER_SERVICE_PORT` (e-commerce/.env) | User management |
+| **Warehouse Service** | `${WAREHOUSE_SERVICE_PORT:-3505}` | `3005` | `WAREHOUSE_SERVICE_PORT` (e-commerce/.env) | Warehouse management |
+| **Supplier Service** | `${SUPPLIER_SERVICE_PORT:-3506}` | `3006` | `SUPPLIER_SERVICE_PORT` (e-commerce/.env) | Supplier integration |
+| **AI Service** | `${AI_SERVICE_PORT:-3507}` | `3007` | `AI_SERVICE_PORT` (e-commerce/.env) | AI shopping assistant |
+| **Analytics Service** | `${ANALYTICS_SERVICE_PORT:-3508}` | `3008` | `ANALYTICS_SERVICE_PORT` (e-commerce/.env) | Analytics and reporting |
+| **Cart Service** | `${CART_SERVICE_PORT:-3509}` | `3009` | `CART_SERVICE_PORT` (e-commerce/.env) | Shopping cart management |
+
+**Note**: All ports are configured in `e-commerce/.env`. The values shown are defaults. All ports are exposed on `127.0.0.1` only (localhost) for security. External access is provided via nginx-microservice reverse proxy.
 
 ### External Shared Services
 
@@ -80,7 +103,7 @@ e-commerce/
 
 ## 🌐 API Endpoints
 
-All API requests go through the API Gateway at `http://localhost:3011/api`
+All API requests go through the API Gateway at `http://localhost:${API_GATEWAY_PORT:-3511}/api` (port configured in `e-commerce/.env`)
 
 **Main endpoints:**
 
@@ -120,7 +143,7 @@ Configure services via `.env` files.
   - Docker/Development: `http://notifications-microservice:3368`
 - `LOGGING_SERVICE_URL` - Logging microservice URL (REQUIRED)
   - Production: `https://logging.statex.cz`
-  - Docker/Development: `http://logging-microservice:3268`
+  - Docker/Development: `http://logging-microservice:3367`
 - `PAYMENT_SERVICE_URL` - Payment microservice URL (REQUIRED)
   - Production: `https://payments.statex.cz`
   - Docker/Development: `http://payment-microservice:3468`

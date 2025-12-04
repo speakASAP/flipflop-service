@@ -48,7 +48,7 @@ export class Logger {
     this.loggingServiceUrl = process.env.LOGGING_SERVICE_URL || 
       (process.env.NODE_ENV === 'production' 
         ? 'https://logging.statex.cz' 
-        : 'http://logging-microservice:3268');
+        : `http://logging-microservice:${process.env.LOGGING_SERVICE_PORT || '3367'}`);
     this.logLevel = process.env.LOG_LEVEL || 'info';
     this.timestampFormat = process.env.LOG_TIMESTAMP_FORMAT || 'YYYY-MM-DD HH:mm:ss';
     this.serviceName = options.serviceName || process.env.SERVICE_NAME || 'e-commerce';

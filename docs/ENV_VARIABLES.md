@@ -35,7 +35,7 @@ PAYMENT_API_KEY=<your-payment-api-key>
 # ============================================
 # For Docker network access (production)
 DB_HOST=db-server-postgres
-DB_PORT=5432
+DB_PORT=${DB_SERVER_PORT:-5432}  # From database-server/.env
 DB_USER=dbadmin
 DB_PASSWORD=<your-db-password>
 DB_NAME=ecommerce
@@ -48,20 +48,22 @@ DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_N
 # ============================================
 # For Docker network access (production)
 REDIS_HOST=db-server-redis
-REDIS_PORT=6379
+REDIS_PORT=${REDIS_SERVER_PORT:-6379}  # From database-server/.env
 REDIS_PASSWORD=<your-redis-password-if-set>
 REDIS_DB=0
 
 # ============================================
-# Service Ports
+# Service Ports (Container Ports)
+# Note: Host ports are 35xx range (3500, 3502-3509, 3511) as per README.md
+# All ports configured in e-commerce/.env - values shown are defaults
 # ============================================
-API_GATEWAY_PORT=3011
-USER_SERVICE_PORT=3004
-PRODUCT_SERVICE_PORT=3002
-ORDER_SERVICE_PORT=3003
-CART_SERVICE_PORT=3005
-WAREHOUSE_SERVICE_PORT=3009
-FRONTEND_PORT=3000
+API_GATEWAY_PORT=3011  # Container port (Host port: 3511)
+USER_SERVICE_PORT=3004  # Container port (Host port: 3504)
+PRODUCT_SERVICE_PORT=3002  # Container port (Host port: 3502)
+ORDER_SERVICE_PORT=3003  # Container port (Host port: 3503)
+CART_SERVICE_PORT=3005  # Container port (Host port: 3505)
+WAREHOUSE_SERVICE_PORT=3009  # Container port (Host port: 3509)
+FRONTEND_PORT=3000  # Container port (Host port: 3500)
 
 # ============================================
 # Logging Configuration
@@ -114,25 +116,25 @@ SERVICE_NAME=e-commerce
 # Option 1: Use production URL (if accessible)
 AUTH_SERVICE_URL=https://auth.statex.cz
 # Option 2: Use Docker network (if running locally)
-# AUTH_SERVICE_URL=http://auth-microservice:3370
+# AUTH_SERVICE_URL=http://auth-microservice:${PORT:-3370}  # port configured in auth-microservice/.env
 
 # Notification Microservice
 # Option 1: Use production URL (if accessible)
 NOTIFICATION_SERVICE_URL=https://notifications.statex.cz
 # Option 2: Use Docker network (if running locally)
-# NOTIFICATION_SERVICE_URL=http://notifications-microservice:3368
+# NOTIFICATION_SERVICE_URL=http://notifications-microservice:${PORT:-3368}  # port configured in notifications-microservice/.env
 
 # Logging Microservice
 # Option 1: Use production URL (if accessible)
 LOGGING_SERVICE_URL=https://logging.statex.cz
 # Option 2: Use Docker network (if running locally)
-# LOGGING_SERVICE_URL=http://logging-microservice:3268
+# LOGGING_SERVICE_URL=http://logging-microservice:${PORT:-3367}  # port configured in logging-microservice/.env
 
 # Payment Microservice
 # Option 1: Use production URL (if accessible)
 PAYMENT_SERVICE_URL=https://payments.statex.cz
 # Option 2: Use Docker network (if running locally)
-# PAYMENT_SERVICE_URL=http://payment-microservice:3468
+# PAYMENT_SERVICE_URL=http://payment-microservice:${SERVICE_PORT:-3468}  # port configured in payment-microservice/.env
 PAYMENT_API_KEY=<your-payment-api-key>
 
 # ============================================
@@ -140,7 +142,7 @@ PAYMENT_API_KEY=<your-payment-api-key>
 # ============================================
 # For local development via SSH tunnel
 DB_HOST=localhost
-DB_PORT=5432
+DB_PORT=${DB_SERVER_PORT:-5432}  # From database-server/.env
 DB_USER=dbadmin
 DB_PASSWORD=<your-db-password>
 DB_NAME=ecommerce
@@ -153,20 +155,22 @@ DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_N
 # ============================================
 # For local development via SSH tunnel
 REDIS_HOST=localhost
-REDIS_PORT=6379
+REDIS_PORT=${REDIS_SERVER_PORT:-6379}  # From database-server/.env
 REDIS_PASSWORD=<your-redis-password-if-set>
 REDIS_DB=0
 
 # ============================================
-# Service Ports
+# Service Ports (Container Ports)
+# Note: Host ports are 35xx range (3500, 3502-3509, 3511) as per README.md
+# All ports configured in e-commerce/.env - values shown are defaults
 # ============================================
-API_GATEWAY_PORT=3011
-USER_SERVICE_PORT=3004
-PRODUCT_SERVICE_PORT=3002
-ORDER_SERVICE_PORT=3003
-CART_SERVICE_PORT=3005
-WAREHOUSE_SERVICE_PORT=3009
-FRONTEND_PORT=3000
+API_GATEWAY_PORT=3011  # Container port (Host port: 3511)
+USER_SERVICE_PORT=3004  # Container port (Host port: 3504)
+PRODUCT_SERVICE_PORT=3002  # Container port (Host port: 3502)
+ORDER_SERVICE_PORT=3003  # Container port (Host port: 3503)
+CART_SERVICE_PORT=3005  # Container port (Host port: 3505)
+WAREHOUSE_SERVICE_PORT=3009  # Container port (Host port: 3509)
+FRONTEND_PORT=3000  # Container port (Host port: 3500)
 
 # ============================================
 # Logging Configuration
@@ -208,10 +212,10 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 
 | Variable | Required | Description | Production | Development |
 |----------|----------|-------------|------------|-------------|
-| `AUTH_SERVICE_URL` | Yes | Auth microservice URL | `https://auth.statex.cz` | `https://auth.statex.cz` or `http://auth-microservice:3370` |
-| `NOTIFICATION_SERVICE_URL` | Yes | Notification microservice URL | `https://notifications.statex.cz` | `https://notifications.statex.cz` or `http://notifications-microservice:3368` |
-| `LOGGING_SERVICE_URL` | Yes | Logging microservice URL | `https://logging.statex.cz` | `https://logging.statex.cz` or `http://logging-microservice:3268` |
-| `PAYMENT_SERVICE_URL` | Yes | Payment microservice URL | `https://payments.statex.cz` | `https://payments.statex.cz` or `http://payment-microservice:3468` |
+| `AUTH_SERVICE_URL` | Yes | Auth microservice URL | `https://auth.statex.cz` | `https://auth.statex.cz` or `http://auth-microservice:${PORT:-3370}` (port configured in `auth-microservice/.env`) |
+| `NOTIFICATION_SERVICE_URL` | Yes | Notification microservice URL | `https://notifications.statex.cz` | `https://notifications.statex.cz` or `http://notifications-microservice:${PORT:-3368}` (port configured in `notifications-microservice/.env`) |
+| `LOGGING_SERVICE_URL` | Yes | Logging microservice URL | `https://logging.statex.cz` | `https://logging.statex.cz` or `http://logging-microservice:${PORT:-3367}` (port configured in `logging-microservice/.env`) |
+| `PAYMENT_SERVICE_URL` | Yes | Payment microservice URL | `https://payments.statex.cz` | `https://payments.statex.cz` or `http://payment-microservice:${SERVICE_PORT:-3468}` (port configured in `payment-microservice/.env`) |
 | `PAYMENT_API_KEY` | Yes | API key for payment microservice | `<your-api-key>` | `<your-api-key>` |
 
 ### Database Configuration
@@ -219,7 +223,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 | Variable | Required | Description | Production | Development |
 |----------|----------|-------------|------------|-------------|
 | `DB_HOST` | Yes | Database hostname | `db-server-postgres` | `localhost` (via SSH tunnel) |
-| `DB_PORT` | Yes | Database port | `5432` | `5432` |
+| `DB_PORT` | Yes | Database port | `${DB_SERVER_PORT:-5432}` | `${DB_SERVER_PORT:-5432}` (port configured in `database-server/.env`) |
 | `DB_USER` | Yes | Database username | `dbadmin` | `dbadmin` |
 | `DB_PASSWORD` | Yes | Database password | `<secret>` | `<secret>` |
 | `DB_NAME` | Yes | Database name | `ecommerce` | `ecommerce` |
@@ -238,15 +242,17 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 
 ### Service Ports
 
-| Variable | Required | Description | Default |
-|----------|----------|-------------|---------|
-| `API_GATEWAY_PORT` | No | API Gateway port | `3011` |
-| `USER_SERVICE_PORT` | No | User Service port | `3004` |
-| `PRODUCT_SERVICE_PORT` | No | Product Service port | `3002` |
-| `ORDER_SERVICE_PORT` | No | Order Service port | `3003` |
-| `CART_SERVICE_PORT` | No | Cart Service port | `3005` |
-| `WAREHOUSE_SERVICE_PORT` | No | Warehouse Service port | `3009` |
-| `FRONTEND_PORT` | No | Frontend port | `3000` |
+**Note**: These are container ports. Host ports are in the 35xx range (3500, 3502-3509, 3511) as per README.md.
+
+| Variable | Required | Description | Container Port | Host Port |
+|----------|----------|-------------|----------------|-----------|
+| `API_GATEWAY_PORT` | No | API Gateway port | `3011` | `3511` |
+| `USER_SERVICE_PORT` | No | User Service port | `3004` | `3504` |
+| `PRODUCT_SERVICE_PORT` | No | Product Service port | `3002` | `3502` |
+| `ORDER_SERVICE_PORT` | No | Order Service port | `3003` | `3503` |
+| `CART_SERVICE_PORT` | No | Cart Service port | `3005` | `3505` |
+| `WAREHOUSE_SERVICE_PORT` | No | Warehouse Service port | `3009` | `3509` |
+| `FRONTEND_PORT` | No | Frontend port | `3000` | `3500` |
 
 ### Logging Configuration
 

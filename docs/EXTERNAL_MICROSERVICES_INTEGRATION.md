@@ -69,7 +69,7 @@ All external microservices are **fully integrated** and being used throughout th
 **Service URL**:
 
 - Production: `https://logging.statex.cz`
-- Docker Network: `http://logging-microservice:3268`
+- Docker Network: `http://logging-microservice:3367`
 
 **Implementation**:
 

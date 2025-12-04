@@ -12,7 +12,7 @@ const os = require('os');
 
 class Logger {
   constructor(options = {}) {
-    this.loggingServiceUrl = process.env.LOGGING_SERVICE_URL || 'http://logging-microservice:3268';
+    this.loggingServiceUrl = process.env.LOGGING_SERVICE_URL || `http://logging-microservice:${process.env.LOGGING_SERVICE_PORT || '3367'}`;
     this.logLevel = process.env.LOG_LEVEL || 'info';
     this.timestampFormat = process.env.LOG_TIMESTAMP_FORMAT || 'YYYY-MM-DD HH:mm:ss';
     this.serviceName = options.serviceName || process.env.SERVICE_NAME || 'e-commerce';

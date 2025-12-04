@@ -419,7 +419,7 @@ Create a modern, fully automated e-commerce platform for selling diverse product
 
 **Centralized Logging System:**
 
-* **External Shared Service**: `https://logging.statex.cz` (production) or `http://logging-microservice:3268` (Docker network)
+* **External Shared Service**: `https://logging.statex.cz` (production) or `http://logging-microservice:3367` (Docker network)
 * Shared logging service used by multiple applications
 * Logger utility for all services acts as a client/wrapper for the external service
 * Logs are sent to the centralized service AND written locally as backup

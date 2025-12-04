@@ -8,7 +8,7 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+      - "127.0.0.1:${FRONTEND_PORT:-3500}:3000"
     depends_on:
       - api-gateway
     volumes:
@@ -35,7 +35,7 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:${API_GATEWAY_PORT:-3011}:${API_GATEWAY_PORT:-3011}"
+      - "127.0.0.1:${API_GATEWAY_PORT:-3511}:3011"
     depends_on:
       - user-service
       - product-service
@@ -65,7 +65,7 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:${USER_SERVICE_PORT:-3004}:${USER_SERVICE_PORT:-3004}"
+      - "127.0.0.1:${USER_SERVICE_PORT:-3504}:3004"
     volumes:
       - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
     environment:
@@ -94,7 +94,7 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:${PRODUCT_SERVICE_PORT:-3002}:${PRODUCT_SERVICE_PORT:-3002}"
+      - "127.0.0.1:${PRODUCT_SERVICE_PORT:-3502}:3002"
     volumes:
       - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
       - /srv/storagebox/statex/docker-volumes/e-commerce/uploads:/app/uploads
@@ -124,7 +124,7 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:${ORDER_SERVICE_PORT:-3003}:${ORDER_SERVICE_PORT:-3003}"
+      - "127.0.0.1:${ORDER_SERVICE_PORT:-3503}:3003"
     volumes:
       - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
     environment:
@@ -153,7 +153,7 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:${CART_SERVICE_PORT:-3009}:${CART_SERVICE_PORT:-3009}"
+      - "127.0.0.1:${CART_SERVICE_PORT:-3509}:3009"
     volumes:
       - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
     environment:
@@ -182,7 +182,7 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:${WAREHOUSE_SERVICE_PORT:-3005}:${WAREHOUSE_SERVICE_PORT:-3005}"
+      - "127.0.0.1:${WAREHOUSE_SERVICE_PORT:-3505}:3005"
     volumes:
       - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
     environment:
@@ -211,7 +211,7 @@ networks:
 
 # Note: External Shared Production Microservices (used by multiple applications):
 # - ../notifications-microservice (Port 3368, Production: https://notifications.statex.cz)
-# - ../logging-microservice (Port 3268, Production: https://logging.statex.cz)
+# - ../logging-microservice (Port 3367, Production: https://logging.statex.cz)
 # - ../database-server (PostgreSQL + Redis, Docker network: db-server-postgres, db-server-redis)
 # - ../nginx-microservice (Reverse proxy, SSL termination, blue/green deployments)
 # These are shared services managed separately and must be running before deploying this application.

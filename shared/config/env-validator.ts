@@ -239,14 +239,14 @@ export const commonDefinitions: EnvVarDefinition[] = [
     required: false,
     type: 'url' as const,
     default: 'https://logging.statex.cz',
-    description: 'Logging microservice URL (production: https://logging.statex.cz, Docker: http://logging-microservice:3268)',
+    description: 'Logging microservice URL (production: https://logging.statex.cz, Docker: http://logging-microservice:${PORT:-3367}, port configured in logging-microservice/.env)',
   },
   {
     name: 'AUTH_SERVICE_URL',
     required: false,
     type: 'url' as const,
     default: 'https://auth.statex.cz',
-    description: 'Authentication microservice URL (production: https://auth.statex.cz, Docker: http://auth-microservice:3370)',
+    description: 'Authentication microservice URL (production: https://auth.statex.cz, Docker: http://auth-microservice:${PORT:-3370}, port configured in auth-microservice/.env)',
   },
   {
     name: 'NOTIFICATION_SERVICE_URL',
