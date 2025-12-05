@@ -18,13 +18,20 @@ export class GatewayService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
+    // Ports configured in e-commerce/.env: PRODUCT_SERVICE_PORT (default: 3002), CART_SERVICE_PORT (default: 3009), etc.
+    const productPort = this.configService.get('PRODUCT_SERVICE_PORT') || '3002';
+    const cartPort = this.configService.get('CART_SERVICE_PORT') || '3009';
+    const orderPort = this.configService.get('ORDER_SERVICE_PORT') || '3003';
+    const warehousePort = this.configService.get('WAREHOUSE_SERVICE_PORT') || '3005';
+    const userPort = this.configService.get('USER_SERVICE_PORT') || '3004';
+
     this.serviceUrls = {
       auth: this.configService.get('AUTH_SERVICE_URL') || 'https://auth.statex.cz',
-      products: this.configService.get('PRODUCT_SERVICE_URL') || 'http://e-commerce-product-service:3002',
-      cart: this.configService.get('CART_SERVICE_URL') || 'http://e-commerce-cart-service:3009',
-      orders: this.configService.get('ORDER_SERVICE_URL') || 'http://e-commerce-order-service:3003',
-      warehouse: this.configService.get('WAREHOUSE_SERVICE_URL') || 'http://e-commerce-warehouse-service:3005',
-      users: this.configService.get('USER_SERVICE_URL') || 'http://e-commerce-user-service:3004',
+      products: this.configService.get('PRODUCT_SERVICE_URL') || `http://e-commerce-product-service:${productPort}`,
+      cart: this.configService.get('CART_SERVICE_URL') || `http://e-commerce-cart-service:${cartPort}`,
+      orders: this.configService.get('ORDER_SERVICE_URL') || `http://e-commerce-order-service:${orderPort}`,
+      warehouse: this.configService.get('WAREHOUSE_SERVICE_URL') || `http://e-commerce-warehouse-service:${warehousePort}`,
+      users: this.configService.get('USER_SERVICE_URL') || `http://e-commerce-user-service:${userPort}`,
     };
   }
 

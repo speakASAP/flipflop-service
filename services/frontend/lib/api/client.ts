@@ -2,7 +2,8 @@
  * API Client for flipflop.statex.cz
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3011/api';
+// Port configured in e-commerce/.env: API_GATEWAY_PORT (default: 3511 host, 3011 container)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || `http://localhost:${process.env.API_GATEWAY_PORT || '3011'}/api`;
 
 export interface ApiResponse<T = any> {
   success: boolean;

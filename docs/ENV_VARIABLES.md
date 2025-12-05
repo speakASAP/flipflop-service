@@ -311,8 +311,9 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 3. Set up SSH tunnel for database access:
 
    ```bash
-   ssh -L 5432:localhost:5432 statex
-   ssh -L 6379:localhost:6379 statex
+   # Ports configured in database-server/.env: DB_SERVER_PORT (default: 5432), REDIS_SERVER_PORT (default: 6379)
+   ssh -L ${DB_SERVER_PORT:-5432}:localhost:${DB_SERVER_PORT:-5432} statex
+   ssh -L ${REDIS_SERVER_PORT:-6379}:localhost:${REDIS_SERVER_PORT:-6379} statex
    ```
 
 4. Set `DB_HOST=localhost` and `REDIS_HOST=localhost`
