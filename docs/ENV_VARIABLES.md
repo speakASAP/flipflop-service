@@ -134,7 +134,7 @@ LOGGING_SERVICE_URL=https://logging.statex.cz
 # Option 1: Use production URL (if accessible)
 PAYMENT_SERVICE_URL=https://payments.statex.cz
 # Option 2: Use Docker network (if running locally)
-# PAYMENT_SERVICE_URL=http://payment-microservice:${SERVICE_PORT:-3468}  # port configured in payment-microservice/.env
+# PAYMENT_SERVICE_URL=http://payments-microservice:${SERVICE_PORT:-3468}  # port configured in payments-microservice/.env
 PAYMENT_API_KEY=<your-payment-api-key>
 
 # ============================================
@@ -215,7 +215,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 | `AUTH_SERVICE_URL` | Yes | Auth microservice URL | `https://auth.statex.cz` | `https://auth.statex.cz` or `http://auth-microservice:${PORT:-3370}` (port configured in `auth-microservice/.env`) |
 | `NOTIFICATION_SERVICE_URL` | Yes | Notification microservice URL | `https://notifications.statex.cz` | `https://notifications.statex.cz` or `http://notifications-microservice:${PORT:-3368}` (port configured in `notifications-microservice/.env`) |
 | `LOGGING_SERVICE_URL` | Yes | Logging microservice URL | `https://logging.statex.cz` | `https://logging.statex.cz` or `http://logging-microservice:${PORT:-3367}` (port configured in `logging-microservice/.env`) |
-| `PAYMENT_SERVICE_URL` | Yes | Payment microservice URL | `https://payments.statex.cz` | `https://payments.statex.cz` or `http://payment-microservice:${SERVICE_PORT:-3468}` (port configured in `payment-microservice/.env`) |
+| `PAYMENT_SERVICE_URL` | Yes | Payment microservice URL | `https://payments.statex.cz` | `https://payments.statex.cz` or `http://payments-microservice:${SERVICE_PORT:-3468}` (port configured in `payments-microservice/.env`) |
 | `PAYMENT_API_KEY` | Yes | API key for payment microservice | `<your-api-key>` | `<your-api-key>` |
 
 ### Database Configuration

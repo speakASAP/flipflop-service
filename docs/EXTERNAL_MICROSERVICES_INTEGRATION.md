@@ -97,7 +97,7 @@ All external microservices are **fully integrated** and being used throughout th
 **Service URL**:
 
 - Production: `https://payments.statex.cz`
-- Docker Network: `http://payment-microservice:3468`
+- Docker Network: `http://payments-microservice:3468`
 
 **Implementation**:
 
@@ -321,7 +321,7 @@ Before deploying, ensure:
 - [ ] `AUTH_SERVICE_URL` points to production auth-microservice
 - [ ] `NOTIFICATION_SERVICE_URL` points to production notifications-microservice
 - [ ] `LOGGING_SERVICE_URL` points to production logging-microservice
-- [ ] `PAYMENT_SERVICE_URL` points to production payment-microservice
+- [ ] `PAYMENT_SERVICE_URL` points to production payments-microservice
 - [ ] `PAYMENT_API_KEY` is set and valid
 - [ ] Database connection is configured (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`)
 - [ ] Redis connection is configured (if using caching)

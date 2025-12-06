@@ -1,6 +1,6 @@
 /**
  * Payment Service
- * Service to handle payments via external payment-microservice
+ * Service to handle payments via external payments-microservice
  */
 
 import { Injectable, BadRequestException } from '@nestjs/common';
@@ -46,7 +46,7 @@ export class PaymentService {
   }
 
   /**
-   * Internal method to call payment-microservice via HTTP
+   * Internal method to call payments-microservice via HTTP
    */
   private async callPaymentService<T>(
     endpoint: string,

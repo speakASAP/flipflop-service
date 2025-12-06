@@ -65,13 +65,13 @@ Services use host ports in the 35xx range, mapping to standard container ports:
 ## ✨ Features
 
 ✅ **Centralized Authentication** - Uses shared auth-microservice for all authentication operations
-✅ **Centralized Payments** - Uses shared payment-microservice for payment processing
+✅ **Centralized Payments** - Uses shared payments-microservice for payment processing
 ✅ **Centralized Notifications** - Uses shared notifications-microservice for multi-channel notifications
 ✅ **Centralized Logging** - Uses shared logging-microservice for centralized log collection
 ✅ User authentication and authorization (JWT via auth-microservice)
 ✅ Product catalog with search and filtering
 ✅ Shopping cart and checkout
-✅ Payment processing via payment-microservice (PayU, PayPal, Stripe, etc.)
+✅ Payment processing via payments-microservice (PayU, PayPal, Stripe, etc.)
 ✅ Order management and tracking
 ✅ Supplier integration and product synchronization
 ✅ AI shopping assistant
@@ -146,7 +146,7 @@ Configure services via `.env` files.
   - Docker/Development: `http://logging-microservice:3367`
 - `PAYMENT_SERVICE_URL` - Payment microservice URL (REQUIRED)
   - Production: `https://payments.statex.cz`
-  - Docker/Development: `http://payment-microservice:3468`
+  - Docker/Development: `http://payments-microservice:3468`
 - `PAYMENT_API_KEY` - API key for payment microservice (REQUIRED)
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` - Database configuration
 - `REDIS_HOST`, `REDIS_PORT` - Redis cache configuration
@@ -155,7 +155,7 @@ Configure services via `.env` files.
 **Note**:
 
 - JWT tokens are managed by auth-microservice. Services use the shared `AuthService` from `shared/auth/auth.service.ts` to interact with auth-microservice.
-- Payments are processed via payment-microservice. Services use the shared `PaymentService` from `shared/payments/payment.service.ts`.
+- Payments are processed via payments-microservice. Services use the shared `PaymentService` from `shared/payments/payment.service.ts`.
 - Notifications are sent via notifications-microservice. Services use the shared `NotificationService` from `shared/notifications/notification.service.ts`.
 - Logs are sent to logging-microservice. Services use the shared `LoggerService` from `shared/logger/logger.service.ts`.
 
