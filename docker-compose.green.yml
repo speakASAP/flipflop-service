@@ -21,9 +21,9 @@ services:
       - nginx-network
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 2
 
   api-gateway:
     build:
@@ -50,9 +50,9 @@ services:
       - nginx-network
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3011/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 2
 
   user-service:
     build:
@@ -78,9 +78,9 @@ services:
       - nginx-network
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3004/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 2
 
   product-service:
     build:
@@ -107,9 +107,9 @@ services:
       - nginx-network
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 2
 
   order-service:
     build:
@@ -135,9 +135,9 @@ services:
       - nginx-network
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 2
 
   cart-service:
     build:
@@ -163,9 +163,9 @@ services:
       - nginx-network
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3009/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 2
 
   warehouse-service:
     build:
@@ -191,9 +191,9 @@ services:
       - nginx-network
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3005/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 2
 
 networks:
   default:
