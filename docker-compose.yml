@@ -23,6 +23,12 @@ services:
       - NEXT_PUBLIC_API_URL=${API_URL:-http://localhost:3011}
     networks:
       - nginx-network
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+        reservations:
+          memory: 50M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -52,6 +58,12 @@ services:
       - PORT=3011
     networks:
       - nginx-network
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+        reservations:
+          memory: 70M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3011/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -80,6 +92,12 @@ services:
       - DB_NAME=${DB_NAME:-ecommerce}
     networks:
       - nginx-network
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+        reservations:
+          memory: 70M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3004/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -109,6 +127,12 @@ services:
       - DB_NAME=${DB_NAME:-ecommerce}
     networks:
       - nginx-network
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+        reservations:
+          memory: 70M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -137,6 +161,12 @@ services:
       - DB_NAME=${DB_NAME:-ecommerce}
     networks:
       - nginx-network
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+        reservations:
+          memory: 70M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -165,6 +195,12 @@ services:
       - DB_NAME=${DB_NAME:-ecommerce}
     networks:
       - nginx-network
+    deploy:
+      resources:
+        limits:
+          memory: 250M
+        reservations:
+          memory: 100M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3009/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -193,6 +229,12 @@ services:
       - DB_NAME=${DB_NAME:-ecommerce}
     networks:
       - nginx-network
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+        reservations:
+          memory: 70M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3005/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -221,6 +263,12 @@ services:
       - DB_NAME=${DB_NAME:-ecommerce}
     networks:
       - nginx-network
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+        reservations:
+          memory: 70M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3006/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
