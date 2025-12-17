@@ -8,6 +8,7 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { AxiosRequestConfig } from 'axios';
+import * as https from 'https';
 
 @Injectable()
 export class GatewayService {
@@ -24,6 +25,7 @@ export class GatewayService {
     const orderPort = this.configService.get('ORDER_SERVICE_PORT') || '3003';
     const warehousePort = this.configService.get('WAREHOUSE_SERVICE_PORT') || '3005';
     const userPort = this.configService.get('USER_SERVICE_PORT') || '3004';
+    const supplierPort = this.configService.get('SUPPLIER_SERVICE_PORT') || '3006';
 
     this.serviceUrls = {
       auth: this.configService.get('AUTH_SERVICE_URL') || 'https://auth.statex.cz',
@@ -32,6 +34,7 @@ export class GatewayService {
       orders: this.configService.get('ORDER_SERVICE_URL') || `http://e-commerce-order-service:${orderPort}`,
       warehouse: this.configService.get('WAREHOUSE_SERVICE_URL') || `http://e-commerce-warehouse-service:${warehousePort}`,
       users: this.configService.get('USER_SERVICE_URL') || `http://e-commerce-user-service:${userPort}`,
+      supplier: this.configService.get('SUPPLIER_SERVICE_URL') || `http://localhost:${supplierPort}`,
     };
   }
 
@@ -51,12 +54,17 @@ export class GatewayService {
     }
 
     const url = `${baseUrl}${path}`;
+    const nodeEnv = this.configService.get('NODE_ENV') || 'development';
     const config: AxiosRequestConfig = {
       headers: {
         'Content-Type': 'application/json',
         ...headers,
       },
       timeout: 30000,
+      // Disable SSL verification in development for external services
+      httpsAgent: nodeEnv === 'development' && url.startsWith('https://')
+        ? new https.Agent({ rejectUnauthorized: false })
+        : undefined,
     };
 
     this.logger.debug(`Forwarding ${method} ${url}`);

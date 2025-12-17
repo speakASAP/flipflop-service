@@ -103,7 +103,7 @@ export class HealthService {
         ),
       );
 
-      if (response.data?.success || response.data?.status === 'ok') {
+      if (response.data?.success || response.data?.status === 'ok' || response.data?.status === 'healthy') {
         return { status: 'ok' };
       }
 
@@ -137,7 +137,7 @@ export class HealthService {
         ),
       );
 
-      if (response.data?.success || response.data?.status === 'ok') {
+      if (response.data?.success || response.data?.status === 'ok' || response.data?.status === 'healthy') {
         return { status: 'ok' };
       }
 
@@ -171,7 +171,7 @@ export class HealthService {
         ),
       );
 
-      if (response.data?.success || response.data?.status === 'ok') {
+      if (response.data?.success || response.data?.status === 'ok' || response.data?.status === 'healthy') {
         return { status: 'ok' };
       }
 

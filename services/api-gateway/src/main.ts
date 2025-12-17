@@ -18,9 +18,16 @@ async function bootstrap() {
   );
 
   // Enable CORS
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  const allowedOrigins = nodeEnv === 'development'
+    ? ['http://localhost:3500', 'http://localhost:3000', 'https://flipflop.statex.cz']
+    : (process.env.CORS_ORIGIN || 'https://flipflop.statex.cz');
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'https://flipflop.statex.cz',
+    origin: allowedOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   const port = process.env.PORT || 3011;

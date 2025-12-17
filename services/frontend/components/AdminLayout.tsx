@@ -52,6 +52,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: '📈',
     },
     {
+      title: 'Synchronizace',
+      href: '/admin/sync',
+      icon: '🔄',
+    },
+    {
       title: 'Nastavení',
       href: '/admin/settings',
       icon: '⚙️',

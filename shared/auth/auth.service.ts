@@ -74,11 +74,11 @@ export class AuthService {
     const callFn = async () => this.callAuthService<AuthResponse>('/auth/register', dto);
 
     const breaker = this.circuitBreakerService.create(
-      'auth-service',
+      'auth-microservice',
       callFn,
     );
 
-    if (this.circuitBreakerService.isOpen('auth-service')) {
+    if (this.circuitBreakerService.isOpen('auth-microservice')) {
       this.logger.warn('Auth service circuit breaker is open', {
         action: 'register',
         email: dto.email,
@@ -98,7 +98,7 @@ export class AuthService {
         },
       );
 
-      this.resilienceMonitor.recordRetryAttempt('auth-service', true);
+      this.resilienceMonitor.recordRetryAttempt('auth-microservice', true);
 
       this.logger.log(`User registered successfully`, {
         email: dto.email,
@@ -107,7 +107,7 @@ export class AuthService {
 
       return response as AuthResponse;
     } catch (error: any) {
-      this.resilienceMonitor.recordRetryAttempt('auth-service', false);
+      this.resilienceMonitor.recordRetryAttempt('auth-microservice', false);
 
       this.logger.error('Failed to register user', {
         error: error.message,
@@ -126,11 +126,11 @@ export class AuthService {
     const callFn = async () => this.callAuthService<AuthResponse>('/auth/login', dto);
 
     const breaker = this.circuitBreakerService.create(
-      'auth-service',
+      'auth-microservice',
       callFn,
     );
 
-    if (this.circuitBreakerService.isOpen('auth-service')) {
+    if (this.circuitBreakerService.isOpen('auth-microservice')) {
       this.logger.warn('Auth service circuit breaker is open', {
         action: 'login',
         email: dto.email,
@@ -150,7 +150,7 @@ export class AuthService {
         },
       );
 
-      this.resilienceMonitor.recordRetryAttempt('auth-service', true);
+      this.resilienceMonitor.recordRetryAttempt('auth-microservice', true);
 
       this.logger.log(`User logged in successfully`, {
         email: dto.email,
@@ -159,7 +159,7 @@ export class AuthService {
 
       return response as AuthResponse;
     } catch (error: any) {
-      this.resilienceMonitor.recordRetryAttempt('auth-service', false);
+      this.resilienceMonitor.recordRetryAttempt('auth-microservice', false);
 
       this.logger.error('Failed to login user', {
         error: error.message,
@@ -187,11 +187,11 @@ export class AuthService {
     };
 
     const breaker = this.circuitBreakerService.create(
-      'auth-service',
+      'auth-microservice',
       callFn,
     );
 
-    if (this.circuitBreakerService.isOpen('auth-service')) {
+    if (this.circuitBreakerService.isOpen('auth-microservice')) {
       this.logger.warn('Auth service circuit breaker is open', {
         action: 'validateToken',
       });
@@ -210,11 +210,11 @@ export class AuthService {
         },
       );
 
-      this.resilienceMonitor.recordRetryAttempt('auth-service', true);
+      this.resilienceMonitor.recordRetryAttempt('auth-microservice', true);
 
       return user as AuthUser;
     } catch (error: any) {
-      this.resilienceMonitor.recordRetryAttempt('auth-service', false);
+      this.resilienceMonitor.recordRetryAttempt('auth-microservice', false);
 
       this.logger.error('Failed to validate token', {
         error: error.message,
@@ -233,11 +233,11 @@ export class AuthService {
       this.callAuthService<AuthResponse>('/auth/refresh', { refreshToken });
 
     const breaker = this.circuitBreakerService.create(
-      'auth-service',
+      'auth-microservice',
       callFn,
     );
 
-    if (this.circuitBreakerService.isOpen('auth-service')) {
+    if (this.circuitBreakerService.isOpen('auth-microservice')) {
       this.logger.warn('Auth service circuit breaker is open', {
         action: 'refreshToken',
       });
@@ -256,7 +256,7 @@ export class AuthService {
         },
       );
 
-      this.resilienceMonitor.recordRetryAttempt('auth-service', true);
+      this.resilienceMonitor.recordRetryAttempt('auth-microservice', true);
 
       this.logger.log(`Token refreshed successfully`, {
         userId: (response as AuthResponse)?.user?.id,
@@ -264,7 +264,7 @@ export class AuthService {
 
       return response as AuthResponse;
     } catch (error: any) {
-      this.resilienceMonitor.recordRetryAttempt('auth-service', false);
+      this.resilienceMonitor.recordRetryAttempt('auth-microservice', false);
 
       this.logger.error('Failed to refresh token', {
         error: error.message,

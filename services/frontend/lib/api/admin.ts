@@ -235,5 +235,56 @@ export const adminApi = {
       skipped: number;
     }>('/products/import', data);
   },
+
+  // Allegro Sync
+  async syncProductsFromAllegro(options?: {
+    productCodes?: string[];
+    syncAll?: boolean;
+  }) {
+    return apiClient.post<{
+      total: number;
+      products: Array<{
+        name: string;
+        sku: string;
+        description?: string;
+        price: number;
+        stockQuantity: number;
+        trackInventory: boolean;
+        [key: string]: unknown;
+      }>;
+      message: string;
+    }>('/allegro/sync', {
+      productCodes: options?.productCodes,
+      syncAll: options?.syncAll || false,
+    });
+  },
+
+  async getAllegroProducts(filters?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    active?: boolean;
+  }) {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const query = params.toString();
+    return apiClient.get<{
+      items: Array<Record<string, unknown>>;
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+        hasNext: boolean;
+        hasPrev: boolean;
+      };
+    }>(`/allegro/products${query ? `?${query}` : ''}`);
+  },
 };
 

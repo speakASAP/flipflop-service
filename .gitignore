@@ -43,3 +43,4 @@ Thumbs.db
 
 # Prisma
 prisma/migrations/
+.dev-pids

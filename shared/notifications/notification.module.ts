@@ -4,18 +4,30 @@
  */
 
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { NotificationService } from './notification.service';
 import { LoggerModule } from '../logger/logger.module';
 import { ResilienceModule } from '../resilience/resilience.module';
+import https from 'https';
 
 @Module({
   imports: [
     ConfigModule,
-    HttpModule.register({
-      timeout: 10000,
-      maxRedirects: 5,
+    HttpModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => {
+        const nodeEnv = configService.get('NODE_ENV') || 'development';
+        const httpsAgent = new https.Agent({
+          rejectUnauthorized: nodeEnv === 'production',
+        });
+        return {
+          timeout: 10000,
+          maxRedirects: 5,
+          httpsAgent,
+        };
+      },
+      inject: [ConfigService],
     }),
     LoggerModule,
     ResilienceModule,

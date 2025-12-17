@@ -29,9 +29,12 @@ export class GatewayController {
     const body = method !== 'GET' && method !== 'DELETE' ? req.body : undefined;
 
     try {
+      // Auth service expects paths like /auth/login, /auth/register, etc.
+      // The shared AuthService uses /auth/login, so we need to prepend /auth
+      const authPath = path.startsWith('/') ? `/auth${path}` : `/auth/${path}`;
       const response = await this.gatewayService.forwardRequest(
         'auth',
-        `/auth${path}`,
+        authPath,
         method,
         body,
         this.getHeaders(req),
@@ -114,6 +117,16 @@ export class GatewayController {
   async usersRoute(@Req() req: ExpressRequest, @Res() res: ExpressResponse) {
     const path = req.url.replace('/api/users', '');
     return this.routeRequest('users', `/users${path}`, req, res);
+  }
+
+  /**
+   * Route Allegro integration requests (requires auth)
+   */
+  @All('allegro/*')
+  @UseGuards(JwtAuthGuard)
+  async allegroRoute(@Req() req: ExpressRequest, @Res() res: ExpressResponse) {
+    const path = req.url.replace('/api/allegro', '');
+    return this.routeRequest('supplier', `/allegro${path}`, req, res);
   }
 
   /**

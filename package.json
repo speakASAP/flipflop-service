@@ -4,6 +4,8 @@
   "description": "E-commerce platform root",
   "private": true,
   "scripts": {
+    "dev": "./scripts/start-dev.sh",
+    "dev:stop": "./scripts/stop-dev.sh",
     "migration:run-direct": "ts-node scripts/run-migration-direct.ts"
   },
   "dependencies": {

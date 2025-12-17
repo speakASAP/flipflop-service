@@ -29,8 +29,12 @@ export class ProductsController {
   }
 
   @Get(':id')
-  async getProduct(@Param('id') id: string) {
-    const product = await this.productsService.getProduct(id);
+  async getProduct(
+    @Param('id') id: string,
+    @Query('includeWarehouse') includeWarehouse?: string,
+  ) {
+    const includeWarehouseData = includeWarehouse === 'true' || includeWarehouse === '1';
+    const product = await this.productsService.getProduct(id, includeWarehouseData);
     return ApiResponse.success(product);
   }
 }

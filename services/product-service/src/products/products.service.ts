@@ -6,20 +6,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@e-commerce/shared';
 import { LoggerService } from '@e-commerce/shared';
+import { WarehouseService } from './warehouse.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
+    private readonly warehouseService: WarehouseService,
   ) {}
 
   /**
    * Get products with pagination and filtering
    */
   async getProducts(filters: any) {
-    const page = filters.page || 1;
-    const limit = filters.limit || 20;
+    const page = Number(filters.page) || 1;
+    const limit = Number(filters.limit) || 20;
     const skip = (page - 1) * limit;
 
     const where: any = {
@@ -78,8 +80,19 @@ export class ProductsService {
       this.prisma.product.count({ where }),
     ]);
 
+    // Optionally enrich with warehouse data from Allegro
+    let warehouseData: Map<string, any> = new Map();
+    if (filters.includeWarehouse === 'true' || filters.includeWarehouse === true) {
+      const productCodes = items
+        .map((p) => p.sku)
+        .filter((sku) => sku && sku.trim() !== '');
+      if (productCodes.length > 0) {
+        warehouseData = await this.warehouseService.getWarehouseData(productCodes);
+      }
+    }
+
     return {
-      items: items.map((product) => this.mapProduct(product)),
+      items: items.map((product) => this.mapProduct(product, warehouseData)),
       pagination: {
         page,
         limit,
@@ -94,7 +107,7 @@ export class ProductsService {
   /**
    * Get product by ID
    */
-  async getProduct(id: string) {
+  async getProduct(id: string, includeWarehouse: boolean = false) {
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
@@ -113,7 +126,16 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
 
-    return this.mapProduct(product);
+    // Optionally enrich with warehouse data from Allegro
+    let warehouseData: Map<string, any> = new Map();
+    if (includeWarehouse && product.sku) {
+      const warehouse = await this.warehouseService.getProductWarehouseData(product.sku);
+      if (warehouse) {
+        warehouseData.set(product.sku, warehouse);
+      }
+    }
+
+    return this.mapProduct(product, warehouseData);
   }
 
   /**
@@ -249,14 +271,33 @@ export class ProductsService {
   /**
    * Map product to response format
    */
-  private mapProduct(product: any) {
+  private mapProduct(product: any, warehouseData?: Map<string, any>) {
+    const sku = product.sku;
+    const warehouse = warehouseData?.get(sku);
+
+    // Use warehouse data from Allegro if available, otherwise use local stockQuantity
+    const stockQuantity = warehouse?.stockQuantity ?? product.stockQuantity ?? 0;
+    const trackInventory = warehouse?.trackInventory ?? product.trackInventory ?? false;
+
     return {
       id: product.id,
       name: product.name,
       sku: product.sku,
       description: product.description,
       price: Number(product.price),
-      stockQuantity: product.stockQuantity,
+      stockQuantity,
+      trackInventory,
+      // Include warehouse data if available
+      ...(warehouse && {
+        warehouse: {
+          stockQuantity: warehouse.stockQuantity,
+          trackInventory: warehouse.trackInventory,
+          availability: warehouse.availability,
+          minimumRequiredStockQuantity: warehouse.minimumRequiredStockQuantity,
+          updatedAt: warehouse.updatedAt,
+          source: 'allegro',
+        },
+      }),
       brand: product.brand,
       mainImageUrl: product.mainImageUrl,
       imageUrls: (product.imageUrls as string[]) || [],
