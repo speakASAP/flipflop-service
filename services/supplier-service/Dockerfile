@@ -36,6 +36,8 @@ WORKDIR /app/services/supplier-service
 RUN npm install --include=dev
 # Verify tsconfig.json exists before building
 RUN ls -la tsconfig.json || (echo "tsconfig.json not found!" && exit 1)
+# Cache bust: verify package.json build script doesn't include tsc-alias
+RUN grep -q '"build": "tsc"' package.json || (echo "Build script still includes tsc-alias!" && exit 1)
 RUN npm run build
 
 # Expose port
