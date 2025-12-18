@@ -15,10 +15,10 @@ RUN npm install
 
 # Copy source code
 COPY shared ./shared
-COPY services/supplier-service ./services/supplier-service
 COPY prisma ./prisma
 COPY tsconfig.json ./
-COPY services/supplier-service/tsconfig.json ./services/supplier-service/
+# Copy supplier-service (this includes tsconfig.json)
+COPY services/supplier-service ./services/supplier-service
 
 # Install shared module dependencies first
 WORKDIR /app/shared
