@@ -4,7 +4,7 @@
   "description": "Supplier Service for E-commerce Platform - Allegro Integration",
   "main": "dist/main.js",
   "scripts": {
-    "build": "tsc && tsc-alias -p tsconfig.json",
+    "build": "tsc",
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
     "start:watch": "ts-node-dev --respawn src/main.ts"
