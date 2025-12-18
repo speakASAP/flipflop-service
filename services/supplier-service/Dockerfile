@@ -18,6 +18,7 @@ COPY shared ./shared
 COPY services/supplier-service ./services/supplier-service
 COPY prisma ./prisma
 COPY tsconfig.json ./
+COPY services/supplier-service/tsconfig.json ./services/supplier-service/
 
 # Install shared module dependencies first
 WORKDIR /app/shared
