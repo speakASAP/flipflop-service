@@ -121,13 +121,13 @@ print_info "To stop all services, press Ctrl+C or run: npm run dev:stop"
 print_info ""
 print_info "Service URLs:"
 print_info "  Frontend: http://localhost:${FRONTEND_PORT:-3500}"
-print_info "  API Gateway: http://localhost:${API_GATEWAY_PORT:-3511}"
-print_info "  User Service: http://localhost:${USER_SERVICE_PORT:-3504}"
 print_info "  Product Service: http://localhost:${PRODUCT_SERVICE_PORT:-3502}"
 print_info "  Order Service: http://localhost:${ORDER_SERVICE_PORT:-3503}"
-print_info "  Cart Service: http://localhost:${CART_SERVICE_PORT:-3509}"
+print_info "  User Service: http://localhost:${USER_SERVICE_PORT:-3504}"
 print_info "  Warehouse Service: http://localhost:${WAREHOUSE_SERVICE_PORT:-3505}"
 print_info "  Supplier Service: http://localhost:${SUPPLIER_SERVICE_PORT:-3506}"
+print_info "  Cart Service: http://localhost:${CART_SERVICE_PORT:-3509}"
+print_info "  API Gateway: http://localhost:${API_GATEWAY_PORT:-3511}"
 
 # Keep script running
 wait

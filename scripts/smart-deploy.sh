@@ -173,9 +173,6 @@ deploy_service() {
             port="3000"
             health_endpoint="/"
             ;;
-        api-gateway)
-            port="3011"
-            ;;
         product-service)
             port="3002"
             ;;
@@ -193,6 +190,9 @@ deploy_service() {
             ;;
         cart-service)
             port="3009"
+            ;;
+        api-gateway)
+            port="3011"
             ;;
     esac
     
