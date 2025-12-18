@@ -8,6 +8,9 @@ RUN apt-get update -y && apt-get install -y openssl libssl-dev && rm -rf /var/li
 
 WORKDIR /app
 
+# Use CACHE_BUST to invalidate cache for package.json COPY steps
+RUN echo "Cache bust: ${CACHE_BUST}"
+
 # Copy package files
 COPY package.json package-lock.json* ./
 COPY shared/package.json shared/package-lock.json* ./shared/
