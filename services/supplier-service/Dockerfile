@@ -1,5 +1,8 @@
 FROM node:lts-slim
 
+# Build argument to force cache invalidation
+ARG CACHE_BUST=1
+
 # Install OpenSSL for Prisma
 RUN apt-get update -y && apt-get install -y openssl libssl-dev && rm -rf /var/lib/apt/lists/*
 
