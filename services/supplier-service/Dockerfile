@@ -34,6 +34,8 @@ RUN npm run build
 # Build service
 WORKDIR /app/services/supplier-service
 RUN npm install --include=dev
+# Verify tsconfig.json exists before building
+RUN ls -la tsconfig.json || (echo "tsconfig.json not found!" && exit 1)
 RUN npm run build
 
 # Expose port
