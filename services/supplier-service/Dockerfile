@@ -1,9 +1,9 @@
 FROM node:lts-slim
 
-WORKDIR /app
-
-# Install OpenSSL for PostgreSQL connections
+# Install OpenSSL for Prisma
 RUN apt-get update -y && apt-get install -y openssl libssl-dev && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
@@ -16,17 +16,30 @@ RUN npm install
 # Copy source code
 COPY shared ./shared
 COPY services/supplier-service ./services/supplier-service
+COPY prisma ./prisma
+COPY tsconfig.json ./
+
+# Install shared module dependencies first
+WORKDIR /app/shared
+RUN npm install --legacy-peer-deps
+
+# Generate Prisma Client in shared module (needed for AdminSettings type)
+RUN cp -r ../prisma ./prisma || true
+RUN npx prisma generate --schema=./prisma/schema.prisma || npx prisma generate
 
 # Build shared module
-WORKDIR /app/shared
 RUN npm run build
 
-# Build supplier-service
+# Build service
 WORKDIR /app/services/supplier-service
+RUN npm install --include=dev
 RUN npm run build
 
 # Expose port
 EXPOSE 3006
+
+# Set NODE_PATH to include shared node_modules for runtime module resolution
+ENV NODE_PATH=/app/shared/node_modules:/app/node_modules
 
 # Start service
 CMD ["node", "dist/main.js"]
