@@ -53,6 +53,11 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=3011
+      - DB_HOST=${DB_HOST:-db-server-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-dbadmin}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-ecommerce}
     networks:
       - nginx-network
     deploy:
