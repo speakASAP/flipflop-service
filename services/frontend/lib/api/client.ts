@@ -2,8 +2,18 @@
  * API Client for flipflop.statex.cz
  */
 
-// Port configured in e-commerce/.env: API_GATEWAY_PORT (default: 3511 host, 3011 container)
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || `http://localhost:${process.env.API_GATEWAY_PORT || '3011'}/api`;
+// For SSR (server-side), use internal Docker network URL
+// For client-side, use external URL from NEXT_PUBLIC_API_URL
+const getApiBaseUrl = () => {
+  // On server-side (SSR), use internal Docker network URL
+  if (typeof window === 'undefined') {
+    return process.env.API_URL || 'http://api-gateway:3011/api';
+  }
+  // On client-side, use external URL
+  return process.env.NEXT_PUBLIC_API_URL || `http://localhost:${process.env.API_GATEWAY_PORT || '3011'}/api`;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export interface ApiResponse<T = any> {
   success: boolean;

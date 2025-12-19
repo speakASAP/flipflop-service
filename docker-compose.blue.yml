@@ -20,7 +20,8 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=3000
-      - NEXT_PUBLIC_API_URL=${API_URL:-http://localhost:3011}
+      - API_URL=http://api-gateway:3011/api
+      - NEXT_PUBLIC_API_URL=${API_URL:-https://flipflop.statex.cz/api}
     networks:
       - nginx-network
     deploy:
