@@ -43,12 +43,7 @@ services:
     ports:
       - ${API_GATEWAY_PORT:-3511}:3011
     depends_on:
-      - user-service
-      - product-service
-      - order-service
       - cart-service
-      - warehouse-service
-      - supplier-service
     volumes:
       - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
     environment:
@@ -114,6 +109,8 @@ services:
       - .env
     ports:
       - ${PRODUCT_SERVICE_PORT:-3502}:3002
+    depends_on:
+      - user-service
     volumes:
       - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
       - /srv/storagebox/statex/docker-volumes/e-commerce/uploads:/app/uploads
@@ -150,6 +147,8 @@ services:
       - .env
     ports:
       - ${ORDER_SERVICE_PORT:-3503}:3003
+    depends_on:
+      - supplier-service
     volumes:
       - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
     environment:
@@ -185,6 +184,8 @@ services:
       - .env
     ports:
       - ${CART_SERVICE_PORT:-3509}:3009
+    depends_on:
+      - order-service
     volumes:
       - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
     environment:
@@ -220,6 +221,8 @@ services:
       - .env
     ports:
       - ${WAREHOUSE_SERVICE_PORT:-3505}:3005
+    depends_on:
+      - product-service
     volumes:
       - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
     environment:
@@ -255,6 +258,8 @@ services:
       - .env
     ports:
       - ${SUPPLIER_SERVICE_PORT:-3506}:3006
+    depends_on:
+      - warehouse-service
     volumes:
       - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
     environment:
