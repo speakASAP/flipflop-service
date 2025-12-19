@@ -1,7 +1,7 @@
 {
-  "name": "e-commerce-root",
+  "name": "flipflop-root",
   "version": "1.0.0",
-  "description": "E-commerce platform root",
+  "description": "FlipFlop flipflop platform root",
   "private": true,
   "scripts": {
     "dev": "./scripts/start-dev.sh",

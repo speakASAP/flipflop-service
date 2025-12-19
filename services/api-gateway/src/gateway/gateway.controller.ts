@@ -12,7 +12,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { GatewayService } from './gateway.service';
-import { JwtAuthGuard } from '@e-commerce/shared';
+import { JwtAuthGuard } from '@flipflop/shared';
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 
 @Controller('api')

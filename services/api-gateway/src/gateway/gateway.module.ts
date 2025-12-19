@@ -7,7 +7,7 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GatewayController } from './gateway.controller';
 import { GatewayService } from './gateway.service';
-import { AuthModule } from '@e-commerce/shared';
+import { AuthModule } from '@flipflop/shared';
 import * as https from 'https';
 
 @Module({

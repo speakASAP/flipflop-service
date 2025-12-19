@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: ./services/frontend/Dockerfile
-    container_name: e-commerce-frontend
+    container_name: flipflop-frontend
     restart: unless-stopped
     env_file:
       - .env
@@ -12,7 +12,7 @@ services:
     depends_on:
       - api-gateway
     volumes:
-      - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
+      - /srv/storagebox/statex/docker-volumes/flipflop/logs:/app/logs
       # Note: Do not mount source code in production - use standalone build output
       # - ./services/frontend:/app  # Removed: overwrites standalone build
       # - /app/node_modules  # Not needed with standalone
@@ -39,7 +39,7 @@ services:
     build:
       context: .
       dockerfile: ./services/api-gateway/Dockerfile
-    container_name: e-commerce-api-gateway
+    container_name: flipflop-api-gateway
     restart: unless-stopped
     env_file:
       - .env
@@ -52,7 +52,7 @@ services:
       - cart-service
       - warehouse-service
     volumes:
-      - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
+      - /srv/storagebox/statex/docker-volumes/flipflop/logs:/app/logs
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3011
@@ -74,14 +74,14 @@ services:
     build:
       context: .
       dockerfile: ./services/user-service/Dockerfile
-    container_name: e-commerce-user-service
+    container_name: flipflop-user-service
     restart: unless-stopped
     env_file:
       - .env
     ports:
       - ${USER_SERVICE_PORT:-3504}:3004
     volumes:
-      - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
+      - /srv/storagebox/statex/docker-volumes/flipflop/logs:/app/logs
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3004
@@ -89,7 +89,7 @@ services:
       - DB_PORT=${DB_PORT:-5432}
       - DB_USER=${DB_USER:-dbadmin}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME:-ecommerce}
+      - DB_NAME=${DB_NAME:-flipflop}
     networks:
       - nginx-network
     deploy:
@@ -108,15 +108,15 @@ services:
     build:
       context: .
       dockerfile: ./services/product-service/Dockerfile
-    container_name: e-commerce-product-service
+    container_name: flipflop-product-service
     restart: unless-stopped
     env_file:
       - .env
     ports:
       - ${PRODUCT_SERVICE_PORT:-3502}:3002
     volumes:
-      - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
-      - /srv/storagebox/statex/docker-volumes/e-commerce/uploads:/app/uploads
+      - /srv/storagebox/statex/docker-volumes/flipflop/logs:/app/logs
+      - /srv/storagebox/statex/docker-volumes/flipflop/uploads:/app/uploads
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3002
@@ -124,7 +124,7 @@ services:
       - DB_PORT=${DB_PORT:-5432}
       - DB_USER=${DB_USER:-dbadmin}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME:-ecommerce}
+      - DB_NAME=${DB_NAME:-flipflop}
     networks:
       - nginx-network
     deploy:
@@ -143,14 +143,14 @@ services:
     build:
       context: .
       dockerfile: ./services/order-service/Dockerfile
-    container_name: e-commerce-order-service
+    container_name: flipflop-order-service
     restart: unless-stopped
     env_file:
       - .env
     ports:
       - ${ORDER_SERVICE_PORT:-3503}:3003
     volumes:
-      - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
+      - /srv/storagebox/statex/docker-volumes/flipflop/logs:/app/logs
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3003
@@ -158,7 +158,7 @@ services:
       - DB_PORT=${DB_PORT:-5432}
       - DB_USER=${DB_USER:-dbadmin}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME:-ecommerce}
+      - DB_NAME=${DB_NAME:-flipflop}
     networks:
       - nginx-network
     deploy:
@@ -177,14 +177,14 @@ services:
     build:
       context: .
       dockerfile: ./services/cart-service/Dockerfile
-    container_name: e-commerce-cart-service
+    container_name: flipflop-cart-service
     restart: unless-stopped
     env_file:
       - .env
     ports:
       - ${CART_SERVICE_PORT:-3509}:3009
     volumes:
-      - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
+      - /srv/storagebox/statex/docker-volumes/flipflop/logs:/app/logs
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3009
@@ -192,7 +192,7 @@ services:
       - DB_PORT=${DB_PORT:-5432}
       - DB_USER=${DB_USER:-dbadmin}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME:-ecommerce}
+      - DB_NAME=${DB_NAME:-flipflop}
     networks:
       - nginx-network
     deploy:
@@ -211,14 +211,14 @@ services:
     build:
       context: .
       dockerfile: ./services/warehouse-service/Dockerfile
-    container_name: e-commerce-warehouse-service
+    container_name: flipflop-warehouse-service
     restart: unless-stopped
     env_file:
       - .env
     ports:
       - ${WAREHOUSE_SERVICE_PORT:-3505}:3005
     volumes:
-      - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
+      - /srv/storagebox/statex/docker-volumes/flipflop/logs:/app/logs
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3005
@@ -226,7 +226,7 @@ services:
       - DB_PORT=${DB_PORT:-5432}
       - DB_USER=${DB_USER:-dbadmin}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME:-ecommerce}
+      - DB_NAME=${DB_NAME:-flipflop}
     networks:
       - nginx-network
     deploy:
@@ -245,14 +245,14 @@ services:
     build:
       context: .
       dockerfile: ./services/supplier-service/Dockerfile
-    container_name: e-commerce-supplier-service
+    container_name: flipflop-supplier-service
     restart: unless-stopped
     env_file:
       - .env
     ports:
       - ${SUPPLIER_SERVICE_PORT:-3506}:3006
     volumes:
-      - /srv/storagebox/statex/docker-volumes/e-commerce/logs:/app/logs
+      - /srv/storagebox/statex/docker-volumes/flipflop/logs:/app/logs
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3006
@@ -260,7 +260,7 @@ services:
       - DB_PORT=${DB_PORT:-5432}
       - DB_USER=${DB_USER:-dbadmin}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME:-ecommerce}
+      - DB_NAME=${DB_NAME:-flipflop}
     networks:
       - nginx-network
     deploy:

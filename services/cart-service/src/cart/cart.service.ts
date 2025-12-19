@@ -4,8 +4,8 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '@e-commerce/shared';
-import { LoggerService } from '@e-commerce/shared';
+import { PrismaService } from '@flipflop/shared';
+import { LoggerService } from '@flipflop/shared';
 
 @Injectable()
 export class CartService {

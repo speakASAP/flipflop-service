@@ -1,7 +1,7 @@
 {
   "name": "product-service",
   "version": "1.0.0",
-  "description": "Product Service for E-commerce Platform",
+  "description": "Product Service for FlipFlop Platform",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc && tsc-alias",
@@ -10,7 +10,7 @@
     "start:watch": "ts-node-dev --respawn src/main.ts"
   },
   "dependencies": {
-    "@e-commerce/shared": "file:../../shared",
+    "@flipflop/shared": "file:../../shared",
     "@nestjs-modules/ioredis": "^2.0.2",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^10.0.0",

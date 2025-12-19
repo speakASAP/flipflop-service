@@ -3,7 +3,7 @@
  */
 
 import { Controller, Get } from '@nestjs/common';
-import { HealthService } from '@e-commerce/shared';
+import { HealthService } from '@flipflop/shared';
 
 @Controller('health')
 export class HealthController {

@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { JwtAuthGuard, ApiResponse } from '@e-commerce/shared';
+import { JwtAuthGuard, ApiResponse } from '@flipflop/shared';
 
 @Controller('orders')
 @UseGuards(JwtAuthGuard)

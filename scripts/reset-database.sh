@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Database Reset Script
-# Drops and recreates the ecommerce database on production server
+# Drops and recreates the flipflop database on production server
 
 set -e
 
@@ -14,7 +14,7 @@ fi
 DB_HOST=${DB_HOST:-localhost}
 DB_PORT=${DB_PORT:-5432}
 DB_USER=${DB_USER:-dbadmin}
-DB_NAME=${DB_NAME:-ecommerce}
+DB_NAME=${DB_NAME:-flipflop}
 
 echo "Resetting database: $DB_NAME on $DB_HOST:$DB_PORT"
 

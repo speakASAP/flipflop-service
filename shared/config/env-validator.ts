@@ -292,7 +292,7 @@ export const databaseDefinitions: EnvVarDefinition[] = [
     name: 'DB_NAME',
     required: true,
     type: 'string',
-    default: 'ecommerce',
+    default: 'flipflop',
     description: 'Database name',
   },
   {

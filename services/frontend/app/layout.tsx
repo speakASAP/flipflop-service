@@ -8,8 +8,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "flipflop.statex.cz - Modern E-commerce Platform",
-  description: "Modern, fully automated e-commerce platform for the Czech Republic",
+  title: "flipflop.statex.cz - Modern flipflop Platform",
+  description: "Modern, fully automated flipflop platform for the Czech Republic",
 };
 
 export default function RootLayout({

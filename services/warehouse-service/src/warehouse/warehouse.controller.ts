@@ -14,7 +14,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { WarehouseService } from './warehouse.service';
-import { JwtAuthGuard, ApiResponse } from '@e-commerce/shared';
+import { JwtAuthGuard, ApiResponse } from '@flipflop/shared';
 
 @Controller('warehouse')
 @UseGuards(JwtAuthGuard)

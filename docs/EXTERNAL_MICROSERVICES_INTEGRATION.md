@@ -1,6 +1,6 @@
 # External Microservices Integration Summary
 
-This document summarizes the integration of external shared microservices into the e-commerce platform.
+This document summarizes the integration of external shared microservices into the flipflop platform.
 
 ## ✅ Integration Status
 
@@ -147,7 +147,7 @@ All external microservices are **fully integrated** and being used throughout th
 - `DB_PORT` (default: `5432`)
 - `DB_USER` (default: `dbadmin`)
 - `DB_PASSWORD` (required)
-- `DB_NAME` (default: `ecommerce`)
+- `DB_NAME` (default: `flipflop`)
 - `DATABASE_URL` (auto-constructed if not set)
 
 **Note**: PrismaService automatically constructs `DATABASE_URL` from `DB_*` variables if not explicitly set.
@@ -197,7 +197,7 @@ DB_HOST=db-server-postgres
 DB_PORT=5432
 DB_USER=dbadmin
 DB_PASSWORD=<your-password>
-DB_NAME=ecommerce
+DB_NAME=flipflop
 
 # Redis (optional)
 REDIS_HOST=db-server-redis
@@ -228,7 +228,7 @@ See [ENV_VARIABLES.md](./ENV_VARIABLES.md) for complete reference.
 ### Using Auth Service
 
 ```typescript
-import { AuthService } from '@e-commerce/shared';
+import { AuthService } from '@flipflop/shared';
 
 @Injectable()
 export class MyService {
@@ -243,7 +243,7 @@ export class MyService {
 ### Using Notification Service
 
 ```typescript
-import { NotificationService } from '@e-commerce/shared';
+import { NotificationService } from '@flipflop/shared';
 
 @Injectable()
 export class MyService {
@@ -263,7 +263,7 @@ export class MyService {
 ### Using Payment Service
 
 ```typescript
-import { PaymentService } from '@e-commerce/shared';
+import { PaymentService } from '@flipflop/shared';
 
 @Injectable()
 export class MyService {
@@ -283,7 +283,7 @@ export class MyService {
 ### Using Logger Service
 
 ```typescript
-import { LoggerService } from '@e-commerce/shared';
+import { LoggerService } from '@flipflop/shared';
 
 @Injectable()
 export class MyService {
@@ -298,7 +298,7 @@ export class MyService {
 ### Using Database (Prisma)
 
 ```typescript
-import { PrismaService } from '@e-commerce/shared';
+import { PrismaService } from '@flipflop/shared';
 
 @Injectable()
 export class MyService {

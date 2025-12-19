@@ -1,14 +1,14 @@
 {
-  "name": "@e-commerce/shared",
+  "name": "@flipflop/shared",
   "version": "1.0.0",
-  "description": "Shared utilities, types, and modules for e-commerce microservices",
+  "description": "Shared utilities, types, and modules for flipflop microservices",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "e-commerce",
+    "flipflop",
     "shared",
     "types"
   ],

@@ -8,7 +8,7 @@ import { HttpModule } from '@nestjs/axios';
 import { ProductsController, CategoriesController, AdminProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 import { WarehouseService } from './warehouse.service';
-import { PrismaModule, AuthModule, LoggerModule, RedisModule } from '@e-commerce/shared';
+import { PrismaModule, AuthModule, LoggerModule, RedisModule } from '@flipflop/shared';
 import * as https from 'https';
 
 @Module({

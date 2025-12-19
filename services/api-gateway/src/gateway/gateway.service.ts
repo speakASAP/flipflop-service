@@ -19,7 +19,7 @@ export class GatewayService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
-    // Ports configured in e-commerce/.env: PRODUCT_SERVICE_PORT (default: 3002), CART_SERVICE_PORT (default: 3009), etc.
+    // Ports configured in flipflop/.env: PRODUCT_SERVICE_PORT (default: 3002), CART_SERVICE_PORT (default: 3009), etc.
     const productPort = this.configService.get('PRODUCT_SERVICE_PORT') || '3002';
     const cartPort = this.configService.get('CART_SERVICE_PORT') || '3009';
     const orderPort = this.configService.get('ORDER_SERVICE_PORT') || '3003';
@@ -29,11 +29,11 @@ export class GatewayService {
 
     this.serviceUrls = {
       auth: this.configService.get('AUTH_SERVICE_URL') || 'https://auth.statex.cz',
-      products: this.configService.get('PRODUCT_SERVICE_URL') || `http://e-commerce-product-service:${productPort}`,
-      cart: this.configService.get('CART_SERVICE_URL') || `http://e-commerce-cart-service:${cartPort}`,
-      orders: this.configService.get('ORDER_SERVICE_URL') || `http://e-commerce-order-service:${orderPort}`,
-      warehouse: this.configService.get('WAREHOUSE_SERVICE_URL') || `http://e-commerce-warehouse-service:${warehousePort}`,
-      users: this.configService.get('USER_SERVICE_URL') || `http://e-commerce-user-service:${userPort}`,
+      products: this.configService.get('PRODUCT_SERVICE_URL') || `http://flipflop-product-service:${productPort}`,
+      cart: this.configService.get('CART_SERVICE_URL') || `http://flipflop-cart-service:${cartPort}`,
+      orders: this.configService.get('ORDER_SERVICE_URL') || `http://flipflop-order-service:${orderPort}`,
+      warehouse: this.configService.get('WAREHOUSE_SERVICE_URL') || `http://flipflop-warehouse-service:${warehousePort}`,
+      users: this.configService.get('USER_SERVICE_URL') || `http://flipflop-user-service:${userPort}`,
       supplier: this.configService.get('SUPPLIER_SERVICE_URL') || `http://localhost:${supplierPort}`,
     };
   }

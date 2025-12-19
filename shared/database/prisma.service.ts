@@ -42,7 +42,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       const dbPort = process.env.DB_PORT || '5432';
       const dbUser = process.env.DB_USER || 'dbadmin';
       const dbPassword = process.env.DB_PASSWORD || '';
-      const dbName = process.env.DB_NAME || 'ecommerce';
+      const dbName = process.env.DB_NAME || 'flipflop';
       
       // URL encode password to handle special characters (/, +, =, @, etc.)
       const encodedPassword = encodeURIComponent(dbPassword);

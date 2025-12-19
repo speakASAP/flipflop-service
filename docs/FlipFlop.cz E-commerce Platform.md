@@ -1,8 +1,8 @@
-# **Technical Specification: flipflop.statex.cz E-commerce Platform**
+# **Technical Specification: flipflop.statex.cz flipflop Platform**
 
 ## **Project Overview**
 
-Create a modern, fully automated e-commerce platform for selling diverse product categories in the Czech Republic (<https://flipflop.statex.cz/>). The platform will integrate with multiple wholesale suppliers via APIs, automatically synchronize product data, process orders, and handle the entire customer journey from product discovery to delivery with minimal human intervention.
+Create a modern, fully automated flipflop platform for selling diverse product categories in the Czech Republic (<https://flipflop.statex.cz/>). The platform will integrate with multiple wholesale suppliers via APIs, automatically synchronize product data, process orders, and handle the entire customer journey from product discovery to delivery with minimal human intervention.
 
 **Primary Goal**: Maximize conversion rates and encourage repeat purchases through automation, speed, user-friendly design, and high-quality product presentation.
 
@@ -114,7 +114,7 @@ Create a modern, fully automated e-commerce platform for selling diverse product
 * Maximum image quality and size  
 * Minimal text, maximum visuals  
 * Inspiration: Amazon, AliExpress, eBay product presentation  
-* Copy successful design patterns from top-performing e-commerce platforms
+* Copy successful design patterns from top-performing flipflop platforms
 
 ### **3.2 Product Display**
 
@@ -401,7 +401,7 @@ Create a modern, fully automated e-commerce platform for selling diverse product
 * Already running in separate Docker container (`db-server-postgres`, `db-server-redis`)
 * Not part of this project deployment
 * Accessible via Docker network (`db-server-postgres:5432`) or SSH tunnel for local development
-* Used by multiple applications: e-commerce, statex.cz, crypto-ai-agent, etc.
+* Used by multiple applications: flipflop, statex.cz, crypto-ai-agent, etc.
 
 ### **8.7 Nginx**
 
@@ -459,7 +459,7 @@ Create a modern, fully automated e-commerce platform for selling diverse product
    * Basic product card with image, name, price  
    * Simple product detail page  
    * Basic filtering (category)  
-2. **Essential E-commerce Functions**  
+2. **Essential flipflop Functions**  
    * Shopping cart  
    * Basic checkout process  
    * Single payment gateway integration  
@@ -924,7 +924,7 @@ Create a modern, fully automated e-commerce platform for selling diverse product
 
 ---
 
-1. Initiate current project with <git@github.com>:speakASAP/e-commerce.git repository
+1. Initiate current project with <git@github.com>:speakASAP/flipflop.git repository
 2. create separate microservice as notification service in separate project in ../notification-microservice and initiate it with <git@github.com>:speakASAP/notification-microservice.git repository
 3. create separate logging-microservice in separate project in ../logging-microservice and initiate it with <git@github.com>:speakASAP/logging-microservice.git repository
 4. Use existing microservices ../nginx-microservice and ../database-server to connect there.
@@ -934,7 +934,7 @@ Create a modern, fully automated e-commerce platform for selling diverse product
 
 ## **Final Notes**
 
-This specification represents a complete, feature-rich e-commerce platform. Every detail has been preserved from the original requirements. The development should proceed in phases, starting with MVP functionality and progressively adding advanced features.
+This specification represents a complete, feature-rich flipflop platform. Every detail has been preserved from the original requirements. The development should proceed in phases, starting with MVP functionality and progressively adding advanced features.
 
 **Key Success Factors:**
 

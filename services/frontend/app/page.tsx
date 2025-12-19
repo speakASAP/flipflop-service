@@ -26,7 +26,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Banner - E-commerce style */}
+      {/* Hero Banner - flipflop style */}
       <section className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
         {/* Animated background elements */}

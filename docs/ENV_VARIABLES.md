@@ -1,6 +1,6 @@
 # Environment Variables Reference
 
-This document lists all required and optional environment variables for the e-commerce platform, organized by microservice and environment (production vs development).
+This document lists all required and optional environment variables for the flipflop platform, organized by microservice and environment (production vs development).
 
 ## 📋 Quick Reference
 
@@ -11,7 +11,8 @@ This document lists all required and optional environment variables for the e-co
 # Application Configuration
 # ============================================
 NODE_ENV=production
-SERVICE_NAME=e-commerce
+SERVICE_NAME=flipflop
+DOMAIN=flipflop.statex.cz
 
 # ============================================
 # External Shared Microservices
@@ -38,7 +39,7 @@ DB_HOST=db-server-postgres
 DB_PORT=${DB_SERVER_PORT:-5432}  # From database-server/.env
 DB_USER=dbadmin
 DB_PASSWORD=<your-db-password>
-DB_NAME=ecommerce
+DB_NAME=flipflop
 
 # Prisma requires DATABASE_URL (constructed from above or set directly)
 DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=public
@@ -55,7 +56,7 @@ REDIS_DB=0
 # ============================================
 # Service Ports (Container Ports)
 # Note: Host ports are 35xx range (3500, 3502-3509, 3511) as per README.md
-# All ports configured in e-commerce/.env - values shown are defaults
+# All ports configured in flipflop/.env - values shown are defaults
 # ============================================
 API_GATEWAY_PORT=3011  # Container port (Host port: 3511)
 USER_SERVICE_PORT=3004  # Container port (Host port: 3504)
@@ -106,7 +107,8 @@ NEXT_PUBLIC_API_URL=https://flipflop.statex.cz/api
 # Application Configuration
 # ============================================
 NODE_ENV=development
-SERVICE_NAME=e-commerce
+SERVICE_NAME=flipflop
+DOMAIN=flipflop.statex.cz
 
 # ============================================
 # External Shared Microservices
@@ -145,7 +147,7 @@ DB_HOST=localhost
 DB_PORT=${DB_SERVER_PORT:-5432}  # From database-server/.env
 DB_USER=dbadmin
 DB_PASSWORD=<your-db-password>
-DB_NAME=ecommerce
+DB_NAME=flipflop
 
 # Prisma requires DATABASE_URL (constructed from above or set directly)
 DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=public
@@ -162,7 +164,7 @@ REDIS_DB=0
 # ============================================
 # Service Ports (Container Ports)
 # Note: Host ports are 35xx range (3500, 3502-3509, 3511) as per README.md
-# All ports configured in e-commerce/.env - values shown are defaults
+# All ports configured in flipflop/.env - values shown are defaults
 # ============================================
 API_GATEWAY_PORT=3011  # Container port (Host port: 3511)
 USER_SERVICE_PORT=3004  # Container port (Host port: 3504)
@@ -226,7 +228,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 | `DB_PORT` | Yes | Database port | `${DB_SERVER_PORT:-5432}` | `${DB_SERVER_PORT:-5432}` (port configured in `database-server/.env`) |
 | `DB_USER` | Yes | Database username | `dbadmin` | `dbadmin` |
 | `DB_PASSWORD` | Yes | Database password | `<secret>` | `<secret>` |
-| `DB_NAME` | Yes | Database name | `ecommerce` | `ecommerce` |
+| `DB_NAME` | Yes | Database name | `flipflop` | `flipflop` |
 | `DATABASE_URL` | Yes | Prisma connection string | Auto-constructed or set directly | Auto-constructed or set directly |
 
 **Note**: `DATABASE_URL` can be constructed from `DB_*` variables or set directly. Format: `postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=public`

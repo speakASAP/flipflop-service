@@ -25,7 +25,7 @@ The smart deployment system optimizes the blue/green deployment process by only 
 Use the smart deployment script on the production server:
 
 ```bash
-ssh statex "cd /home/statex/nginx-microservice && ./scripts/blue-green/deploy-smart.sh e-commerce"
+ssh statex "cd /home/statex/nginx-microservice && ./scripts/blue-green/deploy-smart.sh flipflop"
 ```
 
 This will:
@@ -86,7 +86,7 @@ Hashes are stored in `.deploy-hashes/` directory (gitignored). Each service has 
 If you need to use the standard deployment (rebuilds everything):
 
 ```bash
-ssh statex "cd /home/statex/nginx-microservice && ./scripts/blue-green/deploy.sh e-commerce"
+ssh statex "cd /home/statex/nginx-microservice && ./scripts/blue-green/deploy.sh flipflop"
 ```
 
 ## Troubleshooting

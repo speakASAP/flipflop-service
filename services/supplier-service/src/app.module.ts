@@ -5,7 +5,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AllegroIntegrationModule } from './allegro/allegro-integration.module';
-import { LoggerModule, AuthModule } from '@e-commerce/shared';
+import { LoggerModule, AuthModule } from '@flipflop/shared';
 import { HealthController } from './health/health.controller';
 
 @Module({

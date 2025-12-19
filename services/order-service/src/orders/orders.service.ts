@@ -4,11 +4,11 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '@e-commerce/shared';
-import { LoggerService } from '@e-commerce/shared';
-import { PaymentService } from '@e-commerce/shared';
-import { NotificationService } from '@e-commerce/shared';
-import { OrderStatus, PaymentStatus } from '@e-commerce/shared';
+import { PrismaService } from '@flipflop/shared';
+import { LoggerService } from '@flipflop/shared';
+import { PaymentService } from '@flipflop/shared';
+import { NotificationService } from '@flipflop/shared';
+import { OrderStatus, PaymentStatus } from '@flipflop/shared';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

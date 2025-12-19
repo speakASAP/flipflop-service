@@ -1,7 +1,7 @@
 {
   "name": "warehouse-service",
   "version": "1.0.0",
-  "description": "Warehouse Service for E-commerce Platform",
+  "description": "Warehouse Service for FlipFlop Platform",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc && tsc-alias",
@@ -10,7 +10,7 @@
     "start:watch": "ts-node-dev --respawn src/main.ts"
   },
   "dependencies": {
-    "@e-commerce/shared": "file:../../shared",
+    "@flipflop/shared": "file:../../shared",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",

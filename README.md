@@ -1,6 +1,6 @@
-# flipflop.statex.cz E-commerce Platform
+# flipflop.statex.cz flipflop Platform
 
-Modern, fully automated e-commerce platform for selling diverse product categories in the Czech Republic.
+Modern, fully automated flipflop platform for selling diverse product categories in the Czech Republic.
 
 ## 🏗️ Architecture
 
@@ -16,28 +16,28 @@ The platform consists of 9 microservices:
 6. **AI Service** (${AI_SERVICE_PORT:-3507}) - AI shopping assistant (OpenRouter/Gemini)
 7. **Analytics Service** (${ANALYTICS_SERVICE_PORT:-3508}) - Sales and revenue analytics
 
-**Note**: All ports are configured in `e-commerce/.env`. The values shown are defaults.
+**Note**: All ports are configured in `flipflop/.env`. The values shown are defaults.
 
 ## 🔌 Port Configuration
 
-**Port Range**: 35xx (e-commerce application)
+**Port Range**: 35xx (flipflop application)
 
 Services use host ports in the 35xx range, mapping to standard container ports:
 
 | Service | Host Port | Container Port | .env Variable | Description |
 |---------|-----------|----------------|---------------|-------------|
-| **Frontend** | `${FRONTEND_PORT:-3500}` | `3000` | `FRONTEND_PORT` (e-commerce/.env) | Next.js frontend application |
-| **API Gateway** | `${API_GATEWAY_PORT:-3511}` | `3011` | `API_GATEWAY_PORT` (e-commerce/.env) | Main API gateway for routing |
-| **Product Service** | `${PRODUCT_SERVICE_PORT:-3502}` | `3002` | `PRODUCT_SERVICE_PORT` (e-commerce/.env) | Product catalog management |
-| **Order Service** | `${ORDER_SERVICE_PORT:-3503}` | `3003` | `ORDER_SERVICE_PORT` (e-commerce/.env) | Order processing |
-| **User Service** | `${USER_SERVICE_PORT:-3504}` | `3004` | `USER_SERVICE_PORT` (e-commerce/.env) | User management |
-| **Warehouse Service** | `${WAREHOUSE_SERVICE_PORT:-3505}` | `3005` | `WAREHOUSE_SERVICE_PORT` (e-commerce/.env) | Warehouse management |
-| **Supplier Service** | `${SUPPLIER_SERVICE_PORT:-3506}` | `3006` | `SUPPLIER_SERVICE_PORT` (e-commerce/.env) | Supplier integration |
-| **AI Service** | `${AI_SERVICE_PORT:-3507}` | `3007` | `AI_SERVICE_PORT` (e-commerce/.env) | AI shopping assistant |
-| **Analytics Service** | `${ANALYTICS_SERVICE_PORT:-3508}` | `3008` | `ANALYTICS_SERVICE_PORT` (e-commerce/.env) | Analytics and reporting |
-| **Cart Service** | `${CART_SERVICE_PORT:-3509}` | `3009` | `CART_SERVICE_PORT` (e-commerce/.env) | Shopping cart management |
+| **Frontend** | `${FRONTEND_PORT:-3500}` | `3000` | `FRONTEND_PORT` (flipflop/.env) | Next.js frontend application |
+| **API Gateway** | `${API_GATEWAY_PORT:-3511}` | `3011` | `API_GATEWAY_PORT` (flipflop/.env) | Main API gateway for routing |
+| **Product Service** | `${PRODUCT_SERVICE_PORT:-3502}` | `3002` | `PRODUCT_SERVICE_PORT` (flipflop/.env) | Product catalog management |
+| **Order Service** | `${ORDER_SERVICE_PORT:-3503}` | `3003` | `ORDER_SERVICE_PORT` (flipflop/.env) | Order processing |
+| **User Service** | `${USER_SERVICE_PORT:-3504}` | `3004` | `USER_SERVICE_PORT` (flipflop/.env) | User management |
+| **Warehouse Service** | `${WAREHOUSE_SERVICE_PORT:-3505}` | `3005` | `WAREHOUSE_SERVICE_PORT` (flipflop/.env) | Warehouse management |
+| **Supplier Service** | `${SUPPLIER_SERVICE_PORT:-3506}` | `3006` | `SUPPLIER_SERVICE_PORT` (flipflop/.env) | Supplier integration |
+| **AI Service** | `${AI_SERVICE_PORT:-3507}` | `3007` | `AI_SERVICE_PORT` (flipflop/.env) | AI shopping assistant |
+| **Analytics Service** | `${ANALYTICS_SERVICE_PORT:-3508}` | `3008` | `ANALYTICS_SERVICE_PORT` (flipflop/.env) | Analytics and reporting |
+| **Cart Service** | `${CART_SERVICE_PORT:-3509}` | `3009` | `CART_SERVICE_PORT` (flipflop/.env) | Shopping cart management |
 
-**Note**: All ports are configured in `e-commerce/.env`. The values shown are defaults. All ports are exposed on `127.0.0.1` only (localhost) for security. External access is provided via nginx-microservice reverse proxy.
+**Note**: All ports are configured in `flipflop/.env`. The values shown are defaults. All ports are exposed on `127.0.0.1` only (localhost) for security. External access is provided via nginx-microservice reverse proxy.
 
 ### External Shared Services
 
@@ -82,7 +82,7 @@ Services use host ports in the 35xx range, mapping to standard container ports:
 ## 📦 Project Structure
 
 ```text
-e-commerce/
+flipflop/
 ├── services/              # Microservices
 │   ├── api-gateway/
 │   ├── user-service/
@@ -103,7 +103,7 @@ e-commerce/
 
 ## 🌐 API Endpoints
 
-All API requests go through the API Gateway at `http://localhost:${API_GATEWAY_PORT:-3511}/api` (port configured in `e-commerce/.env`)
+All API requests go through the API Gateway at `http://localhost:${API_GATEWAY_PORT:-3511}/api` (port configured in `flipflop/.env`)
 
 **Main endpoints:**
 
@@ -121,7 +121,7 @@ All API requests go through the API Gateway at `http://localhost:${API_GATEWAY_P
 
 **Authentication Integration**:
 
-All services should use the shared `AuthService` from `e-commerce/shared/auth/auth.service.ts` to:
+All services should use the shared `AuthService` from `flipflop/shared/auth/auth.service.ts` to:
 
 - Register users: `authService.register(registerDto)`
 - Login users: `authService.login(loginDto)`

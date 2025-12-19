@@ -13,7 +13,7 @@ import {
   Param,
 } from '@nestjs/common';
 import { AllegroIntegrationService } from './allegro-integration.service';
-import { JwtAuthGuard, ApiResponse } from '@e-commerce/shared';
+import { JwtAuthGuard, ApiResponse } from '@flipflop/shared';
 
 @Controller('allegro')
 @UseGuards(JwtAuthGuard)
@@ -51,7 +51,7 @@ export class AllegroIntegrationController {
 
   @Post('sync')
   async syncProducts(@Body() body: { productCodes?: string[]; syncAll?: boolean }) {
-    const result = await this.allegroService.syncProductsToEcommerce(
+    const result = await this.allegroService.syncProductsToflipflop(
       body.productCodes,
       body.syncAll,
     );

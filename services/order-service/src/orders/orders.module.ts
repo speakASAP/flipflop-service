@@ -5,7 +5,7 @@
 import { Module } from '@nestjs/common';
 import { OrdersController, PaymentController } from './orders.controller';
 import { OrdersService } from './orders.service';
-import { PrismaModule, AuthModule, PaymentModule, NotificationModule, LoggerModule } from '@e-commerce/shared';
+import { PrismaModule, AuthModule, PaymentModule, NotificationModule, LoggerModule } from '@flipflop/shared';
 
 @Module({
   imports: [

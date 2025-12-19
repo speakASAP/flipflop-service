@@ -6,7 +6,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pool, QueryResult } from 'pg';
-import { LoggerService } from '@e-commerce/shared';
+import { LoggerService } from '@flipflop/shared';
 
 @Injectable()
 export class AllegroIntegrationService implements OnModuleInit, OnModuleDestroy {
@@ -225,9 +225,9 @@ export class AllegroIntegrationService implements OnModuleInit, OnModuleDestroy 
   }
 
   /**
-   * Sync product from Allegro to e-commerce format
+   * Sync product from Allegro to flipflop format
    */
-  mapAllegroProductToEcommerce(allegroProduct: any) {
+  mapAllegroProductToFlipflop(allegroProduct: any) {
     return {
       name: allegroProduct.name,
       sku: allegroProduct.code,
@@ -268,11 +268,11 @@ export class AllegroIntegrationService implements OnModuleInit, OnModuleDestroy 
   }
 
   /**
-   * Sync products from Allegro to e-commerce database
-   * This method fetches products from Allegro and returns them in e-commerce format
+   * Sync products from Allegro to flipflop database
+   * This method fetches products from Allegro and returns them in flipflop format
    * The actual creation/update should be done via Product Service API
    */
-  async syncProductsToEcommerce(productCodes?: string[], syncAll?: boolean) {
+  async syncProductsToflipflop(productCodes?: string[], syncAll?: boolean) {
     try {
       let allegroProducts: any[] = [];
 
@@ -293,9 +293,9 @@ export class AllegroIntegrationService implements OnModuleInit, OnModuleDestroy 
         throw new Error('Either productCodes or syncAll must be provided');
       }
 
-      // Map to e-commerce format
+      // Map to flipflop format
       const mappedProducts = allegroProducts.map((product) =>
-        this.mapAllegroProductToEcommerce(product),
+        this.mapAllegroProductToFlipflop(product),
       );
 
       this.logger.log('Products synced from Allegro', {

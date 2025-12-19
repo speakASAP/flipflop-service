@@ -5,7 +5,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
-import { HealthModule, PrismaModule, LoggerModule, AuthModule } from '@e-commerce/shared';
+import { HealthModule, PrismaModule, LoggerModule, AuthModule } from '@flipflop/shared';
 import { HealthController } from './health/health.controller';
 
 @Module({

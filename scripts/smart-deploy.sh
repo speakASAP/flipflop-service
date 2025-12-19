@@ -162,7 +162,7 @@ deploy_service() {
     print_info "Processing service: $service_name"
     
     # Determine container name
-    local container_name="e-commerce-${service_name}-${DEPLOY_COLOR}"
+    local container_name="flipflop-${service_name}-${DEPLOY_COLOR}"
     local compose_file="docker-compose.${DEPLOY_COLOR}.yml"
     
     # Determine health check endpoint and port

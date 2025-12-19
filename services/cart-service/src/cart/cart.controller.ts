@@ -17,7 +17,7 @@ import {
 import { CartService } from './cart.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
-import { JwtAuthGuard, ApiResponse } from '@e-commerce/shared';
+import { JwtAuthGuard, ApiResponse } from '@flipflop/shared';
 
 @Controller('cart')
 @UseGuards(JwtAuthGuard)

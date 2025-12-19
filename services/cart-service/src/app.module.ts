@@ -5,10 +5,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CartModule } from './cart/cart.module';
-import { HealthModule } from '@e-commerce/shared';
-import { PrismaModule } from '@e-commerce/shared';
-import { LoggerModule } from '@e-commerce/shared';
-import { AuthModule } from '@e-commerce/shared';
+import { HealthModule } from '@flipflop/shared';
+import { PrismaModule } from '@flipflop/shared';
+import { LoggerModule } from '@flipflop/shared';
+import { AuthModule } from '@flipflop/shared';
 import { HealthController } from './health/health.controller';
 
 @Module({

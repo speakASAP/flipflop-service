@@ -15,7 +15,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { JwtAuthGuard, ApiResponse } from '@e-commerce/shared';
+import { JwtAuthGuard, ApiResponse } from '@flipflop/shared';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)

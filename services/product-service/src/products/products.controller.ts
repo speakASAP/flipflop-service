@@ -16,7 +16,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { JwtAuthGuard, ApiResponse } from '@e-commerce/shared';
+import { JwtAuthGuard, ApiResponse } from '@flipflop/shared';
 
 @Controller('products')
 export class ProductsController {
