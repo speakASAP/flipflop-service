@@ -54,19 +54,21 @@ export class GatewayController {
   /**
    * Route product requests
    */
-  @All('products/*')
+  @All('products*')
   async productsRoute(@Req() req: ExpressRequest, @Res() res: ExpressResponse) {
     const path = req.url.replace('/api/products', '');
-    return this.routeRequest('products', `/products${path}`, req, res);
+    const finalPath = path === '' ? '/products' : `/products${path}`;
+    return this.routeRequest('products', finalPath, req, res);
   }
 
   /**
    * Route category requests
    */
-  @All('categories/*')
+  @All('categories*')
   async categoriesRoute(@Req() req: ExpressRequest, @Res() res: ExpressResponse) {
     const path = req.url.replace('/api/categories', '');
-    return this.routeRequest('products', `/categories${path}`, req, res);
+    const finalPath = path === '' ? '/categories' : `/categories${path}`;
+    return this.routeRequest('products', finalPath, req, res);
   }
 
   /**
