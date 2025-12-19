@@ -26,7 +26,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 150M
+          memory: 100M
+          cpus: '0.5'
         reservations:
           memory: 50M
     healthcheck:
@@ -62,9 +63,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 200M
+          memory: 130M
+          cpus: '0.5'
         reservations:
-          memory: 70M
+          memory: 50M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3011/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -96,9 +98,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 200M
+          memory: 130M
+          cpus: '0.5'
         reservations:
-          memory: 70M
+          memory: 50M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3004/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -131,9 +134,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 200M
+          memory: 130M
+          cpus: '0.5'
         reservations:
-          memory: 70M
+          memory: 50M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -165,9 +169,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 200M
+          memory: 130M
+          cpus: '0.5'
         reservations:
-          memory: 70M
+          memory: 50M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -199,9 +204,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 250M
+          memory: 150M
+          cpus: '0.5'
         reservations:
-          memory: 100M
+          memory: 70M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3009/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -233,9 +239,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 200M
+          memory: 130M
+          cpus: '0.5'
         reservations:
-          memory: 70M
+          memory: 50M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3005/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -268,9 +275,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 200M
+          memory: 130M
+          cpus: '0.5'
         reservations:
-          memory: 70M
+          memory: 50M
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3006/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
