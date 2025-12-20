@@ -12,6 +12,7 @@ This document lists all required and optional environment variables for the flip
 # ============================================
 NODE_ENV=production
 SERVICE_NAME=flipflop
+# DOMAIN is used by nginx-microservice for auto-registry generation (required for correct SSL certificate paths)
 DOMAIN=flipflop.statex.cz
 
 # ============================================
@@ -108,6 +109,7 @@ NEXT_PUBLIC_API_URL=https://flipflop.statex.cz/api
 # ============================================
 NODE_ENV=development
 SERVICE_NAME=flipflop
+# DOMAIN is used by nginx-microservice for auto-registry generation (required for correct SSL certificate paths)
 DOMAIN=flipflop.statex.cz
 
 # ============================================
