@@ -8,7 +8,7 @@ import { PrismaService } from '@flipflop/shared';
 import { LoggerService } from '@flipflop/shared';
 import { PaymentService } from '@flipflop/shared';
 import { NotificationService } from '@flipflop/shared';
-import { OrderStatus, PaymentStatus } from '@flipflop/shared';
+import { OrderStatus, PaymentStatus, OrderClientService } from '@flipflop/shared';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -19,6 +19,7 @@ export class OrdersService {
     private readonly paymentService: PaymentService,
     private readonly notificationService: NotificationService,
     private readonly configService: ConfigService,
+    private readonly orderClient: OrderClientService,
   ) {}
 
   /**
@@ -145,9 +146,10 @@ export class OrdersService {
 
     this.logger.log('Order created', { orderId: order.id, orderNumber: order.orderNumber });
 
-    // Send order confirmation notification
+    // Send order confirmation notification and get user for order forwarding
+    let user = null;
     try {
-      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      user = await this.prisma.user.findUnique({ where: { id: userId } });
       if (user?.email) {
         await this.notificationService.sendOrderConfirmation(
           user.email,
@@ -157,6 +159,49 @@ export class OrdersService {
       }
     } catch (error) {
       this.logger.warn('Failed to send order confirmation notification', { error });
+    }
+
+    // Forward order to order-microservice
+    try {
+      const orderData = {
+        externalOrderId: order.orderNumber,
+        channel: 'flipflop',
+        customer: {
+          id: userId,
+          email: user?.email,
+        },
+        shippingAddress: deliveryAddress,
+        billingAddress: deliveryAddress, // Use same address for billing if not separate
+        items: orderItems.map((item) => ({
+          productId: item.productId,
+          sku: item.productSku,
+          title: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+        })),
+        subtotal: order.subtotal,
+        shippingCost: order.shippingCost,
+        taxAmount: order.tax,
+        total: order.total,
+        currency: 'CZK',
+        paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus,
+        orderedAt: order.createdAt,
+      };
+
+      await this.orderClient.createOrder(orderData);
+      this.logger.log('Order forwarded to order-microservice', {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+      });
+    } catch (error: any) {
+      // Log error but don't fail the order creation
+      this.logger.error('Failed to forward order to order-microservice', {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        error: error.message,
+      });
     }
 
     return this.mapOrder(order);

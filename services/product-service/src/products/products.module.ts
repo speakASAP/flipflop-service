@@ -8,7 +8,7 @@ import { HttpModule } from '@nestjs/axios';
 import { ProductsController, CategoriesController, AdminProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 import { WarehouseService } from './warehouse.service';
-import { PrismaModule, AuthModule, LoggerModule, RedisModule } from '@flipflop/shared';
+import { PrismaModule, AuthModule, LoggerModule, RedisModule, ClientsModule, RabbitMQModule } from '@flipflop/shared';
 import * as https from 'https';
 
 @Module({
@@ -17,6 +17,8 @@ import * as https from 'https';
     AuthModule,
     LoggerModule,
     RedisModule,
+    ClientsModule,
+    RabbitMQModule,
     ConfigModule,
     HttpModule.registerAsync({
       imports: [ConfigModule],

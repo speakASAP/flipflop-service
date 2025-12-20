@@ -4,14 +4,15 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '@flipflop/shared';
-import { LoggerService } from '@flipflop/shared';
+import { PrismaService, LoggerService, WarehouseClientService, CatalogClientService } from '@flipflop/shared';
 
 @Injectable()
 export class WarehouseService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
+    private readonly warehouseClient: WarehouseClientService,
+    private readonly catalogClient: CatalogClientService,
   ) {}
 
   /**
@@ -29,6 +30,35 @@ export class WarehouseService {
       throw new NotFoundException('Product not found');
     }
 
+    // If product has catalogProductId, fetch from warehouse-microservice
+    if (product.catalogProductId) {
+      try {
+        const stockData = await this.warehouseClient.getStockByProduct(product.catalogProductId);
+        const totalAvailable = await this.warehouseClient.getTotalAvailable(product.catalogProductId);
+
+        return {
+          productId: product.id,
+          productName: product.name,
+          stockQuantity: totalAvailable,
+          trackInventory: product.trackInventory,
+          variants: (product.product_variants || []).map((v) => ({
+            variantId: v.id,
+            variantName: v.name,
+            stockQuantity: v.stockQuantity, // Variants still use local stock
+          })),
+          warehouse: {
+            stock: stockData,
+            totalAvailable,
+            source: 'warehouse-microservice',
+          },
+        };
+      } catch (error: any) {
+        this.logger.warn(`Failed to fetch stock from warehouse-microservice: ${error.message}`, 'WarehouseService');
+        // Fallback to local data
+      }
+    }
+
+    // Fallback to local data (legacy mode or if warehouse-microservice unavailable)
     return {
       productId: product.id,
       productName: product.name,
@@ -47,6 +77,7 @@ export class WarehouseService {
    */
   async updateInventory(productId: string, variantId: string | undefined, quantity: number) {
     if (variantId) {
+      // Variants still use local stock management
       const variant = await this.prisma.productVariant.findUnique({
         where: { id: variantId },
       });
@@ -71,6 +102,30 @@ export class WarehouseService {
         throw new NotFoundException('Product not found');
       }
 
+      // If product has catalogProductId, update in warehouse-microservice
+      if (product.catalogProductId) {
+        try {
+          const warehouseId = await this.warehouseClient.getDefaultWarehouseId();
+          if (warehouseId) {
+            await this.warehouseClient.setStock(
+              product.catalogProductId,
+              warehouseId,
+              quantity,
+              `Stock updated from flipflop-service for product ${productId}`
+            );
+            this.logger.log('Stock updated in warehouse-microservice', { productId, catalogProductId: product.catalogProductId, quantity });
+          } else {
+            this.logger.warn('No default warehouse ID found, updating local stock only', 'WarehouseService');
+          }
+        } catch (error: any) {
+          this.logger.error(`Failed to update stock in warehouse-microservice: ${error.message}`, error.stack, 'WarehouseService');
+          // Continue with local update
+        }
+      } else {
+        this.logger.warn(`Product ${productId} has no catalogProductId, updating local stock only`, 'WarehouseService');
+      }
+
+      // Update local Product table for cache/display
       const updated = await this.prisma.product.update({
         where: { id: productId },
         data: { stockQuantity: quantity },
@@ -84,11 +139,13 @@ export class WarehouseService {
   /**
    * Reserve items for order
    */
-  async reserveItems(items: Array<{ productId: string; variantId?: string; quantity: number }>) {
+  async reserveItems(items: Array<{ productId: string; variantId?: string; quantity: number; orderId?: string }>) {
     const reservations = [];
+    const warehouseId = await this.warehouseClient.getDefaultWarehouseId();
 
     for (const item of items) {
       if (item.variantId) {
+        // Variants still use local stock management
         const variant = await this.prisma.productVariant.findUnique({
           where: { id: item.variantId },
         });
@@ -116,10 +173,35 @@ export class WarehouseService {
           throw new NotFoundException(`Product ${item.productId} not found`);
         }
 
-        if (product.stockQuantity < item.quantity) {
-          throw new BadRequestException(`Insufficient stock for product ${item.productId}`);
+        // If product has catalogProductId, reserve in warehouse-microservice
+        if (product.catalogProductId && warehouseId && item.orderId) {
+          try {
+            await this.warehouseClient.reserveStock(
+              product.catalogProductId,
+              warehouseId,
+              item.quantity,
+              item.orderId
+            );
+            this.logger.log('Stock reserved in warehouse-microservice', {
+              productId: item.productId,
+              catalogProductId: product.catalogProductId,
+              quantity: item.quantity,
+            });
+          } catch (error: any) {
+            this.logger.error(`Failed to reserve stock in warehouse-microservice: ${error.message}`, error.stack, 'WarehouseService');
+            // Check local stock as fallback
+            if (product.stockQuantity < item.quantity) {
+              throw new BadRequestException(`Insufficient stock for product ${item.productId}`);
+            }
+          }
+        } else {
+          // Fallback to local stock check
+          if (product.stockQuantity < item.quantity) {
+            throw new BadRequestException(`Insufficient stock for product ${item.productId}`);
+          }
         }
 
+        // Update local Product table for cache/display
         await this.prisma.product.update({
           where: { id: item.productId },
           data: { stockQuantity: product.stockQuantity - item.quantity },
@@ -136,9 +218,12 @@ export class WarehouseService {
   /**
    * Release reserved items
    */
-  async releaseItems(items: Array<{ productId: string; variantId?: string; quantity: number }>) {
+  async releaseItems(items: Array<{ productId: string; variantId?: string; quantity: number; orderId?: string }>) {
+    const warehouseId = await this.warehouseClient.getDefaultWarehouseId();
+
     for (const item of items) {
       if (item.variantId) {
+        // Variants still use local stock management
         const variant = await this.prisma.productVariant.findUnique({
           where: { id: item.variantId },
         });
@@ -155,6 +240,27 @@ export class WarehouseService {
         });
 
         if (product) {
+          // If product has catalogProductId, unreserve in warehouse-microservice
+          if (product.catalogProductId && warehouseId && item.orderId) {
+            try {
+              await this.warehouseClient.unreserveStock(
+                product.catalogProductId,
+                warehouseId,
+                item.quantity,
+                item.orderId
+              );
+              this.logger.log('Stock unreserved in warehouse-microservice', {
+                productId: item.productId,
+                catalogProductId: product.catalogProductId,
+                quantity: item.quantity,
+              });
+            } catch (error: any) {
+              this.logger.error(`Failed to unreserve stock in warehouse-microservice: ${error.message}`, error.stack, 'WarehouseService');
+              // Continue with local update
+            }
+          }
+
+          // Update local Product table for cache/display
           await this.prisma.product.update({
             where: { id: item.productId },
             data: { stockQuantity: product.stockQuantity + item.quantity },

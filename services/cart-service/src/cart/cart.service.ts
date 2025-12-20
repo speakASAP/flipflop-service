@@ -4,14 +4,15 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '@flipflop/shared';
-import { LoggerService } from '@flipflop/shared';
+import { PrismaService, LoggerService, WarehouseClientService, CatalogClientService } from '@flipflop/shared';
 
 @Injectable()
 export class CartService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
+    private readonly warehouseClient: WarehouseClientService,
+    private readonly catalogClient: CatalogClientService,
   ) {}
 
   /**
@@ -99,6 +100,9 @@ export class CartService {
       }
     }
 
+    // Check stock availability from warehouse-microservice
+    await this.checkStockAvailability(productId, product.catalogProductId, quantity);
+
     // Get price from variant or product
     let price: number;
     if (variantId && product.product_variants && product.product_variants.length > 0) {
@@ -118,10 +122,14 @@ export class CartService {
     });
 
     if (existingItem) {
+      // Check stock for new total quantity
+      const newQuantity = existingItem.quantity + quantity;
+      await this.checkStockAvailability(productId, product.catalogProductId, newQuantity);
+
       // Update quantity
       const updated = await this.prisma.cartItem.update({
         where: { id: existingItem.id },
-        data: { quantity: existingItem.quantity + quantity },
+        data: { quantity: newQuantity },
         include: {
           products: true,
           product_variants: true,
@@ -160,10 +168,19 @@ export class CartService {
         id: cartItemId,
         userId,
       },
+      include: {
+        products: true,
+      },
     });
 
     if (!cartItem) {
       throw new NotFoundException('Cart item not found');
+    }
+
+    // Check stock availability from warehouse-microservice
+    const product = cartItem.products;
+    if (product) {
+      await this.checkStockAvailability(product.id, product.catalogProductId, quantity);
     }
 
     const updated = await this.prisma.cartItem.update({
@@ -212,6 +229,50 @@ export class CartService {
 
     this.logger.log('Cart cleared', { userId });
     return { success: true };
+  }
+
+  /**
+   * Check stock availability from warehouse-microservice or local database
+   */
+  private async checkStockAvailability(productId: string, catalogProductId: string | null, quantity: number): Promise<void> {
+    if (catalogProductId) {
+      // Use central warehouse-microservice
+      try {
+        const totalAvailable = await this.warehouseClient.getTotalAvailable(catalogProductId);
+        if (totalAvailable < quantity) {
+          throw new BadRequestException(`Insufficient stock. Available: ${totalAvailable}, Requested: ${quantity}`);
+        }
+      } catch (error: any) {
+        // If warehouse-microservice is unavailable, log warning but allow operation
+        // This prevents service failures from breaking cart functionality
+        if (error instanceof BadRequestException && error.message.includes('Insufficient stock')) {
+          throw error;
+        }
+        this.logger.warn(
+          `Failed to check stock from warehouse-microservice for product ${productId}: ${error.message}`,
+          'CartService'
+        );
+        // Fallback to local stock check
+        const product = await this.prisma.product.findUnique({
+          where: { id: productId },
+          select: { stockQuantity: true, trackInventory: true },
+        });
+
+        if (product?.trackInventory && (product.stockQuantity || 0) < quantity) {
+          throw new BadRequestException(`Insufficient stock. Available: ${product.stockQuantity}, Requested: ${quantity}`);
+        }
+      }
+    } else {
+      // Fallback to local stock (legacy mode)
+      const product = await this.prisma.product.findUnique({
+        where: { id: productId },
+        select: { stockQuantity: true, trackInventory: true },
+      });
+
+      if (product?.trackInventory && (product.stockQuantity || 0) < quantity) {
+        throw new BadRequestException(`Insufficient stock. Available: ${product.stockQuantity}, Requested: ${quantity}`);
+      }
+    }
   }
 
   /**

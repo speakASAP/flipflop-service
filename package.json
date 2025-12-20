@@ -1,7 +1,7 @@
 {
-  "name": "flipflop-root",
+  "name": "flipflop-service",
   "version": "1.0.0",
-  "description": "FlipFlop flipflop platform root",
+  "description": "FlipFlop.cz e-commerce website service",
   "private": true,
   "scripts": {
     "dev": "./scripts/start-dev.sh",
@@ -17,6 +17,8 @@
     "@nestjs/passport": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "@prisma/client": "^5.7.1",
+    "amqplib": "^0.10.3",
+    "amqp-connection-manager": "^4.1.14",
     "axios": "^1.6.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
@@ -32,6 +34,7 @@
     "@types/express": "^4.17.21",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.10.0",
+    "@types/amqplib": "^0.10.4",
     "@types/passport-jwt": "^3.0.13",
     "@types/pg": "^8.15.6",
     "@types/xml2js": "^0.4.14",

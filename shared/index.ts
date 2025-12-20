@@ -57,3 +57,13 @@ export * from './resilience/retry.service';
 export * from './resilience/fallback.service';
 export * from './resilience/resilience.monitor';
 export * from './resilience/resilience.config';
+
+// Central Microservices Clients
+export * from './clients/clients.module';
+export * from './clients/catalog-client.service';
+export * from './clients/warehouse-client.service';
+export * from './clients/order-client.service';
+
+// RabbitMQ
+export * from './rabbitmq/rabbitmq.module';
+export * from './rabbitmq/stock-events.subscriber';

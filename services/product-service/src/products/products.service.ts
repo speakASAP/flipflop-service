@@ -4,8 +4,7 @@
  */
 
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@flipflop/shared';
-import { LoggerService } from '@flipflop/shared';
+import { PrismaService, LoggerService, CatalogClientService, WarehouseClientService } from '@flipflop/shared';
 import { WarehouseService } from './warehouse.service';
 
 @Injectable()
@@ -14,128 +13,149 @@ export class ProductsService {
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly warehouseService: WarehouseService,
+    private readonly catalogClient: CatalogClientService,
+    private readonly warehouseClient: WarehouseClientService,
   ) {}
 
   /**
    * Get products with pagination and filtering
+   * Fetches from catalog-microservice and enriches with stock from warehouse-microservice
    */
   async getProducts(filters: any) {
-    const page = Number(filters.page) || 1;
-    const limit = Number(filters.limit) || 20;
-    const skip = (page - 1) * limit;
+    try {
+      // Fetch products from catalog-microservice
+      const catalogResult = await this.catalogClient.searchProducts({
+        page: Number(filters.page) || 1,
+        limit: Number(filters.limit) || 20,
+        search: filters.search,
+        categoryId: filters.categoryId,
+        brand: filters.brand,
+        minPrice: filters.minPrice,
+        maxPrice: filters.maxPrice,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
+      });
 
-    const where: any = {
-      isActive: true,
-    };
-
-    if (filters.search) {
-      where.OR = [
-        { name: { contains: filters.search, mode: 'insensitive' } },
-        { description: { contains: filters.search, mode: 'insensitive' } },
-        { sku: { contains: filters.search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (filters.categoryId) {
-      where.categories = {
-        some: {
-          categoryId: filters.categoryId,
-        },
-      };
-    }
-
-    if (filters.brand) {
-      where.brand = filters.brand;
-    }
-
-    if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
-      where.price = {};
-      if (filters.minPrice !== undefined) {
-        where.price.gte = filters.minPrice;
+      // Fetch stock from warehouse-microservice if requested
+      let warehouseData: Map<string, any> = new Map();
+      if (filters.includeWarehouse === 'true' || filters.includeWarehouse === true) {
+        const productIds = catalogResult.items.map((p: any) => p.id);
+        if (productIds.length > 0) {
+          // Get stock for all products
+          const stockPromises = productIds.map(async (productId: string) => {
+            try {
+              const stock = await this.warehouseClient.getProductStock(productId);
+              return { productId, stock };
+            } catch (error: any) {
+              this.logger.error(`Failed to fetch stock for product ${productId}: ${error.message}`, error.stack, 'ProductsService');
+              return { productId, stock: null };
+            }
+          });
+          const stockResults = await Promise.all(stockPromises);
+          stockResults.forEach(({ productId, stock }) => {
+            if (stock) {
+              warehouseData.set(productId, stock);
+            }
+          });
+        }
       }
-      if (filters.maxPrice !== undefined) {
-        where.price.lte = filters.maxPrice;
-      }
-    }
 
-    const [items, total] = await Promise.all([
-      this.prisma.product.findMany({
-        where,
-        include: {
-          product_categories: {
-            include: {
-              categories: true,
+      // Map catalog products to response format
+      const items = catalogResult.items.map((product: any) => {
+        const stock = warehouseData.get(product.id);
+        return {
+          id: product.id,
+          name: product.title,
+          sku: product.sku,
+          description: product.description,
+          price: product.pricing?.basePrice || 0,
+          stockQuantity: stock?.available || 0,
+          trackInventory: true,
+          brand: product.brand,
+          mainImageUrl: product.media?.find((m: any) => m.type === 'image' && m.isPrimary)?.url,
+          imageUrls: product.media?.filter((m: any) => m.type === 'image').map((m: any) => m.url) || [],
+          images: product.media?.filter((m: any) => m.type === 'image').map((m: any) => m.url) || [],
+          categories: product.categories || [],
+          createdAt: product.createdAt,
+          updatedAt: product.updatedAt,
+          ...(stock && {
+            warehouse: {
+              stockQuantity: stock.available,
+              trackInventory: true,
+              availability: stock.available > 0 ? 'in_stock' : 'out_of_stock',
+              updatedAt: stock.updatedAt,
+              source: 'warehouse-microservice',
             },
-          },
-          product_variants: {
-            where: { isActive: true },
-          },
-        },
-        skip,
-        take: limit,
-        orderBy: filters.sortBy
-          ? { [filters.sortBy]: filters.sortOrder || 'asc' }
-          : { createdAt: 'desc' },
-      }),
-      this.prisma.product.count({ where }),
-    ]);
+          }),
+        };
+      });
 
-    // Optionally enrich with warehouse data from Allegro
-    let warehouseData: Map<string, any> = new Map();
-    if (filters.includeWarehouse === 'true' || filters.includeWarehouse === true) {
-      const productCodes = items
-        .map((p) => p.sku)
-        .filter((sku) => sku && sku.trim() !== '');
-      if (productCodes.length > 0) {
-        warehouseData = await this.warehouseService.getWarehouseData(productCodes);
-      }
+      return {
+        items,
+        pagination: catalogResult.pagination,
+      };
+    } catch (error: any) {
+      this.logger.error(`Failed to fetch products: ${error.message}`, error.stack, 'ProductsService');
+      throw error;
     }
-
-    return {
-      items: items.map((product) => this.mapProduct(product, warehouseData)),
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page * limit < total,
-        hasPrev: page > 1,
-      },
-    };
   }
 
   /**
    * Get product by ID
+   * Fetches from catalog-microservice and enriches with stock from warehouse-microservice
    */
   async getProduct(id: string, includeWarehouse: boolean = false) {
-    const product = await this.prisma.product.findUnique({
-      where: { id },
-      include: {
-        product_categories: {
-          include: {
-            categories: true,
-          },
-        },
-        product_variants: {
-          where: { isActive: true },
-        },
-      },
-    });
-
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
-
-    // Optionally enrich with warehouse data from Allegro
-    let warehouseData: Map<string, any> = new Map();
-    if (includeWarehouse && product.sku) {
-      const warehouse = await this.warehouseService.getProductWarehouseData(product.sku);
-      if (warehouse) {
-        warehouseData.set(product.sku, warehouse);
+    try {
+      // Fetch product from catalog-microservice
+      const product = await this.catalogClient.getProduct(id);
+      if (!product) {
+        throw new NotFoundException('Product not found');
       }
-    }
 
-    return this.mapProduct(product, warehouseData);
+      // Fetch stock from warehouse-microservice if requested
+      let stock = null;
+      if (includeWarehouse) {
+        try {
+          stock = await this.warehouseClient.getProductStock(id);
+        } catch (error: any) {
+          this.logger.error(`Failed to fetch stock for product ${id}: ${error.message}`, error.stack, 'ProductsService');
+        }
+      }
+
+      // Map to response format
+      return {
+        id: product.id,
+        name: product.title,
+        sku: product.sku,
+        description: product.description,
+        price: product.pricing?.basePrice || 0,
+        stockQuantity: stock?.available || 0,
+        trackInventory: true,
+        brand: product.brand,
+        mainImageUrl: product.media?.find((m: any) => m.type === 'image' && m.isPrimary)?.url,
+        imageUrls: product.media?.filter((m: any) => m.type === 'image').map((m: any) => m.url) || [],
+        images: product.media?.filter((m: any) => m.type === 'image').map((m: any) => m.url) || [],
+        categories: product.categories || [],
+        attributes: product.attributes || [],
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+        ...(stock && {
+          warehouse: {
+            stockQuantity: stock.available,
+            trackInventory: true,
+            availability: stock.available > 0 ? 'in_stock' : 'out_of_stock',
+            updatedAt: stock.updatedAt,
+            source: 'warehouse-microservice',
+          },
+        }),
+      };
+    } catch (error: any) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.logger.error(`Failed to fetch product ${id}: ${error.message}`, error.stack, 'ProductsService');
+      throw error;
+    }
   }
 
   /**

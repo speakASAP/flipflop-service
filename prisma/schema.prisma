@@ -45,6 +45,8 @@ model Category {
 
 model Product {
   id                 String            @id(map: "PK_0806c755e0aca124e67c0cf6d7d") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // Link to catalog-microservice product (optional during migration)
+  catalogProductId   String?           @db.Uuid // Product ID from catalog-microservice
   name               String            @db.VarChar(255)
   sku                String            @unique(map: "IDX_products_sku") @db.VarChar(255)
   description        String?

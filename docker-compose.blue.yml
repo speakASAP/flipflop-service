@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: ./services/frontend/Dockerfile
-    container_name: flipflop-frontend-blue
+    container_name: flipflop-service-frontend-blue
     restart: unless-stopped
     env_file:
       - .env
@@ -41,7 +41,7 @@ services:
     build:
       context: .
       dockerfile: ./services/api-gateway/Dockerfile
-    container_name: flipflop-api-gateway-blue
+    container_name: flipflop-service-api-gateway-blue
     restart: unless-stopped
     env_file:
       - .env
@@ -78,7 +78,7 @@ services:
     build:
       context: .
       dockerfile: ./services/user-service/Dockerfile
-    container_name: flipflop-user-service-blue
+    container_name: flipflop-service-user-service-blue
     restart: unless-stopped
     env_file:
       - .env
@@ -113,7 +113,7 @@ services:
     build:
       context: .
       dockerfile: ./services/product-service/Dockerfile
-    container_name: flipflop-product-service-blue
+    container_name: flipflop-service-product-service-blue
     restart: unless-stopped
     env_file:
       - .env
@@ -132,6 +132,8 @@ services:
       - DB_USER=${DB_USER:-dbadmin}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME:-flipflop}
+      - CATALOG_SERVICE_URL=${CATALOG_SERVICE_URL:-http://catalog-microservice:3200}
+      - WAREHOUSE_SERVICE_URL=${WAREHOUSE_SERVICE_URL:-http://warehouse-microservice:3201}
     networks:
       - nginx-network
     deploy:
@@ -151,7 +153,7 @@ services:
     build:
       context: .
       dockerfile: ./services/order-service/Dockerfile
-    container_name: flipflop-order-service-blue
+    container_name: flipflop-service-order-service-blue
     restart: unless-stopped
     env_file:
       - .env
@@ -169,6 +171,8 @@ services:
       - DB_USER=${DB_USER:-dbadmin}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME:-flipflop}
+      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL:-http://order-microservice:3203}
+      - WAREHOUSE_SERVICE_URL=${WAREHOUSE_SERVICE_URL:-http://warehouse-microservice:3201}
     networks:
       - nginx-network
     deploy:
@@ -188,7 +192,7 @@ services:
     build:
       context: .
       dockerfile: ./services/cart-service/Dockerfile
-    container_name: flipflop-cart-service-blue
+    container_name: flipflop-service-cart-service-blue
     restart: unless-stopped
     env_file:
       - .env
@@ -225,7 +229,7 @@ services:
     build:
       context: .
       dockerfile: ./services/warehouse-service/Dockerfile
-    container_name: flipflop-warehouse-service-blue
+    container_name: flipflop-service-warehouse-service-blue
     restart: unless-stopped
     env_file:
       - .env
@@ -243,6 +247,8 @@ services:
       - DB_USER=${DB_USER:-dbadmin}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME:-flipflop}
+      - WAREHOUSE_SERVICE_URL=${WAREHOUSE_SERVICE_URL:-http://warehouse-microservice:3201}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@statex_rabbitmq:5672}
     networks:
       - nginx-network
     deploy:
@@ -262,7 +268,7 @@ services:
     build:
       context: .
       dockerfile: ./services/supplier-service/Dockerfile
-    container_name: flipflop-supplier-service-blue
+    container_name: flipflop-service-supplier-service-blue
     restart: unless-stopped
     env_file:
       - .env
@@ -280,7 +286,10 @@ services:
       - DB_USER=${DB_USER:-dbadmin}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME:-flipflop}
-      - ALLEGRO_DB_NAME=${ALLEGRO_DB_NAME:-allegro}
+      - CATALOG_SERVICE_URL=${CATALOG_SERVICE_URL:-http://catalog-microservice:3200}
+      - WAREHOUSE_SERVICE_URL=${WAREHOUSE_SERVICE_URL:-http://warehouse-microservice:3201}
+      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL:-http://order-microservice:3203}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@statex_rabbitmq:5672}
     networks:
       - nginx-network
     deploy:
