@@ -46,11 +46,11 @@ export class StockEventsSubscriber implements OnModuleInit, OnModuleDestroy {
       const url = process.env.RABBITMQ_URL || 'amqp://guest:guest@statex_rabbitmq:5672';
       this.logger.log(`Connecting to RabbitMQ: ${url}`, 'StockEventsSubscriber');
 
-      this.connection = await amqp.connect(url);
+      this.connection = await amqp.connect(url) as amqp.Connection;
       if (!this.connection) {
         throw new Error('Failed to establish RabbitMQ connection');
       }
-      this.channel = await this.connection.createChannel();
+      this.channel = await this.connection.createChannel() as amqp.Channel;
       if (!this.channel) {
         throw new Error('Failed to create RabbitMQ channel');
       }
