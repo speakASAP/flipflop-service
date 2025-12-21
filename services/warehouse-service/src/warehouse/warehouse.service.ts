@@ -275,6 +275,7 @@ export class WarehouseService {
 
   /**
    * Get all stock levels
+   * Uses warehouse-microservice for products with catalogProductId
    */
   async getStockLevels() {
     const products = await this.prisma.product.findMany({
@@ -286,18 +287,40 @@ export class WarehouseService {
       },
     });
 
-    return products.map((product) => ({
-      productId: product.id,
-      productName: product.name,
-      sku: product.sku,
-      stockQuantity: product.stockQuantity,
-      variants: (product.product_variants || []).map((v) => ({
-        variantId: v.id,
-        variantName: v.name,
-        sku: v.sku,
-        stockQuantity: v.stockQuantity,
-      })),
-    }));
+    // Fetch stock from warehouse-microservice for products with catalogProductId
+    const stockLevels = await Promise.all(
+      products.map(async (product) => {
+        let stockQuantity = product.stockQuantity;
+        let source = 'local';
+
+        if (product.catalogProductId) {
+          try {
+            stockQuantity = await this.warehouseClient.getTotalAvailable(product.catalogProductId);
+            source = 'warehouse-microservice';
+          } catch (error: any) {
+            this.logger.warn(`Failed to fetch stock for product ${product.id}: ${error.message}`, 'WarehouseService');
+            // Keep local stockQuantity as fallback
+          }
+        }
+
+        return {
+          productId: product.id,
+          productName: product.name,
+          sku: product.sku,
+          stockQuantity,
+          source,
+          variants: (product.product_variants || []).map((v) => ({
+            variantId: v.id,
+            variantName: v.name,
+            sku: v.sku,
+            stockQuantity: v.stockQuantity,
+            source: 'local', // Variants still use local stock
+          })),
+        };
+      })
+    );
+
+    return stockLevels;
   }
 }
 

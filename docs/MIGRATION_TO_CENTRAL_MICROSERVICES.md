@@ -10,7 +10,7 @@ This document tracks the migration of flipflop-service from allegro database dep
 
 - `shared/clients/catalog-client.service.ts` - Fetches products from catalog-microservice
 - `shared/clients/warehouse-client.service.ts` - Fetches stock from warehouse-microservice
-- `shared/clients/order-client.service.ts` - Forwards orders to order-microservice
+- `shared/clients/order-client.service.ts` - Forwards orders to orders-microservice
 - `shared/clients/clients.module.ts` - NestJS module for clients
 
 ### 2. RabbitMQ Subscriber Created ✅
@@ -32,7 +32,7 @@ This document tracks the migration of flipflop-service from allegro database dep
 - `services/warehouse-service/src/warehouse.service.ts`
   - Replace with WarehouseClientService calls
 - `services/order-service/src/order.service.ts`
-  - Forward orders to order-microservice via OrderClientService
+  - Forward orders to orders-microservice via OrderClientService
 
 ### Step 2: Update Product Model
 
@@ -70,7 +70,7 @@ Add to `.env`:
 ```
 CATALOG_SERVICE_URL=http://catalog-microservice:3200
 WAREHOUSE_SERVICE_URL=http://warehouse-microservice:3201
-ORDER_SERVICE_URL=http://order-microservice:3203
+ORDER_SERVICE_URL=http://orders-microservice:3203
 RABBITMQ_URL=amqp://guest:guest@statex_rabbitmq:5672
 ```
 
@@ -96,7 +96,7 @@ imports: [
 - [ ] Stock fetched from warehouse-microservice
 - [ ] Stock events received via RabbitMQ
 - [ ] Product stock updated in real-time
-- [ ] Orders forwarded to order-microservice
+- [ ] Orders forwarded to orders-microservice
 - [ ] No direct connection to allegro database
 - [ ] Cart checkout checks stock via warehouse-microservice
 

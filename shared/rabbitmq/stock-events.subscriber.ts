@@ -25,8 +25,20 @@ export class StockEventsSubscriber implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    if (this.channel) await this.channel.close();
-    if (this.connection) await this.connection.close();
+    if (this.channel) {
+      try {
+        await this.channel.close();
+      } catch (error) {
+        // Ignore errors during cleanup
+      }
+    }
+    if (this.connection) {
+      try {
+        await this.connection.close();
+      } catch (error) {
+        // Ignore errors during cleanup
+      }
+    }
   }
 
   private async connect() {
@@ -35,15 +47,23 @@ export class StockEventsSubscriber implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Connecting to RabbitMQ: ${url}`, 'StockEventsSubscriber');
 
       this.connection = await amqp.connect(url);
+      if (!this.connection) {
+        throw new Error('Failed to establish RabbitMQ connection');
+      }
       this.channel = await this.connection.createChannel();
+      if (!this.channel) {
+        throw new Error('Failed to create RabbitMQ channel');
+      }
 
       await this.channel.assertExchange(this.exchangeName, 'topic', { durable: true });
       await this.channel.assertQueue(this.queueName, { durable: true });
       await this.channel.bindQueue(this.queueName, this.exchangeName, 'stock.#');
 
       this.logger.log('Connected to RabbitMQ and subscribed to stock events', 'StockEventsSubscriber');
-    } catch (error) {
-      this.logger.error(`Failed to connect to RabbitMQ: ${error.message}`, error.stack, 'StockEventsSubscriber');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to connect to RabbitMQ: ${errorMessage}`, errorStack, 'StockEventsSubscriber');
     }
   }
 
@@ -59,18 +79,26 @@ export class StockEventsSubscriber implements OnModuleInit, OnModuleDestroy {
           try {
             const event = JSON.parse(msg.content.toString());
             await this.handleStockEvent(event);
-            this.channel?.ack(msg);
-          } catch (error) {
-            this.logger.error(`Error processing stock event: ${error.message}`, error.stack, 'StockEventsSubscriber');
-            this.channel?.nack(msg, false, false);
+            if (this.channel) {
+              this.channel.ack(msg);
+            }
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const errorStack = error instanceof Error ? error.stack : undefined;
+            this.logger.error(`Error processing stock event: ${errorMessage}`, errorStack, 'StockEventsSubscriber');
+            if (this.channel) {
+              this.channel.nack(msg, false, false);
+            }
           }
         },
         { noAck: false }
       );
 
       this.logger.log('Subscribed to stock events queue', 'StockEventsSubscriber');
-    } catch (error) {
-      this.logger.error(`Failed to subscribe to stock events: ${error.message}`, error.stack, 'StockEventsSubscriber');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to subscribe to stock events: ${errorMessage}`, errorStack, 'StockEventsSubscriber');
     }
   }
 

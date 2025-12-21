@@ -165,7 +165,7 @@ services:
       - DB_USER=${DB_USER:-dbadmin}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME:-flipflop}
-      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL:-http://order-microservice:3203}
+      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL:-http://orders-microservice:3203}
       - WAREHOUSE_SERVICE_URL=${WAREHOUSE_SERVICE_URL:-http://warehouse-microservice:3201}
     networks:
       - nginx-network
@@ -282,7 +282,7 @@ services:
       - DB_NAME=${DB_NAME:-flipflop}
       - CATALOG_SERVICE_URL=${CATALOG_SERVICE_URL:-http://catalog-microservice:3200}
       - WAREHOUSE_SERVICE_URL=${WAREHOUSE_SERVICE_URL:-http://warehouse-microservice:3201}
-      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL:-http://order-microservice:3203}
+      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL:-http://orders-microservice:3203}
       - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@statex_rabbitmq:5672}
     networks:
       - nginx-network
