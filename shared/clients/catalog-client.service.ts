@@ -24,8 +24,10 @@ export class CatalogClientService {
         this.httpService.get(`${this.baseUrl}/api/products/${productId}`)
       );
       return response.data.data;
-    } catch (error) {
-      this.logger.error(`Failed to get product ${productId}: ${error.message}`, error.stack, 'CatalogClient');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to get product ${productId}: ${errorMessage}`, errorStack, 'CatalogClient');
       throw new HttpException(`Product not found: ${productId}`, HttpStatus.NOT_FOUND);
     }
   }
@@ -39,8 +41,9 @@ export class CatalogClientService {
         return null;
       }
       return response.data.data;
-    } catch (error) {
-      this.logger.warn(`Product not found by SKU ${sku}: ${error.message}`, 'CatalogClient');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Product not found by SKU ${sku}: ${errorMessage}`, 'CatalogClient');
       return null;
     }
   }
@@ -69,8 +72,10 @@ export class CatalogClientService {
         page: response.data.pagination?.page || 1,
         limit: response.data.pagination?.limit || 20,
       };
-    } catch (error) {
-      this.logger.error(`Failed to search products: ${error.message}`, error.stack, 'CatalogClient');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to search products: ${errorMessage}`, errorStack, 'CatalogClient');
       return { items: [], total: 0, page: 1, limit: 20 };
     }
   }

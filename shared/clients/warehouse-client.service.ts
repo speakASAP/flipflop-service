@@ -24,8 +24,9 @@ export class WarehouseClientService {
         this.httpService.get(`${this.baseUrl}/api/stock/${productId}`)
       );
       return response.data.data || [];
-    } catch (error) {
-      this.logger.warn(`Stock not found for product ${productId}: ${error.message}`, 'WarehouseClient');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Stock not found for product ${productId}: ${errorMessage}`, 'WarehouseClient');
       return [];
     }
   }
@@ -36,8 +37,9 @@ export class WarehouseClientService {
         this.httpService.get(`${this.baseUrl}/api/stock/${productId}/total`)
       );
       return response.data.data?.totalAvailable || 0;
-    } catch (error) {
-      this.logger.warn(`Failed to get total stock for product ${productId}: ${error.message}`, 'WarehouseClient');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Failed to get total stock for product ${productId}: ${errorMessage}`, 'WarehouseClient');
       return 0;
     }
   }
@@ -53,9 +55,11 @@ export class WarehouseClientService {
         })
       );
       return response.data.data;
-    } catch (error) {
-      this.logger.error(`Failed to reserve stock: ${error.message}`, error.stack, 'WarehouseClient');
-      throw new HttpException(`Failed to reserve stock: ${error.message}`, HttpStatus.BAD_REQUEST);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to reserve stock: ${errorMessage}`, errorStack, 'WarehouseClient');
+      throw new HttpException(`Failed to reserve stock: ${errorMessage}`, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -70,9 +74,11 @@ export class WarehouseClientService {
         })
       );
       return response.data.data;
-    } catch (error) {
-      this.logger.error(`Failed to set stock: ${error.message}`, error.stack, 'WarehouseClient');
-      throw new HttpException(`Failed to set stock: ${error.message}`, HttpStatus.BAD_REQUEST);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to set stock: ${errorMessage}`, errorStack, 'WarehouseClient');
+      throw new HttpException(`Failed to set stock: ${errorMessage}`, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -87,9 +93,11 @@ export class WarehouseClientService {
         })
       );
       return response.data.data;
-    } catch (error) {
-      this.logger.error(`Failed to increment stock: ${error.message}`, error.stack, 'WarehouseClient');
-      throw new HttpException(`Failed to increment stock: ${error.message}`, HttpStatus.BAD_REQUEST);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to increment stock: ${errorMessage}`, errorStack, 'WarehouseClient');
+      throw new HttpException(`Failed to increment stock: ${errorMessage}`, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -104,9 +112,11 @@ export class WarehouseClientService {
         })
       );
       return response.data.data;
-    } catch (error) {
-      this.logger.error(`Failed to decrement stock: ${error.message}`, error.stack, 'WarehouseClient');
-      throw new HttpException(`Failed to decrement stock: ${error.message}`, HttpStatus.BAD_REQUEST);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to decrement stock: ${errorMessage}`, errorStack, 'WarehouseClient');
+      throw new HttpException(`Failed to decrement stock: ${errorMessage}`, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -121,9 +131,11 @@ export class WarehouseClientService {
         })
       );
       return response.data.data;
-    } catch (error) {
-      this.logger.error(`Failed to unreserve stock: ${error.message}`, error.stack, 'WarehouseClient');
-      throw new HttpException(`Failed to unreserve stock: ${error.message}`, HttpStatus.BAD_REQUEST);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to unreserve stock: ${errorMessage}`, errorStack, 'WarehouseClient');
+      throw new HttpException(`Failed to unreserve stock: ${errorMessage}`, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -133,8 +145,9 @@ export class WarehouseClientService {
         this.httpService.get(`${this.baseUrl}/api/warehouses`)
       );
       return response.data.data || [];
-    } catch (error) {
-      this.logger.warn(`Failed to get warehouses: ${error.message}`, 'WarehouseClient');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Failed to get warehouses: ${errorMessage}`, 'WarehouseClient');
       return [];
     }
   }
@@ -148,8 +161,9 @@ export class WarehouseClientService {
       }
       // Fallback to environment variable
       return process.env.DEFAULT_WAREHOUSE_ID || null;
-    } catch (error) {
-      this.logger.warn(`Failed to get default warehouse: ${error.message}`, 'WarehouseClient');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Failed to get default warehouse: ${errorMessage}`, 'WarehouseClient');
       return process.env.DEFAULT_WAREHOUSE_ID || null;
     }
   }

@@ -161,7 +161,7 @@ export class OrdersService {
       this.logger.warn('Failed to send order confirmation notification', { error });
     }
 
-    // Forward order to order-microservice
+    // Forward order to orders-microservice
     try {
       const orderData = {
         externalOrderId: order.orderNumber,
@@ -191,13 +191,13 @@ export class OrdersService {
       };
 
       await this.orderClient.createOrder(orderData);
-      this.logger.log('Order forwarded to order-microservice', {
+      this.logger.log('Order forwarded to orders-microservice', {
         orderId: order.id,
         orderNumber: order.orderNumber,
       });
     } catch (error: any) {
       // Log error but don't fail the order creation
-      this.logger.error('Failed to forward order to order-microservice', {
+      this.logger.error('Failed to forward order to orders-microservice', {
         orderId: order.id,
         orderNumber: order.orderNumber,
         error: error.message,
