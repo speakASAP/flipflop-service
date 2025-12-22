@@ -9,7 +9,7 @@ import { PrismaService } from '../database/prisma.service';
  */
 @Injectable()
 export class StockEventsSubscriber implements OnModuleInit, OnModuleDestroy {
-  private connection: amqp.Connection | null = null;
+  private connection: any = null;
   private channel: amqp.Channel | null = null;
   private readonly exchangeName = 'stock.events';
   private readonly queueName = 'stock.flipflop-service';
@@ -34,7 +34,7 @@ export class StockEventsSubscriber implements OnModuleInit, OnModuleDestroy {
     }
     if (this.connection) {
       try {
-        await (this.connection as any).close();
+        await this.connection.close();
       } catch (error: unknown) {
         // Ignore errors during cleanup
       }
@@ -47,11 +47,11 @@ export class StockEventsSubscriber implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Connecting to RabbitMQ: ${url}`, 'StockEventsSubscriber');
 
       const conn = await amqp.connect(url);
-      this.connection = conn as unknown as amqp.Connection;
+      this.connection = conn;
       if (!this.connection) {
         throw new Error('Failed to establish RabbitMQ connection');
       }
-      const ch = await (conn as any).createChannel();
+      const ch = await this.connection.createChannel();
       this.channel = ch as unknown as amqp.Channel;
       if (!this.channel) {
         throw new Error('Failed to create RabbitMQ channel');
