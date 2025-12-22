@@ -27,15 +27,15 @@ export class StockEventsSubscriber implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy() {
     if (this.channel) {
       try {
-        await this.channel.close();
-      } catch (error) {
+        await (this.channel as any).close();
+      } catch (error: unknown) {
         // Ignore errors during cleanup
       }
     }
     if (this.connection) {
       try {
-        await this.connection.close();
-      } catch (error) {
+        await (this.connection as any).close();
+      } catch (error: unknown) {
         // Ignore errors during cleanup
       }
     }
@@ -51,7 +51,7 @@ export class StockEventsSubscriber implements OnModuleInit, OnModuleDestroy {
       if (!this.connection) {
         throw new Error('Failed to establish RabbitMQ connection');
       }
-      const ch = await this.connection.createChannel();
+      const ch = await (conn as any).createChannel();
       this.channel = ch as unknown as amqp.Channel;
       if (!this.channel) {
         throw new Error('Failed to create RabbitMQ channel');
