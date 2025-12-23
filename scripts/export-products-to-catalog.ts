@@ -107,11 +107,11 @@ class FlipflopExportService {
         videoUrls: product.videoUrls || [],
       },
       attributes: product.attributes || {},
-      catalogProductId: product.catalogProductId || null,
+      catalogProductId: (product as any).catalogProductId || null,
     };
   }
 
-  private mapVariantToCatalog(variant: ProductVariant, productLookup: Map<string, Product>) {
+  private mapVariantToCatalog(variant: any, productLookup: Map<string, any>) {
     const product = productLookup.get(variant.productId);
     const baseTitle = product?.name || 'Variant';
     return {
@@ -130,14 +130,14 @@ class FlipflopExportService {
         imageUrl: variant.imageUrl,
       },
       attributes: variant.options || {},
-      catalogProductId: product?.catalogProductId || null,
+      catalogProductId: (product as any)?.catalogProductId || null,
       parentProductId: variant.productId,
     };
   }
 
-  private buildRecords(products: Product[], variants: ProductVariant[]): NormalizedRecord[] {
+  private buildRecords(products: any[], variants: any[]): NormalizedRecord[] {
     const records: NormalizedRecord[] = [];
-    const productLookup = new Map<string, Product>();
+    const productLookup = new Map<string, any>();
     products.forEach((p) => productLookup.set(p.id, p));
 
     for (const product of products) {
@@ -160,7 +160,7 @@ class FlipflopExportService {
         updatedAt: product.updatedAt ? product.updatedAt.toISOString() : null,
         needsManualReview: !sku,
         notes,
-        catalogProductId: product.catalogProductId,
+        catalogProductId: (product as any).catalogProductId || null,
         catalogPayload: this.mapProductToCatalog(product),
       });
     }
@@ -173,6 +173,7 @@ class FlipflopExportService {
           notes.push('Missing SKU for variant');
         }
 
+        const parentProduct = productLookup.get(variant.productId);
         records.push({
           source: 'flipflop-variant',
           legacyId: variant.id,
@@ -185,7 +186,7 @@ class FlipflopExportService {
           updatedAt: variant.updatedAt ? variant.updatedAt.toISOString() : null,
           needsManualReview: !sku,
           notes,
-          catalogProductId: productLookup.get(variant.productId)?.catalogProductId || null,
+          catalogProductId: (parentProduct as any)?.catalogProductId || null,
           catalogPayload: this.mapVariantToCatalog(variant, productLookup),
         });
       }
@@ -201,11 +202,46 @@ class FlipflopExportService {
     });
 
     try {
+      // Use select to avoid issues with catalogProductId if column doesn't exist
       const [products, variants] = await Promise.all([
-        this.prisma.product.findMany({ orderBy: { updatedAt: 'desc' } }),
+        this.prisma.product.findMany({
+          select: {
+            id: true,
+            sku: true,
+            name: true,
+            description: true,
+            shortDescription: true,
+            price: true,
+            mainImageUrl: true,
+            imageUrls: true,
+            videoUrls: true,
+            stockQuantity: true,
+            trackInventory: true,
+            isActive: true,
+            brand: true,
+            manufacturer: true,
+            attributes: true,
+            updatedAt: true,
+          },
+          orderBy: { updatedAt: 'desc' },
+        }) as Promise<any[]>,
         this.includeVariants
-          ? this.prisma.productVariant.findMany({ orderBy: { updatedAt: 'desc' } })
-          : Promise.resolve([] as ProductVariant[]),
+          ? this.prisma.productVariant.findMany({
+              select: {
+                id: true,
+                productId: true,
+                sku: true,
+                name: true,
+                price: true,
+                stockQuantity: true,
+                imageUrl: true,
+                isActive: true,
+                options: true,
+                updatedAt: true,
+              },
+              orderBy: { updatedAt: 'desc' },
+            })
+          : Promise.resolve([] as any[]),
       ]);
 
       const rawRecords = this.buildRecords(products, variants);
