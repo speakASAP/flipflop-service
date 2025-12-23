@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "./scripts/start-dev.sh",
     "dev:stop": "./scripts/stop-dev.sh",
-    "migration:run-direct": "ts-node scripts/run-migration-direct.ts"
+    "migration:run-direct": "ts-node scripts/run-migration-direct.ts",
+    "export:products": "ts-node scripts/export-products-to-catalog.ts",
+    "migrate:products": "ts-node scripts/migrate-products-to-catalog.ts",
+    "migrate:products:dry-run": "ts-node scripts/migrate-products-to-catalog.ts --dry-run",
+    "migrate:products:skip-stock": "ts-node scripts/migrate-products-to-catalog.ts --skip-stock"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.1",

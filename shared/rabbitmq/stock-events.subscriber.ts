@@ -129,6 +129,10 @@ export class StockEventsSubscriber implements OnModuleInit, OnModuleDestroy {
   }
 
   private async updateProductStock(productId: string, available: number) {
+    if (available === undefined || available === null) {
+      this.logger.warn(`Stock update skipped for ${productId}: available not provided`, 'StockEventsSubscriber');
+      return;
+    }
     try {
       // Note: event.productId is the catalog-microservice product ID
       // We need to find local products by catalogProductId

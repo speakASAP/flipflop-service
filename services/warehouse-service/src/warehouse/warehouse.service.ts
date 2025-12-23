@@ -98,41 +98,29 @@ export class WarehouseService {
         where: { id: productId },
       });
 
-      if (!product) {
-        throw new NotFoundException('Product not found');
+      if (!product || !product.catalogProductId) {
+        throw new BadRequestException('Product is not linked to catalog; cannot update central stock');
       }
 
-      // If product has catalogProductId, update in warehouse-microservice
-      if (product.catalogProductId) {
-        try {
-          const warehouseId = await this.warehouseClient.getDefaultWarehouseId();
-          if (warehouseId) {
-            await this.warehouseClient.setStock(
-              product.catalogProductId,
-              warehouseId,
-              quantity,
-              `Stock updated from flipflop-service for product ${productId}`
-            );
-            this.logger.log('Stock updated in warehouse-microservice', { productId, catalogProductId: product.catalogProductId, quantity });
-          } else {
-            this.logger.warn('No default warehouse ID found, updating local stock only', 'WarehouseService');
-          }
-        } catch (error: any) {
-          this.logger.error(`Failed to update stock in warehouse-microservice: ${error.message}`, error.stack, 'WarehouseService');
-          // Continue with local update
-        }
-      } else {
-        this.logger.warn(`Product ${productId} has no catalogProductId, updating local stock only`, 'WarehouseService');
+      const warehouseId = await this.warehouseClient.getDefaultWarehouseId();
+      if (!warehouseId) {
+        throw new BadRequestException('No default warehouse available to update stock');
       }
 
-      // Update local Product table for cache/display
-      const updated = await this.prisma.product.update({
-        where: { id: productId },
-        data: { stockQuantity: quantity },
-      });
+      try {
+        await this.warehouseClient.setStock(
+          product.catalogProductId,
+          warehouseId,
+          quantity,
+          `Stock updated from flipflop-service for product ${productId}`
+        );
+        this.logger.log('Stock updated in warehouse-microservice', { productId, catalogProductId: product.catalogProductId, quantity });
+      } catch (error: any) {
+        this.logger.error(`Failed to update stock in warehouse-microservice: ${error.message}`, error.stack, 'WarehouseService');
+        throw new BadRequestException('Failed to update stock in central warehouse');
+      }
 
-      this.logger.log('Product inventory updated', { productId, quantity });
-      return { productId: updated.id, stockQuantity: updated.stockQuantity };
+      return { productId, stockQuantity: quantity };
     }
   }
 
@@ -169,43 +157,30 @@ export class WarehouseService {
           where: { id: item.productId },
         });
 
-        if (!product) {
-          throw new NotFoundException(`Product ${item.productId} not found`);
+        if (!product || !product.catalogProductId) {
+          throw new BadRequestException(`Product ${item.productId} is not linked to catalog for reservation`);
         }
 
-        // If product has catalogProductId, reserve in warehouse-microservice
-        if (product.catalogProductId && warehouseId && item.orderId) {
-          try {
-            await this.warehouseClient.reserveStock(
-              product.catalogProductId,
-              warehouseId,
-              item.quantity,
-              item.orderId
-            );
-            this.logger.log('Stock reserved in warehouse-microservice', {
-              productId: item.productId,
-              catalogProductId: product.catalogProductId,
-              quantity: item.quantity,
-            });
-          } catch (error: any) {
-            this.logger.error(`Failed to reserve stock in warehouse-microservice: ${error.message}`, error.stack, 'WarehouseService');
-            // Check local stock as fallback
-            if (product.stockQuantity < item.quantity) {
-              throw new BadRequestException(`Insufficient stock for product ${item.productId}`);
-            }
-          }
-        } else {
-          // Fallback to local stock check
-          if (product.stockQuantity < item.quantity) {
-            throw new BadRequestException(`Insufficient stock for product ${item.productId}`);
-          }
+        if (!warehouseId || !item.orderId) {
+          throw new BadRequestException('Missing warehouse or order reference for reservation');
         }
 
-        // Update local Product table for cache/display
-        await this.prisma.product.update({
-          where: { id: item.productId },
-          data: { stockQuantity: product.stockQuantity - item.quantity },
-        });
+        try {
+          await this.warehouseClient.reserveStock(
+            product.catalogProductId,
+            warehouseId,
+            item.quantity,
+            item.orderId
+          );
+          this.logger.log('Stock reserved in warehouse-microservice', {
+            productId: item.productId,
+            catalogProductId: product.catalogProductId,
+            quantity: item.quantity,
+          });
+        } catch (error: any) {
+          this.logger.error(`Failed to reserve stock in warehouse-microservice: ${error.message}`, error.stack, 'WarehouseService');
+          throw new BadRequestException(`Insufficient stock for product ${item.productId}`);
+        }
 
         reservations.push({ productId: item.productId, quantity: item.quantity });
       }
@@ -239,32 +214,29 @@ export class WarehouseService {
           where: { id: item.productId },
         });
 
-        if (product) {
-          // If product has catalogProductId, unreserve in warehouse-microservice
-          if (product.catalogProductId && warehouseId && item.orderId) {
-            try {
-              await this.warehouseClient.unreserveStock(
-                product.catalogProductId,
-                warehouseId,
-                item.quantity,
-                item.orderId
-              );
-              this.logger.log('Stock unreserved in warehouse-microservice', {
-                productId: item.productId,
-                catalogProductId: product.catalogProductId,
-                quantity: item.quantity,
-              });
-            } catch (error: any) {
-              this.logger.error(`Failed to unreserve stock in warehouse-microservice: ${error.message}`, error.stack, 'WarehouseService');
-              // Continue with local update
-            }
-          }
+        if (!product || !product.catalogProductId) {
+          throw new BadRequestException(`Product ${item.productId} is not linked to catalog for unreservation`);
+        }
 
-          // Update local Product table for cache/display
-          await this.prisma.product.update({
-            where: { id: item.productId },
-            data: { stockQuantity: product.stockQuantity + item.quantity },
+        if (!warehouseId || !item.orderId) {
+          throw new BadRequestException('Missing warehouse or order reference for unreservation');
+        }
+
+        try {
+          await this.warehouseClient.unreserveStock(
+            product.catalogProductId,
+            warehouseId,
+            item.quantity,
+            item.orderId
+          );
+          this.logger.log('Stock unreserved in warehouse-microservice', {
+            productId: item.productId,
+            catalogProductId: product.catalogProductId,
+            quantity: item.quantity,
           });
+        } catch (error: any) {
+          this.logger.error(`Failed to unreserve stock in warehouse-microservice: ${error.message}`, error.stack, 'WarehouseService');
+          throw new BadRequestException(`Failed to unreserve stock for product ${item.productId}`);
         }
       }
     }

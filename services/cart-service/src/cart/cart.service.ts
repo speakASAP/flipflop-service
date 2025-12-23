@@ -235,43 +235,29 @@ export class CartService {
    * Check stock availability from warehouse-microservice or local database
    */
   private async checkStockAvailability(productId: string, catalogProductId: string | null, quantity: number): Promise<void> {
-    if (catalogProductId) {
-      // Use central warehouse-microservice
-      try {
-        const totalAvailable = await this.warehouseClient.getTotalAvailable(catalogProductId);
-        if (totalAvailable < quantity) {
-          throw new BadRequestException(`Insufficient stock. Available: ${totalAvailable}, Requested: ${quantity}`);
-        }
-      } catch (error: any) {
-        // If warehouse-microservice is unavailable, log warning but allow operation
-        // This prevents service failures from breaking cart functionality
-        if (error instanceof BadRequestException && error.message.includes('Insufficient stock')) {
-          throw error;
-        }
-        this.logger.warn(
-          `Failed to check stock from warehouse-microservice for product ${productId}: ${error.message}`,
-          'CartService'
-        );
-        // Fallback to local stock check
-        const product = await this.prisma.product.findUnique({
-          where: { id: productId },
-          select: { stockQuantity: true, trackInventory: true },
-        });
+    if (!catalogProductId) {
+      this.logger.warn(
+        `Catalog product missing for ${productId}; cannot verify stock centrally`,
+        'CartService'
+      );
+      throw new BadRequestException('Unable to verify stock for this product. Please try again later.');
+    }
 
-        if (product?.trackInventory && (product.stockQuantity || 0) < quantity) {
-          throw new BadRequestException(`Insufficient stock. Available: ${product.stockQuantity}, Requested: ${quantity}`);
-        }
+    try {
+      const totalAvailable = await this.warehouseClient.getTotalAvailable(catalogProductId);
+      if (totalAvailable < quantity) {
+        throw new BadRequestException(`Insufficient stock. Available: ${totalAvailable}, Requested: ${quantity}`);
       }
-    } else {
-      // Fallback to local stock (legacy mode)
-      const product = await this.prisma.product.findUnique({
-        where: { id: productId },
-        select: { stockQuantity: true, trackInventory: true },
-      });
-
-      if (product?.trackInventory && (product.stockQuantity || 0) < quantity) {
-        throw new BadRequestException(`Insufficient stock. Available: ${product.stockQuantity}, Requested: ${quantity}`);
+    } catch (error: any) {
+      if (error instanceof BadRequestException && error.message.includes('Insufficient stock')) {
+        throw error;
       }
+      this.logger.error(
+        `Failed to verify stock via warehouse-microservice for product ${productId}: ${error.message}`,
+        error.stack,
+        'CartService'
+      );
+      throw new BadRequestException('Stock verification failed. Please try again shortly.');
     }
   }
 
