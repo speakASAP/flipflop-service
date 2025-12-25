@@ -48,6 +48,7 @@ export interface ProductFilters {
   categoryId?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+  includeWarehouse?: boolean | string; // Include warehouse stock data (default: true)
 }
 
 export interface PaginatedResponse<T> {
@@ -111,8 +112,13 @@ export const productsApi = {
     );
   },
 
-  async getProduct(id: string) {
-    return apiClient.get<Product>(`/products/${id}`);
+  async getProduct(id: string, includeWarehouse: boolean = true) {
+    const params = new URLSearchParams();
+    if (includeWarehouse !== undefined) {
+      params.append('includeWarehouse', String(includeWarehouse));
+    }
+    const query = params.toString();
+    return apiClient.get<Product>(`/products/${id}${query ? `?${query}` : ''}`);
   },
 
   async getCategories() {

@@ -22,6 +22,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     categoryId: searchParams.categoryId,
     minPrice: searchParams.minPrice ? parseFloat(searchParams.minPrice) : undefined,
     maxPrice: searchParams.maxPrice ? parseFloat(searchParams.maxPrice) : undefined,
+    includeWarehouse: true, // Always include real warehouse stock data
   };
 
   const response = await productsApi.getProducts(filters);

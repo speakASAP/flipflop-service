@@ -26,6 +26,7 @@ export default function AdminProductsPage() {
         page,
         limit: 20,
         search: search || undefined,
+        includeWarehouse: true, // Always include real warehouse stock data
       });
       if (response.success && response.data) {
         const data = response.data as PaginatedResponse<Product>;

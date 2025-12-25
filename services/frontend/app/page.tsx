@@ -5,24 +5,26 @@ import ProductCard from '@/components/ProductCard';
 // Product type with optional rating for display purposes
 type ProductWithRating = Product & { rating?: number };
 
-// Placeholder products for demo when API is not available
-const placeholderProducts: ProductWithRating[] = [
-  { id: '1', name: 'Kvalitní notebook', sku: 'PLACEHOLDER-1', price: 15990, brand: 'TechBrand', stockQuantity: 15, rating: 4.5, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  { id: '2', name: 'Bezdrátová sluchátka', sku: 'PLACEHOLDER-2', price: 2490, brand: 'AudioPro', stockQuantity: 32, rating: 4.8, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  { id: '3', name: 'Chytrý telefon', sku: 'PLACEHOLDER-3', price: 12990, brand: 'SmartTech', stockQuantity: 8, rating: 4.7, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  { id: '4', name: 'Sportovní boty', sku: 'PLACEHOLDER-4', price: 1890, brand: 'SportMax', stockQuantity: 45, rating: 4.6, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  { id: '5', name: 'Designové hodinky', sku: 'PLACEHOLDER-5', price: 5490, brand: 'TimeStyle', stockQuantity: 12, rating: 4.9, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  { id: '6', name: 'Kávovar', sku: 'PLACEHOLDER-6', price: 3290, brand: 'CoffeePro', stockQuantity: 20, rating: 4.4, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  { id: '7', name: 'Fitness náramek', sku: 'PLACEHOLDER-7', price: 1290, brand: 'FitTrack', stockQuantity: 28, rating: 4.5, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  { id: '8', name: 'Tablet', sku: 'PLACEHOLDER-8', price: 8990, brand: 'TechBrand', stockQuantity: 18, rating: 4.6, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-];
-
 export default async function HomePage() {
-  // Fetch featured products
-  const productsResponse = await productsApi.getProducts({ limit: 8 });
-  const products = productsResponse.success && productsResponse.data && productsResponse.data.items?.length > 0 
-    ? productsResponse.data.items 
-    : placeholderProducts;
+  // Fetch featured products from catalog and warehouse services
+  // includeWarehouse is now default true, so real stock data will be included
+  let products: ProductWithRating[] = [];
+  let hasError = false;
+
+  try {
+    const productsResponse = await productsApi.getProducts({ limit: 8, includeWarehouse: true });
+    if (productsResponse.success && productsResponse.data?.items) {
+      products = productsResponse.data.items;
+    } else {
+      // Log error but don't throw - show empty state instead
+      console.error('Failed to fetch products:', productsResponse.error);
+      hasError = true;
+    }
+  } catch (error) {
+    // Log error but don't throw - show empty state instead
+    console.error('Error fetching products:', error);
+    hasError = true;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -104,11 +106,29 @@ export default async function HomePage() {
             </Link>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {products.map((product: ProductWithRating) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {products.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+              {products.map((product: ProductWithRating) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 bg-white rounded-2xl shadow-lg">
+              <div className="text-6xl mb-4">📦</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">Žádné produkty k dispozici</h3>
+              <p className="text-gray-600 mb-6">
+                {hasError 
+                  ? 'Nepodařilo se načíst produkty. Zkuste to prosím později.'
+                  : 'V současné době nemáme žádné produkty v nabídce.'}
+              </p>
+              <Link
+                href="/products"
+                className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                Procházet produkty
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

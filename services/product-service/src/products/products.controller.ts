@@ -33,7 +33,8 @@ export class ProductsController {
     @Param('id') id: string,
     @Query('includeWarehouse') includeWarehouse?: string,
   ) {
-    const includeWarehouseData = includeWarehouse === 'true' || includeWarehouse === '1';
+    // Default to true (include warehouse data) unless explicitly set to false
+    const includeWarehouseData = includeWarehouse !== 'false' && includeWarehouse !== '0';
     const product = await this.productsService.getProduct(id, includeWarehouseData);
     return ApiResponse.success(product);
   }

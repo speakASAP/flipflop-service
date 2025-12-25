@@ -24,30 +24,32 @@ export class ProductsService {
   async getProducts(filters: any) {
     try {
       // Fetch products from catalog-microservice
+      // Note: catalog client only supports: search, isActive, categoryId, page, limit
       const catalogResult = await this.catalogClient.searchProducts({
         page: Number(filters.page) || 1,
         limit: Number(filters.limit) || 20,
         search: filters.search,
         categoryId: filters.categoryId,
-        brand: filters.brand,
-        minPrice: filters.minPrice,
-        maxPrice: filters.maxPrice,
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
+        isActive: filters.isActive !== undefined ? filters.isActive : true,
       });
 
-      // Fetch stock from warehouse-microservice if requested
+      // Always fetch stock from warehouse-microservice (unless explicitly disabled)
+      // This ensures real stock quantities are displayed instead of 0
       let warehouseData: Map<string, any> = new Map();
-      if (filters.includeWarehouse === 'true' || filters.includeWarehouse === true) {
+      const shouldIncludeWarehouse = filters.includeWarehouse !== 'false' && filters.includeWarehouse !== false;
+      if (shouldIncludeWarehouse) {
         const productIds = catalogResult.items.map((p: any) => p.id);
         if (productIds.length > 0) {
+          this.logger.log(`Fetching warehouse stock for ${productIds.length} products`, 'ProductsService');
           // Get stock for all products
           const stockPromises = productIds.map(async (productId: string) => {
             try {
-              const stock = await this.warehouseClient.getProductStock(productId);
-              return { productId, stock };
+              // Use getTotalAvailable to get stock quantity
+              const totalAvailable = await this.warehouseClient.getTotalAvailable(productId);
+              return { productId, stock: { available: totalAvailable } };
             } catch (error: any) {
-              this.logger.error(`Failed to fetch stock for product ${productId}: ${error.message}`, error.stack, 'ProductsService');
+              // Log warning but don't fail the request - products will show 0 stock
+              this.logger.warn(`Failed to fetch stock for product ${productId}: ${error.message}`, 'ProductsService');
               return { productId, stock: null };
             }
           });
@@ -57,6 +59,7 @@ export class ProductsService {
               warehouseData.set(productId, stock);
             }
           });
+          this.logger.log(`Successfully fetched warehouse stock for ${warehouseData.size} products`, 'ProductsService');
         }
       }
 
@@ -92,7 +95,14 @@ export class ProductsService {
 
       return {
         items,
-        pagination: catalogResult.pagination,
+        pagination: {
+          page: catalogResult.page,
+          limit: catalogResult.limit,
+          total: catalogResult.total,
+          totalPages: Math.ceil(catalogResult.total / catalogResult.limit),
+          hasNext: catalogResult.page < Math.ceil(catalogResult.total / catalogResult.limit),
+          hasPrev: catalogResult.page > 1,
+        },
       };
     } catch (error: any) {
       this.logger.error(`Failed to fetch products: ${error.message}`, error.stack, 'ProductsService');
@@ -104,21 +114,26 @@ export class ProductsService {
    * Get product by ID
    * Fetches from catalog-microservice and enriches with stock from warehouse-microservice
    */
-  async getProduct(id: string, includeWarehouse: boolean = false) {
+  async getProduct(id: string, includeWarehouse: boolean = true) {
     try {
       // Fetch product from catalog-microservice
-      const product = await this.catalogClient.getProduct(id);
+      const product = await this.catalogClient.getProductById(id);
       if (!product) {
         throw new NotFoundException('Product not found');
       }
 
-      // Fetch stock from warehouse-microservice if requested
+      // Always fetch stock from warehouse-microservice by default (unless explicitly disabled)
+      // This ensures real stock quantities are displayed
       let stock = null;
       if (includeWarehouse) {
         try {
-          stock = await this.warehouseClient.getProductStock(id);
+          this.logger.log(`Fetching warehouse stock for product ${id}`, 'ProductsService');
+          const totalAvailable = await this.warehouseClient.getTotalAvailable(id);
+          stock = { available: totalAvailable };
+          this.logger.log(`Successfully fetched warehouse stock for product ${id}: ${totalAvailable}`, 'ProductsService');
         } catch (error: any) {
-          this.logger.error(`Failed to fetch stock for product ${id}: ${error.message}`, error.stack, 'ProductsService');
+          // Log warning but don't fail the request - product will show 0 stock
+          this.logger.warn(`Failed to fetch stock for product ${id}: ${error.message}`, 'ProductsService');
         }
       }
 
