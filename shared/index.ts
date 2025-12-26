@@ -59,7 +59,7 @@ export * from './resilience/resilience.monitor';
 export * from './resilience/resilience.config';
 
 // Central Microservices Clients
-export * from './clients/clients.module';
+export { ClientsModule } from './clients/clients.module';
 export * from './clients/catalog-client.service';
 export * from './clients/warehouse-client.service';
 export * from './clients/order-client.service';
