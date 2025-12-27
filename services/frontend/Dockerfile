@@ -25,8 +25,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install curl for health checks
-RUN apt-get update -y && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Install curl for health checks and tini for zombie process reaping
+RUN apt-get update -y && apt-get install -y curl tini && rm -rf /var/lib/apt/lists/*
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -42,6 +42,10 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+
+# Use tini as init system to properly reap zombie processes
+# tini will run as PID 1 and handle signal forwarding and zombie process cleanup
+ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Run server.js from the standalone output
 CMD ["node", "server.js"]
