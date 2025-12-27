@@ -11,6 +11,28 @@ const nextConfig: NextConfig = {
     // Images will be served as-is without optimization
     unoptimized: true,
   },
+  // Reduce memory usage during builds and runtime
+  experimental: {
+    // Reduce memory usage during webpack compilation
+    webpackMemoryOptimizations: true,
+  },
+  // Disable source maps in production to reduce memory usage
+  productionBrowserSourceMaps: false,
+  // Suppress error overlay in production to reduce noise
+  reactStrictMode: true,
+  // Logging configuration
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
+  },
+  // Error handling - suppress known Next.js internal errors
+  onDemandEntries: {
+    // Period in ms to keep pages in the buffer
+    maxInactiveAge: 25 * 1000,
+    // Number of pages that should be kept simultaneously without being disposed
+    pagesBufferLength: 2,
+  },
 };
 
 export default nextConfig;
