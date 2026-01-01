@@ -161,6 +161,43 @@ Configure services via `.env` files.
 
 See [docs/ENV_VARIABLES.md](./docs/ENV_VARIABLES.md) for complete environment variable reference.
 
+## 🔧 Troubleshooting
+
+### Zombie Processes in Frontend Container
+
+**Issue**: Frontend container (`flipflop-service-frontend-blue` or `flipflop-service-frontend-green`) generates zombie processes.
+
+**Root Cause**: Container was built with an older Dockerfile that didn't include `tini` as PID 1, or healthcheck was spawning child processes.
+
+**Solution**:
+
+1. **Rebuild the container** with the current Dockerfile (which includes `tini`):
+   ```bash
+   cd /path/to/flipflop-service
+   docker-compose -f docker-compose.blue.yml build frontend
+   # or for green:
+   docker-compose -f docker-compose.green.yml build frontend
+   ```
+
+2. **Restart the container**:
+   ```bash
+   docker-compose -f docker-compose.blue.yml up -d frontend
+   # or for green:
+   docker-compose -f docker-compose.green.yml up -d frontend
+   ```
+
+3. **Verify tini is running as PID 1**:
+   ```bash
+   docker exec flipflop-service-frontend-blue cat /proc/1/cmdline | tr '\0' ' '
+   # Should show: /usr/bin/tini -- node server.js
+   ```
+
+**Prevention**: The Dockerfile now includes:
+- `tini` installed and configured as PID 1 (line 29, 48)
+- Healthcheck uses `curl` instead of complex node commands (simpler, no child processes)
+
+**Note**: If you see zombie processes, the container needs to be rebuilt. The current Dockerfile configuration prevents this issue.
+
 ## 📝 License
 
 MIT License - See [LICENSE](LICENSE) file for details.
