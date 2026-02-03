@@ -25,7 +25,7 @@ The platform consists of 9 microservices:
 Services use host ports in the 35xx range, mapping to standard container ports:
 
 | Service | Host Port | Container Port | .env Variable | Description |
-|---------|-----------|----------------|---------------|-------------|
+| ------- | --------- | -------------- | ------------- | ----------- |
 | **Frontend** | `${FRONTEND_PORT:-3500}` | `3000` | `FRONTEND_PORT` (flipflop/.env) | Next.js frontend application |
 | **API Gateway** | `${API_GATEWAY_PORT:-3511}` | `3011` | `API_GATEWAY_PORT` (flipflop/.env) | Main API gateway for routing |
 | **Product Service** | `${PRODUCT_SERVICE_PORT:-3502}` | `3002` | `PRODUCT_SERVICE_PORT` (flipflop/.env) | Product catalog management |
