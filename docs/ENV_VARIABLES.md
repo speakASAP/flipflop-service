@@ -215,7 +215,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 ### External Shared Microservices
 
 | Variable | Required | Description | Production | Development |
-|----------|----------|-------------|------------|-------------|
+| -------- | -------- | ----------- | ---------- | ----------- |
 | `AUTH_SERVICE_URL` | Yes | Auth microservice URL | `https://auth.statex.cz` | `https://auth.statex.cz` or `http://auth-microservice:${PORT:-3370}` (port configured in `auth-microservice/.env`) |
 | `NOTIFICATION_SERVICE_URL` | Yes | Notification microservice URL | `https://notifications.statex.cz` | `https://notifications.statex.cz` or `http://notifications-microservice:${PORT:-3368}` (port configured in `notifications-microservice/.env`) |
 | `LOGGING_SERVICE_URL` | Yes | Logging microservice URL | `https://logging.statex.cz` | `https://logging.statex.cz` or `http://logging-microservice:${PORT:-3367}` (port configured in `logging-microservice/.env`) |
@@ -225,7 +225,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 ### Database Configuration
 
 | Variable | Required | Description | Production | Development |
-|----------|----------|-------------|------------|-------------|
+| -------- | -------- | ----------- | ---------- | ----------- |
 | `DB_HOST` | Yes | Database hostname | `db-server-postgres` | `localhost` (via SSH tunnel) |
 | `DB_PORT` | Yes | Database port | `${DB_SERVER_PORT:-5432}` | `${DB_SERVER_PORT:-5432}` (port configured in `database-server/.env`) |
 | `DB_USER` | Yes | Database username | `dbadmin` | `dbadmin` |
@@ -238,7 +238,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 ### Redis Configuration
 
 | Variable | Required | Description | Production | Development |
-|----------|----------|-------------|------------|-------------|
+| -------- | -------- | ----------- | ---------- | ----------- |
 | `REDIS_HOST` | No | Redis hostname | `db-server-redis` | `localhost` (via SSH tunnel) |
 | `REDIS_PORT` | No | Redis port | `6379` | `6379` |
 | `REDIS_PASSWORD` | No | Redis password (if set) | `<secret>` | `<secret>` |
@@ -249,7 +249,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 **Note**: These are container ports. Host ports are in the 35xx range (3500, 3502-3509, 3511) as per README.md.
 
 | Variable | Required | Description | Container Port | Host Port |
-|----------|----------|-------------|----------------|-----------|
+| -------- | -------- | ----------- | -------------- | --------- |
 | `API_GATEWAY_PORT` | No | API Gateway port | `3011` | `3511` |
 | `USER_SERVICE_PORT` | No | User Service port | `3004` | `3504` |
 | `PRODUCT_SERVICE_PORT` | No | Product Service port | `3002` | `3502` |
@@ -261,14 +261,14 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 ### Logging Configuration
 
 | Variable | Required | Description | Default |
-|----------|----------|-------------|---------|
+| -------- | -------- | ----------- | ------- |
 | `LOG_LEVEL` | No | Logging level (error/warn/info/debug) | `info` |
 | `LOG_TIMESTAMP_FORMAT` | No | Timestamp format | `YYYY-MM-DD HH:mm:ss` |
 
 ### Payment Gateway (PayU)
 
 | Variable | Required | Description |
-|----------|----------|-------------|
+| -------- | -------- | ----------- |
 | `PAYU_POS_ID` | Yes | PayU Point of Sale ID |
 | `PAYU_CLIENT_ID` | Yes | PayU Client ID |
 | `PAYU_CLIENT_SECRET` | Yes | PayU Client Secret |
@@ -278,14 +278,14 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 ### AI Service (OpenRouter)
 
 | Variable | Required | Description | URL |
-|----------|----------|-------------|-----|
+| -------- | -------- | ----------- | --- |
 | `OPENROUTER_API_KEY` | Yes | OpenRouter API key | `https://openrouter.ai/api/v1` |
 | `OPENROUTER_BASE_URL` | No | OpenRouter API base URL | `https://openrouter.ai/api/v1` |
 
 ### Frontend Configuration
 
 | Variable | Required | Description |
-|----------|----------|-------------|
+| -------- | -------- | ----------- |
 | `API_URL` | Yes | Backend API URL |
 | `NEXT_PUBLIC_API_URL` | Yes | Public API URL (exposed to browser) |
 
