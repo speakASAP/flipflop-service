@@ -27,6 +27,8 @@ export * from './auth/auth.module';
 export * from './auth/auth.service';
 export * from './auth/auth.interface';
 export * from './auth/jwt-auth.guard';
+export * from './auth/roles.guard';
+export * from './auth/roles.decorator';
 
 // Payments
 export * from './payments/payment.module';
