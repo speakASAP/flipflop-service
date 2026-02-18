@@ -16,7 +16,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { JwtAuthGuard, ApiResponse } from '@flipflop/shared';
+import { JwtAuthGuard, RolesGuard, Roles, ApiResponse } from '@flipflop/shared';
 
 @Controller('products')
 export class ProductsController {
@@ -58,27 +58,25 @@ export class CategoriesController {
 }
 
 @Controller('products')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('global:superadmin', 'app:flipflop-service:admin')
 export class AdminProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
   async createProduct(@Request() req: any, @Body() dto: any) {
-    // TODO: Add admin check
     const product = await this.productsService.createProduct(dto);
     return ApiResponse.success(product);
   }
 
   @Put(':id')
   async updateProduct(@Request() req: any, @Param('id') id: string, @Body() dto: any) {
-    // TODO: Add admin check
     const product = await this.productsService.updateProduct(id, dto);
     return ApiResponse.success(product);
   }
 
   @Delete(':id')
   async deleteProduct(@Request() req: any, @Param('id') id: string) {
-    // TODO: Add admin check
     const result = await this.productsService.deleteProduct(id);
     return ApiResponse.success(result);
   }

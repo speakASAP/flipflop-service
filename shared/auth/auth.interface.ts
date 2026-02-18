@@ -23,6 +23,7 @@ export interface AuthUser {
   phone?: string;
   isActive: boolean;
   isVerified: boolean;
+  roles?: string[];
   createdAt?: string;
   updatedAt?: string;
 }
