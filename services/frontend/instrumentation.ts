@@ -6,7 +6,10 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     // Suppress known Next.js internal errors that don't affect functionality
-    const originalEmit: typeof process.emit = process.emit.bind(process);
+    const originalEmit = process.emit.bind(process) as (
+      event: string | symbol,
+      ...args: any[]
+    ) => boolean;
     process.emit = ((event: string | symbol, ...args: any[]): boolean => {
       // Filter out known harmless errors
       if (event === 'uncaughtException') {
@@ -28,7 +31,7 @@ export async function register() {
         }
       }
       return originalEmit(event, ...args);
-    }) as typeof process.emit;
+    }) as any;
 
     // Handle unhandled promise rejections
     process.on('unhandledRejection', (reason, promise) => {
