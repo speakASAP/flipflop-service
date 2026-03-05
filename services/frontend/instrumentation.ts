@@ -6,11 +6,11 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     // Suppress known Next.js internal errors that don't affect functionality
-    const originalEmit = process.emit;
-    process.emit = function (event: string | symbol, ...args: any[]) {
+    const originalEmit: typeof process.emit = process.emit.bind(process);
+    process.emit = ((event: string | symbol, ...args: any[]): boolean => {
       // Filter out known harmless errors
       if (event === 'uncaughtException') {
-        const error = args[0] as Error;
+        const error = args[0] as NodeJS.ErrnoException;
         // Suppress permission errors for non-existent paths (likely Next.js internal bug)
         if (
           error.message?.includes('/dev/lrt') ||
@@ -27,8 +27,8 @@ export async function register() {
           return false;
         }
       }
-      return originalEmit.apply(this, [event, ...args]);
-    };
+      return originalEmit(event, ...args);
+    }) as typeof process.emit;
 
     // Handle unhandled promise rejections
     process.on('unhandledRejection', (reason, promise) => {
