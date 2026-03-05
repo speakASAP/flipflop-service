@@ -30,7 +30,7 @@ export async function register() {
           return false;
         }
       }
-      return originalEmit(event, ...args);
+      return Boolean(originalEmit(event, ...args));
     }) as any;
 
     // Handle unhandled promise rejections
