@@ -50,7 +50,7 @@ All external microservices are **fully integrated** and being used throughout th
 
 **Features Used**:
 
-- Email notifications
+- Email notifications (flipflop.cz sender identity; **planned migration from SendGrid to AWS SES**—see notifications-microservice channel registry)
 - Telegram notifications
 - WhatsApp notifications
 - Order confirmation notifications
