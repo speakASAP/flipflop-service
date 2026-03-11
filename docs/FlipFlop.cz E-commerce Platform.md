@@ -674,7 +674,7 @@ Create a modern, fully automated flipflop platform for selling diverse product c
 
 **Multi-channel notifications:**
 
-* Email service (SendGrid, Mailgun, AWS SES, etc.)  
+* Email: via shared **notifications-microservice**; flipflop.cz identity will use **AWS SES** (migration from SendGrid planned). See notifications-microservice channel registry.
 * Telegram Bot API  
 * WhatsApp Business API  
 * SMS service  

@@ -89,10 +89,14 @@ OPENROUTER_API_KEY=<your-openrouter-api-key>
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 
 # ============================================
-# Email Service (SendGrid) - Optional, notifications use external microservice
+# Email (flipflop.cz) - Via notifications-microservice; moving to AWS SES
 # ============================================
-SENDGRID_API_KEY=<your-sendgrid-api-key-if-needed>
-SENDGRID_FROM_EMAIL=noreply@flipflop.cz
+# Flipflop does not send email directly. All email is sent via NOTIFICATION_SERVICE_URL.
+# The flipflop.cz sender identity (noreply@flipflop.cz) is being migrated from SendGrid to AWS SES
+# and will be configured in notifications-microservice (channel registry). The variables below
+# are legacy/deprecated for flipflop-service; do not rely on them for new features.
+# SENDGRID_API_KEY=
+# SENDGRID_FROM_EMAIL=noreply@flipflop.cz
 
 # ============================================
 # Frontend Configuration
@@ -198,10 +202,11 @@ OPENROUTER_API_KEY=<your-openrouter-api-key>
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 
 # ============================================
-# Email Service (SendGrid) - Optional
+# Email (flipflop.cz) - Via notifications-microservice; moving to AWS SES
 # ============================================
-SENDGRID_API_KEY=<your-sendgrid-api-key-if-needed>
-SENDGRID_FROM_EMAIL=noreply@flipflop.cz
+# See Production section above. Legacy SENDGRID_* vars deprecated for flipflop.
+# SENDGRID_API_KEY=
+# SENDGRID_FROM_EMAIL=noreply@flipflop.cz
 
 # ============================================
 # Frontend Configuration

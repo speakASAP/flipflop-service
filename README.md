@@ -58,7 +58,7 @@ Services use host ports in the 35xx range, mapping to standard container ports:
 - **Caching**: Redis
 - **Payment**: PayU (Czech Republic)
 - **AI**: OpenRouter API (Google Gemini 2.0 Flash)
-- **Notifications**: SendGrid, Telegram, WhatsApp
+- **Notifications**: Email (via notifications-microservice; flipflop.cz identity will use **AWS SES**—migration from SendGrid planned), Telegram, WhatsApp
 - **Containerization**: Docker & Docker Compose
 - **Reverse Proxy**: Nginx (external)
 
@@ -172,6 +172,7 @@ See [docs/ENV_VARIABLES.md](./docs/ENV_VARIABLES.md) for complete environment va
 **Solution**:
 
 1. **Rebuild the container** with the current Dockerfile (which includes `tini`):
+
    ```bash
    cd /path/to/flipflop-service
    docker-compose -f docker-compose.blue.yml build frontend
@@ -180,6 +181,7 @@ See [docs/ENV_VARIABLES.md](./docs/ENV_VARIABLES.md) for complete environment va
    ```
 
 2. **Restart the container**:
+
    ```bash
    docker-compose -f docker-compose.blue.yml up -d frontend
    # or for green:
@@ -187,12 +189,14 @@ See [docs/ENV_VARIABLES.md](./docs/ENV_VARIABLES.md) for complete environment va
    ```
 
 3. **Verify tini is running as PID 1**:
+
    ```bash
    docker exec flipflop-service-frontend-blue cat /proc/1/cmdline | tr '\0' ' '
    # Should show: /usr/bin/tini -- node server.js
    ```
 
 **Prevention**: The Dockerfile now includes:
+
 - `tini` installed and configured as PID 1 (line 29, 48)
 - Healthcheck uses `curl` instead of complex node commands (simpler, no child processes)
 
