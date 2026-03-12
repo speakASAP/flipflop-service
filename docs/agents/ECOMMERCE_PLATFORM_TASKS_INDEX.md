@@ -61,4 +61,3 @@ See:
 ## Next Phases
 
 Later phases (catalog admin + warehouse orchestration, orders/payments integration, events to leads) must also define Implementation + Validator agents, following this structure, but those are executed after Sync A is approved.
-
