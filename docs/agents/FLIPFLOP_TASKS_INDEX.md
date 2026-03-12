@@ -45,4 +45,3 @@ must each define:
 - A **Validator Agent** prompt (how to verify behavior and contracts).
 
 Those prompts are defined closer to implementation time, after Sync A is fully validated.
-
