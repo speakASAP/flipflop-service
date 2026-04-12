@@ -6,6 +6,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
+import { Reflector } from '@nestjs/core';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
@@ -34,7 +35,7 @@ import https from 'https';
     LoggerModule,
     ResilienceModule,
   ],
-  providers: [AuthService, JwtAuthGuard, RolesGuard],
+  providers: [AuthService, JwtAuthGuard, RolesGuard, Reflector],
   exports: [AuthService, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {}
