@@ -19,7 +19,8 @@
     "noFallthroughCasesInSwitch": false,
     "types": ["node", "jest"],
     "paths": {
-      "@shared/*": ["shared/*"]
+      "@shared/*": ["shared/*"],
+      "@prisma/client": ["./node_modules/@prisma/client"]
     }
   },
   "include": ["shared/**/*"],
