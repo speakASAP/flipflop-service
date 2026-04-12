@@ -33,6 +33,8 @@ RUN npm run build
 # Build service
 WORKDIR /app/services/order-service
 RUN npm install --include=dev
+# Generate Prisma client at root level so TypeScript can resolve @prisma/client types
+RUN cd /app && npx prisma generate --schema=./prisma/schema.prisma
 RUN npm run build
 
 # Expose port
