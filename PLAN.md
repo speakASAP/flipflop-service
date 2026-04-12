@@ -6,9 +6,9 @@
 
 | ID  | Task | Owner | Status |
 |-----|------|-------|--------|
-| T0a | Fix `DESCRIPTION` hardcoding in `payments-microservice/src/payments/providers/webpay/webpay.service.ts:329` → dynamic per `applicationId` | cursor-agent | pending |
-| T0b | Wire GP WebPay + Stripe into flipflop-service checkout alongside PayU/PayPal | cursor-agent | pending |
-| T0c | Migrate `speakasap-portal` from Django WebPay (`orders/webpay/`) → `payments-microservice` HTTP client | claude-code | pending |
+| T0a | Fix `DESCRIPTION` hardcoding in `payments-microservice/src/payments/providers/webpay/webpay.service.ts:329` → dynamic per `applicationId` | cursor-agent | done |
+| T0b | Wire GP WebPay + Stripe into flipflop-service checkout alongside PayU/PayPal | cursor-agent | done |
+| T0c | Migrate `speakasap-portal` from Django WebPay (`orders/webpay/`) → `payments-microservice` HTTP client | claude-code | impl_done — staging smoke pending |
 | T1  | Verify PayU end-to-end: initiate → webhook → order.status = paid | cursor-agent | pending |
 | T2  | Verify PayPal end-to-end: initiate → webhook → order.status = paid | cursor-agent | pending |
 | T3  | Verify GP WebPay end-to-end: redirect → PRCODE=0 callback → order.status = paid | cursor-agent | pending |
