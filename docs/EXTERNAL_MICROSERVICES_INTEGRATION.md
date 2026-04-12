@@ -114,8 +114,9 @@ All external microservices are **fully integrated** and being used throughout th
 
 **Environment Variables**:
 
-- `PAYMENT_SERVICE_URL`
-- `PAYMENT_API_KEY` (required for authentication)
+- `PAYMENT_SERVICE_URL` — base URL for REST calls (for example `https://payments.statex.cz` or `http://payments-microservice:3468` on Docker network).
+- `PAYMENT_API_KEY` — value sent as `X-API-Key` on every outbound request to payments-microservice. When `payments-microservice` has **`API_KEYS`** set (comma-separated allowlist), this value must **match one entry exactly**. Add each legitimate client key to `API_KEYS` on the payment service, then restart payments-microservice.
+- `API_GATEWAY_URL`, `PAYMENT_WEBHOOK_API_KEY`, `FLIPFLOP_INTERNAL_SERVICE_SECRET` — used by flipflop checkout and application callbacks from payments; see [ENV_VARIABLES.md](./ENV_VARIABLES.md).
 
 ---
 
@@ -190,7 +191,7 @@ AUTH_SERVICE_URL=https://auth.statex.cz
 NOTIFICATION_SERVICE_URL=https://notifications.statex.cz
 LOGGING_SERVICE_URL=https://logging.statex.cz
 PAYMENT_SERVICE_URL=https://payments.statex.cz
-PAYMENT_API_KEY=<your-api-key>
+PAYMENT_API_KEY=<one-of-payments-microservice-API_KEYS>
 
 # Database
 DB_HOST=db-server-postgres
@@ -322,7 +323,9 @@ Before deploying, ensure:
 - [ ] `NOTIFICATION_SERVICE_URL` points to production notifications-microservice
 - [ ] `LOGGING_SERVICE_URL` points to production logging-microservice
 - [ ] `PAYMENT_SERVICE_URL` points to production payments-microservice
-- [ ] `PAYMENT_API_KEY` is set and valid
+- [ ] `payments-microservice` `API_KEYS` includes flipflop’s `PAYMENT_API_KEY` (and any other callers), and payments was restarted after changes
+- [ ] `PAYMENT_API_KEY` matches one entry in that allowlist
+- [ ] (Checkout) `API_GATEWAY_URL`, `FLIPFLOP_INTERNAL_SERVICE_SECRET`, and optional `PAYMENT_WEBHOOK_API_KEY` align with [ENV_VARIABLES.md](./ENV_VARIABLES.md)
 - [ ] Database connection is configured (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`)
 - [ ] Redis connection is configured (if using caching)
 - [ ] All services can reach external microservices (network connectivity)
@@ -338,5 +341,5 @@ Before deploying, ensure:
 
 ---
 
-**Last Updated**: 2025-01-27
+**Last Updated**: 2026-04-12
 **Status**: All microservices fully integrated ✅

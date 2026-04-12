@@ -147,7 +147,10 @@ Configure services via `.env` files.
 - `PAYMENT_SERVICE_URL` - Payment microservice URL (REQUIRED)
   - Production: `https://payments.statex.cz`
   - Docker/Development: `http://payments-microservice:3468`
-- `PAYMENT_API_KEY` - API key for payment microservice (REQUIRED)
+- `PAYMENT_API_KEY` - Sent as `X-API-Key` on **outbound** calls to payments-microservice (REQUIRED in production). Must match **one** of the comma-separated values in `payments-microservice` `API_KEYS` when that variable is set.
+- `API_GATEWAY_URL` - Public base URL of flipflop api-gateway (no trailing slash), used to build `callbackUrl` for payments (for example `https://flipflop.statex.cz`).
+- `PAYMENT_WEBHOOK_API_KEY` - Optional: if set, api-gateway `POST /api/webhooks/payment-result` only forwards when incoming `X-API-Key` matches. Use the **same** value as `SPEAKASAP_PORTAL_API_KEY` on payments-microservice so provider callbacks that include that header are accepted.
+- `FLIPFLOP_INTERNAL_SERVICE_SECRET` - Shared secret between api-gateway and order-service (`X-Flipflop-Internal-Key`) for internal payment-result handling. Set the **same** value in the root `.env` used by both services.
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` - Database configuration
 - `REDIS_HOST`, `REDIS_PORT` - Redis cache configuration
 - `OPENROUTER_API_KEY` - OpenRouter API key

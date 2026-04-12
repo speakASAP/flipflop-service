@@ -14,7 +14,8 @@ import { ROLES_KEY } from './roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  /** Own instance avoids DI token mismatch when multiple @nestjs/core copies exist (e.g. shared vs service node_modules). */
+  private readonly reflector = new Reflector();
 
   canActivate(context: ExecutionContext): boolean {
     const rolesMetadata = this.reflector.getAllAndOverride<{

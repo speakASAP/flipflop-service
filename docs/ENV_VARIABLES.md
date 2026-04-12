@@ -30,7 +30,10 @@ LOGGING_SERVICE_URL=https://logging.statex.cz
 
 # Payment Microservice (https://payments.statex.cz)
 PAYMENT_SERVICE_URL=https://payments.statex.cz
-PAYMENT_API_KEY=<your-payment-api-key>
+PAYMENT_API_KEY=<must-match-one-entry-in-payments-API_KEYS>
+API_GATEWAY_URL=https://flipflop.statex.cz
+PAYMENT_WEBHOOK_API_KEY=<same-as-payments-SPEAKASAP_PORTAL_API_KEY-if-used>
+FLIPFLOP_INTERNAL_SERVICE_SECRET=<shared-secret-api-gateway-and-order-service>
 
 # ============================================
 # Database Server (Shared PostgreSQL)
@@ -143,7 +146,10 @@ LOGGING_SERVICE_URL=https://logging.statex.cz
 PAYMENT_SERVICE_URL=https://payments.statex.cz
 # Option 2: Use Docker network (if running locally)
 # PAYMENT_SERVICE_URL=http://payments-microservice:${SERVICE_PORT:-3468}  # port configured in payments-microservice/.env
-PAYMENT_API_KEY=<your-payment-api-key>
+PAYMENT_API_KEY=<must-match-one-entry-in-payments-API_KEYS>
+API_GATEWAY_URL=http://localhost:3511
+# PAYMENT_WEBHOOK_API_KEY=  # optional; match payments SPEAKASAP_PORTAL_API_KEY if validating callbacks
+# FLIPFLOP_INTERNAL_SERVICE_SECRET=  # set for checkout webhook path through api-gateway → order-service
 
 # ============================================
 # Database Server (Shared PostgreSQL)
@@ -225,7 +231,10 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 | `NOTIFICATION_SERVICE_URL` | Yes | Notification microservice URL | `https://notifications.statex.cz` | `https://notifications.statex.cz` or `http://notifications-microservice:${PORT:-3368}` (port configured in `notifications-microservice/.env`) |
 | `LOGGING_SERVICE_URL` | Yes | Logging microservice URL | `https://logging.statex.cz` | `https://logging.statex.cz` or `http://logging-microservice:${PORT:-3367}` (port configured in `logging-microservice/.env`) |
 | `PAYMENT_SERVICE_URL` | Yes | Payment microservice URL | `https://payments.statex.cz` | `https://payments.statex.cz` or `http://payments-microservice:${SERVICE_PORT:-3468}` (port configured in `payments-microservice/.env`) |
-| `PAYMENT_API_KEY` | Yes | API key for payment microservice | `<your-api-key>` | `<your-api-key>` |
+| `PAYMENT_API_KEY` | Yes | Outbound `X-API-Key` for `POST /payments/create` etc. | One of `API_KEYS` on payments | Same |
+| `API_GATEWAY_URL` | Yes (checkout) | Public HTTPS base for `callbackUrl` (no trailing slash) | `https://flipflop.statex.cz` | `http://localhost:3511` only if payments can reach host |
+| `PAYMENT_WEBHOOK_API_KEY` | No | If set, validates incoming `X-API-Key` on `POST /api/webhooks/payment-result` | Same as payments `SPEAKASAP_PORTAL_API_KEY` | Omit in dev |
+| `FLIPFLOP_INTERNAL_SERVICE_SECRET` | Yes (checkout) | api-gateway → order-service internal header | Strong random string | Strong random string |
 
 ### Database Configuration
 
@@ -297,11 +306,12 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 ## 🔐 Security Notes
 
 1. **Never commit `.env` files** to version control
-2. **Use `.env.example`** to document variable names (without values)
-3. **Use strong passwords** for database and Redis
-4. **Rotate API keys** regularly
-5. **Use HTTPS** for all production microservice URLs
-6. **Use SSH tunnels** for local database access instead of exposing ports
+2. **Payments**: keep `PAYMENT_API_KEY` in sync with `payments-microservice` `API_KEYS` (comma-separated allowlist). Add a new key to `API_KEYS` before rotating a client secret.
+3. **Use `.env.example`** to document variable names (without values)
+4. **Use strong passwords** for database and Redis
+5. **Rotate API keys** regularly
+6. **Use HTTPS** for all production microservice URLs
+7. **Use SSH tunnels** for local database access instead of exposing ports
 
 ## 🚀 Setup Instructions
 
