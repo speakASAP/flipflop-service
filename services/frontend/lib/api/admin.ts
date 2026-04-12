@@ -77,6 +77,15 @@ export interface MarginAnalysis {
   }>;
 }
 
+export interface CheckoutFunnel {
+  orders_created: number;
+  payments_initiated: number;
+  payments_completed: number;
+  payments_failed: number;
+  completion_rate_pct: number;
+  abandonment_rate_pct: number;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -146,6 +155,11 @@ export const adminApi = {
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     return apiClient.get<MarginAnalysis>(`/analytics/margins?${params.toString()}`);
+  },
+
+  async getCheckoutFunnel(days?: number) {
+    const params = days !== undefined && days > 0 ? `?days=${days}` : '';
+    return apiClient.get<CheckoutFunnel>(`/admin/checkout-funnel${params}`);
   },
 
   // Products (Admin CRUD)

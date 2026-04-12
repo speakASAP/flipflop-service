@@ -5,13 +5,20 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { adminApi, SalesData, RevenueData, MarginAnalysis } from '@/lib/api/admin';
+import {
+  adminApi,
+  SalesData,
+  RevenueData,
+  MarginAnalysis,
+  CheckoutFunnel,
+} from '@/lib/api/admin';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function AdminAnalyticsPage() {
   const [salesData, setSalesData] = useState<SalesData | null>(null);
   const [revenueData, setRevenueData] = useState<RevenueData | null>(null);
   const [marginData, setMarginData] = useState<MarginAnalysis | null>(null);
+  const [funnelData, setFunnelData] = useState<CheckoutFunnel | null>(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState({
     startDate: '',
@@ -21,20 +28,22 @@ export default function AdminAnalyticsPage() {
   const loadAnalytics = useCallback(async () => {
     setLoading(true);
     try {
-      const [salesResponse, revenueResponse, marginResponse] = await Promise.all([
-        adminApi.getSales(
-          dateRange.startDate || undefined,
-          dateRange.endDate || undefined
-        ),
-        adminApi.getRevenue(
-          dateRange.startDate || undefined,
-          dateRange.endDate || undefined
-        ),
-        adminApi.getMarginAnalysis(
-          dateRange.startDate || undefined,
-          dateRange.endDate || undefined
-        ),
-      ]);
+      const [salesResponse, revenueResponse, marginResponse, funnelResponse] =
+        await Promise.all([
+          adminApi.getSales(
+            dateRange.startDate || undefined,
+            dateRange.endDate || undefined
+          ),
+          adminApi.getRevenue(
+            dateRange.startDate || undefined,
+            dateRange.endDate || undefined
+          ),
+          adminApi.getMarginAnalysis(
+            dateRange.startDate || undefined,
+            dateRange.endDate || undefined
+          ),
+          adminApi.getCheckoutFunnel(30),
+        ]);
 
       if (salesResponse.success && salesResponse.data) {
         setSalesData(salesResponse.data);
@@ -44,6 +53,9 @@ export default function AdminAnalyticsPage() {
       }
       if (marginResponse.success && marginResponse.data) {
         setMarginData(marginResponse.data);
+      }
+      if (funnelResponse.success && funnelResponse.data) {
+        setFunnelData(funnelResponse.data);
       }
     } catch (error) {
       console.error('Failed to load analytics:', error);
@@ -210,6 +222,46 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
       </div>
+
+      {funnelData && (
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 mt-6">
+          <h2 className="text-xl font-extrabold mb-4 text-slate-900">
+            Konverzní trychtýř — posledních 30 dní
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {(
+              [
+                { label: 'Objednávky', value: funnelData.orders_created },
+                { label: 'Platba zahájena', value: funnelData.payments_initiated },
+                { label: 'Platba úspěšná', value: funnelData.payments_completed },
+                { label: 'Platba selhala', value: funnelData.payments_failed },
+              ] as const
+            ).map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-xl p-4 text-center bg-gray-50 border border-gray-200"
+              >
+                <p className="text-3xl font-extrabold text-slate-900">{stat.value}</p>
+                <p className="text-sm text-gray-500 mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-8">
+            <div className="text-center">
+              <p className="text-4xl font-extrabold text-green-600">
+                {funnelData.completion_rate_pct}%
+              </p>
+              <p className="text-sm text-gray-500">Konverzní poměr</p>
+            </div>
+            <div className="text-center">
+              <p className="text-4xl font-extrabold text-red-500">
+                {funnelData.abandonment_rate_pct}%
+              </p>
+              <p className="text-sm text-gray-500">Míra opuštění</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

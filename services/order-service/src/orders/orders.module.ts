@@ -3,7 +3,7 @@
  */
 
 import { Module } from '@nestjs/common';
-import { OrdersController, PaymentController } from './orders.controller';
+import { AdminOrdersController, OrdersController, PaymentController } from './orders.controller';
 import { OrdersInternalController } from './orders-internal.controller';
 import { OrdersService } from './orders.service';
 import {
@@ -24,7 +24,7 @@ import {
     NotificationModule,
     ClientsModule,
   ],
-  controllers: [OrdersController, PaymentController, OrdersInternalController],
+  controllers: [OrdersController, PaymentController, AdminOrdersController, OrdersInternalController],
   providers: [OrdersService],
   exports: [OrdersService],
 })

@@ -11,6 +11,24 @@ export type NotificationType =
   | 'shipment_tracking'
   | 'custom';
 
+/** Serializable line items for order_confirmation templateData */
+export interface OrderConfirmationLineItem {
+  productName: string;
+  productSku: string;
+  quantity: number;
+  unitPrice: string;
+  totalPrice: string;
+}
+
+export interface SendOrderConfirmationParams {
+  to: string;
+  orderId: string;
+  orderNumber: string;
+  items: OrderConfirmationLineItem[];
+  total: number;
+  currency?: string;
+}
+
 export interface SendNotificationDto {
   channel: NotificationChannel;
   type: NotificationType;

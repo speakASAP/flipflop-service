@@ -82,6 +82,16 @@ export class GatewayController {
   }
 
   /**
+   * Route admin order analytics (requires auth)
+   */
+  @All('admin/*')
+  @UseGuards(JwtAuthGuard)
+  async adminOrdersRoute(@Req() req: ExpressRequest, @Res() res: ExpressResponse) {
+    const path = req.url.replace('/api/admin', '');
+    return this.routeRequest('orders', `/admin${path}`, req, res);
+  }
+
+  /**
    * Route order requests (requires auth)
    */
   @All('orders/*')

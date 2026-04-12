@@ -1,5 +1,20 @@
 export type NotificationChannel = 'email' | 'telegram' | 'whatsapp';
 export type NotificationType = 'order_confirmation' | 'payment_confirmation' | 'order_status_update' | 'shipment_tracking' | 'custom';
+export interface OrderConfirmationLineItem {
+    productName: string;
+    productSku: string;
+    quantity: number;
+    unitPrice: string;
+    totalPrice: string;
+}
+export interface SendOrderConfirmationParams {
+    to: string;
+    orderId: string;
+    orderNumber: string;
+    items: OrderConfirmationLineItem[];
+    total: number;
+    currency?: string;
+}
 export interface SendNotificationDto {
     channel: NotificationChannel;
     type: NotificationType;

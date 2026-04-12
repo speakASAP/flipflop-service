@@ -12,6 +12,7 @@ import {
   SendNotificationDto,
   NotificationResponse,
   NotificationChannel,
+  SendOrderConfirmationParams,
 } from './notification.interface';
 import { CircuitBreakerService } from '../resilience/circuit-breaker.service';
 import { RetryService } from '../resilience/retry.service';
@@ -73,7 +74,7 @@ export class NotificationService {
   ): Promise<NotificationResponse> {
     // Create a function that captures the dto in closure
     const callFn = async () => this.sendNotificationHttp(dto);
-    
+
     // Get or create circuit breaker (reuses same instance by service name)
     const breaker = this.circuitBreakerService.create(
       'notification-service',
@@ -166,23 +167,25 @@ export class NotificationService {
   }
 
   /**
-   * Send order confirmation notification
+   * Send order confirmation notification (notifications-microservice: type order_confirmation)
    */
   async sendOrderConfirmation(
-    recipient: string,
-    orderNumber: string,
-    orderTotal: number,
+    params: SendOrderConfirmationParams,
     channel: NotificationChannel = 'email',
   ): Promise<NotificationResponse> {
+    const currency = params.currency ?? 'CZK';
     return this.sendNotification({
       channel,
       type: 'order_confirmation',
-      recipient,
-      subject: `Potvrzení objednávky ${orderNumber}`,
-      message: `Vaše objednávka {{orderNumber}} byla úspěšně vytvořena. Celková částka: {{orderTotal}} Kč.`,
+      recipient: params.to,
+      subject: `Potvrzení objednávky ${params.orderNumber}`,
+      message: `Vaše objednávka {{orderNumber}} byla úspěšně potvrzena. Celková částka: {{total}} {{currency}}.`,
       templateData: {
-        orderNumber,
-        orderTotal: orderTotal.toFixed(2),
+        orderId: params.orderId,
+        orderNumber: params.orderNumber,
+        items: params.items,
+        total: params.total.toFixed(2),
+        currency,
       },
     });
   }

@@ -8,6 +8,8 @@ import {
   NotFoundException,
   BadRequestException,
   UnauthorizedException,
+  OnModuleInit,
+  OnModuleDestroy,
 } from '@nestjs/common';
 import { PrismaService } from '@flipflop/shared';
 import { LoggerService } from '@flipflop/shared';
@@ -19,7 +21,9 @@ import { PaymentResultDto } from './dto/payment-result.dto';
 import { UpdateOrderPaymentStatusDto } from './dto/update-order-payment-status.dto';
 
 @Injectable()
-export class OrdersService {
+export class OrdersService implements OnModuleInit, OnModuleDestroy {
+  private staleOrderInterval?: ReturnType<typeof setInterval>;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
@@ -30,10 +34,148 @@ export class OrdersService {
     private readonly warehouseClient: WarehouseClientService,
   ) {}
 
+  onModuleInit(): void {
+    const hourMs = 60 * 60 * 1000;
+    this.staleOrderInterval = setInterval(() => {
+      void this.cancelStaleUnpaidOrders();
+    }, hourMs);
+  }
+
+  onModuleDestroy(): void {
+    if (this.staleOrderInterval) {
+      clearInterval(this.staleOrderInterval);
+    }
+  }
+
   assertInternalServiceKey(internalKey: string | undefined): void {
     const expected = this.configService.get<string>('FLIPFLOP_INTERNAL_SERVICE_SECRET');
     if (expected && internalKey !== expected) {
       throw new UnauthorizedException('Invalid internal service key');
+    }
+  }
+
+  /**
+   * Reserve catalog stock in warehouse-microservice for each line (orderNumber = reservation key).
+   */
+  private async reserveOrderLines(orderNumber: string, orderItems: any[]): Promise<void> {
+    const warehouseId = await this.warehouseClient.getDefaultWarehouseId();
+    if (!warehouseId) {
+      this.logger.warn('Stock reserve skipped: no default warehouse', { orderNumber });
+      return;
+    }
+    const completed: Array<{ catalogProductId: string; quantity: number }> = [];
+    for (const item of orderItems) {
+      const product =
+        item.products ||
+        (await this.prisma.product.findUnique({
+          where: { id: item.productId },
+        }));
+      const catalogProductId = product?.catalogProductId;
+      if (!catalogProductId) {
+        continue;
+      }
+      try {
+        await this.warehouseClient.reserveStock(
+          catalogProductId,
+          warehouseId,
+          item.quantity,
+          orderNumber,
+        );
+        completed.push({ catalogProductId, quantity: item.quantity });
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        for (const row of completed.slice().reverse()) {
+          try {
+            await this.warehouseClient.unreserveStock(
+              row.catalogProductId,
+              warehouseId,
+              row.quantity,
+              orderNumber,
+            );
+          } catch (inner: unknown) {
+            this.logger.warn('Stock reserve rollback: unreserve failed', {
+              orderNumber,
+              catalogProductId: row.catalogProductId,
+              error: inner instanceof Error ? inner.message : String(inner),
+            });
+          }
+        }
+        this.logger.error('Stock reservation failed', { orderNumber, message });
+        throw new BadRequestException(`Stock reservation failed: ${message}`);
+      }
+    }
+  }
+
+  /**
+   * Release reservations for order lines (best-effort; logs on failure).
+   */
+  private async unreserveOrderLines(orderNumber: string, orderItems: any[]): Promise<void> {
+    const warehouseId = await this.warehouseClient.getDefaultWarehouseId();
+    if (!warehouseId) {
+      this.logger.warn('Stock unreserve skipped: no default warehouse', { orderNumber });
+      return;
+    }
+    for (const item of orderItems) {
+      const product =
+        item.products ||
+        (await this.prisma.product.findUnique({
+          where: { id: item.productId },
+        }));
+      const catalogProductId = product?.catalogProductId;
+      if (!catalogProductId) {
+        continue;
+      }
+      try {
+        await this.warehouseClient.unreserveStock(
+          catalogProductId,
+          warehouseId,
+          item.quantity,
+          orderNumber,
+        );
+      } catch (err: unknown) {
+        this.logger.warn('Stock unreserve failed', {
+          orderNumber,
+          productId: item.productId,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  }
+
+  /**
+   * Hourly: cancel stale unpaid orders and release reserved stock.
+   */
+  async cancelStaleUnpaidOrders(): Promise<void> {
+    const hours = Number(process.env.STALE_UNPAID_ORDER_HOURS || 24);
+    const safeHours = Number.isFinite(hours) && hours > 0 ? hours : 24;
+    const cutoff = new Date(Date.now() - safeHours * 60 * 60 * 1000);
+    const stale = await this.prisma.order.findMany({
+      where: {
+        paymentStatus: PaymentStatus.pending,
+        status: OrderStatus.pending,
+        createdAt: { lt: cutoff },
+      },
+      include: {
+        order_items: {
+          include: {
+            products: true,
+          },
+        },
+      },
+    });
+    for (const o of stale) {
+      await this.unreserveOrderLines(o.orderNumber, o.order_items);
+      await this.prisma.order.update({
+        where: { id: o.id },
+        data: {
+          paymentStatus: PaymentStatus.failed,
+          status: OrderStatus.cancelled,
+        },
+      });
+      this.logger.log('Stale unpaid order cancelled', {
+        orderNumber: o.orderNumber,
+        orderId: o.id,
+      });
     }
   }
 
@@ -58,6 +200,10 @@ export class OrdersService {
     });
 
     if (body.status === 'completed') {
+      if (order.paymentStatus === PaymentStatus.paid) {
+        return { ok: true };
+      }
+
       await this.prisma.order.update({
         where: { id: order.id },
         data: {
@@ -76,6 +222,20 @@ export class OrdersService {
           const catalogProductId = product?.catalogProductId;
           if (!catalogProductId) {
             continue;
+          }
+          try {
+            await this.warehouseClient.unreserveStock(
+              catalogProductId,
+              warehouseId,
+              item.quantity,
+              order.orderNumber,
+            );
+          } catch (err: unknown) {
+            this.logger.warn('Stock unreserve after payment (non-fatal)', {
+              orderNumber: order.orderNumber,
+              productId: item.productId,
+              error: err instanceof Error ? err.message : String(err),
+            });
           }
           try {
             await this.warehouseClient.decrementStock(
@@ -98,13 +258,24 @@ export class OrdersService {
       const recipient = buyer?.email;
       if (recipient) {
         try {
-          await this.notificationService.sendOrderConfirmation(
-            recipient,
-            order.orderNumber,
-            Number(order.total),
-          );
+          await this.notificationService.sendOrderConfirmation({
+            to: recipient,
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            items: order.order_items.map((item) => ({
+              productName: item.productName,
+              productSku: item.productSku,
+              quantity: item.quantity,
+              unitPrice: Number(item.unitPrice).toFixed(2),
+              totalPrice: Number(item.totalPrice).toFixed(2),
+            })),
+            total: Number(order.total),
+            currency: 'CZK',
+          });
         } catch (err: unknown) {
-          this.logger.warn('Order confirmation email failed after payment', {
+          this.logger.error('Order confirmation email failed after payment', {
+            orderId: order.id,
+            email: recipient,
             error: err instanceof Error ? err.message : String(err),
           });
         }
@@ -114,10 +285,23 @@ export class OrdersService {
     }
 
     if (body.status === 'failed') {
+      if (
+        order.paymentStatus === PaymentStatus.failed &&
+        order.status === OrderStatus.cancelled
+      ) {
+        return { ok: true };
+      }
+
       await this.prisma.order.update({
         where: { id: order.id },
-        data: { paymentStatus: PaymentStatus.failed },
+        data: {
+          paymentStatus: PaymentStatus.failed,
+          status: OrderStatus.cancelled,
+        },
       });
+
+      await this.unreserveOrderLines(order.orderNumber, order.order_items);
+
       return { ok: true };
     }
 
@@ -263,6 +447,13 @@ export class OrdersService {
       },
     });
 
+    try {
+      await this.reserveOrderLines(order.orderNumber, order.order_items);
+    } catch (err: unknown) {
+      await this.prisma.order.delete({ where: { id: order.id } });
+      throw err;
+    }
+
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     const callbackUrlBase =
       this.configService.get<string>('API_GATEWAY_URL') || 'https://flipflop.statex.cz';
@@ -284,11 +475,13 @@ export class OrdersService {
         description: 'FLIPFLOP',
       });
     } catch (error: unknown) {
+      await this.unreserveOrderLines(order.orderNumber, order.order_items);
       await this.prisma.order.delete({ where: { id: order.id } });
       throw error;
     }
 
     if (!paymentResult.success || !paymentResult.data?.id) {
+      await this.unreserveOrderLines(order.orderNumber, order.order_items);
       await this.prisma.order.delete({ where: { id: order.id } });
       throw new BadRequestException('Payment initiation failed');
     }
@@ -469,6 +662,43 @@ export class OrdersService {
     return {
       redirectUri: paymentResponse.data.redirectUri,
       orderId: order.id,
+    };
+  }
+
+  async getCheckoutFunnel(since?: Date): Promise<{
+    orders_created: number;
+    payments_initiated: number;
+    payments_completed: number;
+    payments_failed: number;
+    completion_rate_pct: number;
+    abandonment_rate_pct: number;
+  }> {
+    const where: { createdAt?: { gte: Date } } = since ? { createdAt: { gte: since } } : {};
+
+    const [orders_created, payments_initiated, payments_completed, payments_failed] =
+      await Promise.all([
+        this.prisma.order.count({ where }),
+        this.prisma.order.count({
+          where: { ...where, paymentTransactionId: { not: null } },
+        }),
+        this.prisma.order.count({
+          where: { ...where, paymentStatus: PaymentStatus.paid },
+        }),
+        this.prisma.order.count({
+          where: { ...where, paymentStatus: PaymentStatus.failed },
+        }),
+      ]);
+
+    const completion_rate_pct =
+      orders_created > 0 ? Math.round((payments_completed / orders_created) * 100) : 0;
+
+    return {
+      orders_created,
+      payments_initiated,
+      payments_completed,
+      payments_failed,
+      completion_rate_pct,
+      abandonment_rate_pct: 100 - completion_rate_pct,
     };
   }
 

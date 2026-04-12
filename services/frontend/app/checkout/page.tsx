@@ -14,6 +14,8 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'payu' | 'paypal' | 'webpay' | 'stripe'>('webpay');
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -54,8 +56,10 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
+    setOrderError(null);
+
     if (!selectedAddressId) {
-      alert('Vyberte prosím dodací adresu');
+      setOrderError('Vyberte prosím dodací adresu');
       return;
     }
 
@@ -64,7 +68,7 @@ export default function CheckoutPage() {
     try {
       const response = await ordersApi.createOrder({
         deliveryAddressId: selectedAddressId,
-        paymentMethod: 'payu',
+        paymentMethod,
       });
 
       if (response.success && response.data) {
@@ -76,11 +80,11 @@ export default function CheckoutPage() {
           router.push(`/orders/${response.data.id}`);
         }
       } else {
-        alert('Nepodařilo se vytvořit objednávku');
+        setOrderError('Nepodařilo se vytvořit objednávku. Zkuste to prosím znovu.');
       }
     } catch (error) {
       console.error('Failed to place order:', error);
-      alert('Došlo k chybě při vytváření objednávky');
+      setOrderError('Došlo k chybě při platbě. Zkuste to prosím znovu.');
     } finally {
       setProcessing(false);
     }
@@ -193,6 +197,41 @@ export default function CheckoutPage() {
               )}
             </div>
 
+            {/* Payment Method */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <h2 className="text-2xl font-extrabold mb-6 text-slate-900 flex items-center gap-2">
+                💳 Způsob platby
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                {([
+                  { value: 'webpay', label: 'GP WebPay (karta)', icon: '💳' },
+                  { value: 'payu', label: 'PayU', icon: '🏦' },
+                  { value: 'paypal', label: 'PayPal', icon: '🅿️' },
+                  { value: 'stripe', label: 'Stripe (karta)', icon: '💳' },
+                ] as const).map((method) => (
+                  <label
+                    key={method.value}
+                    className={`flex items-center gap-3 border-2 rounded-xl p-4 cursor-pointer transition-all ${
+                      paymentMethod === method.value
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-300 hover:border-blue-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value={method.value}
+                      checked={paymentMethod === method.value}
+                      onChange={() => setPaymentMethod(method.value)}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className="text-lg">{method.icon}</span>
+                    <span className="font-semibold text-slate-900 text-sm">{method.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
             {/* Order Summary */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <h2 className="text-2xl font-extrabold mb-6 text-slate-900">Přehled objednávky</h2>
@@ -237,6 +276,11 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               </div>
+              {orderError && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-red-700 font-semibold text-sm">⚠️ {orderError}</p>
+                </div>
+              )}
               <button
                 onClick={handlePlaceOrder}
                 disabled={processing || !selectedAddressId || addresses.length === 0}
