@@ -27,6 +27,7 @@ FlipFlop (flipflop.statex.cz) is an automated Czech e-commerce platform selling 
 ### SEO Fields
 
 Every `Product` record carries three SEO fields stored in PostgreSQL:
+
 - `seoTitle` — page `<title>` override (max 255 chars)
 - `seoDescription` — `<meta name="description">` content
 - `seoKeywords` — comma-separated keywords (max 255 chars)
@@ -36,6 +37,7 @@ These fields are rendered by the Next.js SSR frontend into page `<head>` for eac
 ### catalog-microservice Sync
 
 `catalog-microservice:3200` is the master product catalogue. flipflop products optionally reference `catalogProductId`. Sync flow:
+
 1. Catalog pushes product data events (name, images, attributes, pricing signals) to flipflop via HTTP or message queue.
 2. flipflop `product-service` upserts `Product` records, never overwriting locally customised `price` without human approval.
 3. Manual products (no `catalogProductId`) are managed entirely in-service.
@@ -43,7 +45,7 @@ These fields are rendered by the Next.js SSR frontend into page `<head>` for eac
 ### AI Task Types
 
 | Task Type | Description | Output |
-|-----------|-------------|--------|
+| --------- | ----------- | ------ |
 | `write_product_description` | Generate `description` and `shortDescription` for a product SKU using ai-microservice:3380 | Updated `description`/`shortDescription` fields, pending human review |
 | `generate_seo_meta` | Generate `seoTitle`, `seoDescription`, `seoKeywords` for a product | Updated SEO fields, pending human review |
 
@@ -64,7 +66,7 @@ These fields are rendered by the Next.js SSR frontend into page `<head>` for eac
 ### Operations
 
 | Operation | Behaviour |
-|-----------|-----------|
+| --------- | --------- |
 | Add to cart | Validates stock availability at add-time via warehouse-microservice:3201; captures `price` snapshot from current `Product.price` |
 | Update quantity | Revalidates stock; updates `quantity`; price snapshot unchanged |
 | Remove item | Deletes `CartItem` record; releases any soft reservation |
@@ -91,7 +93,7 @@ User session state (session token, cart context for guest users) is stored in Re
 All payment processing routes through `payments-microservice:3468`.
 
 | Provider | Status | Notes |
-|----------|--------|-------|
+| -------- | ------ | ----- |
 | PayU | Available in payments-microservice | Not yet wired into flipflop checkout |
 | PayPal | Available in payments-microservice | Not yet wired into flipflop checkout |
 | GP WebPay | Implemented (`webpay.service.ts`) | Blocked by T0a — hardcoded `DESCRIPTION: 'SPEAKASAP'` |
@@ -111,7 +113,7 @@ All payment processing routes through `payments-microservice:3468`.
 
 ### Webhook Flow
 
-```
+```text
 Provider → payments-microservice:3468/webhooks/<provider>
          → flipflop api-gateway/webhooks/payment-result
          → order-service: update Order status + PaymentStatus
@@ -122,7 +124,7 @@ Provider → payments-microservice:3468/webhooks/<provider>
 ### Blockers
 
 | ID | Blocker | Impact |
-|----|---------|--------|
+| -- | ------- | ------ |
 | **T0a** | `webpay.service.ts` line 329 has `DESCRIPTION: 'SPEAKASAP'` hardcoded — must be dynamic per `applicationId` before GP WebPay works for flipflop | GP WebPay unusable for flipflop until fixed |
 | **T0b** | flipflop checkout not yet wired to `payments-microservice:3468` for any provider | Zero payment providers active in checkout |
 | **T0c** | speakasap-portal still uses its own Django WebPay (`orders/webpay/`) — migration to payments-microservice pending | Blocks shared payment infrastructure maturity |
@@ -143,7 +145,7 @@ Provider → payments-microservice:3468/webhooks/<provider>
 
 ### Order Lifecycle
 
-```
+```text
 pending → confirmed → processing → shipped → delivered
                                 ↘ cancelled (human approval required)
 delivered → refunded (14-day Czech law window)
@@ -153,7 +155,7 @@ delivered → refunded (14-day Czech law window)
 
 **Payment statuses** (Prisma enum `PaymentStatus`): `pending`, `paid`, `failed`, `refunded`
 
-### Data Models
+### Order Data Models
 
 **Order** (Prisma): `id`, `orderNumber`, `userId`, `deliveryAddressId`, `status`, `paymentStatus`, `paymentMethod`, `paymentTransactionId`, `subtotal`, `tax`, `shippingCost`, `discount`, `total`, `trackingNumber`, `shippingProvider`, `notes`, `metadata`
 
@@ -185,7 +187,7 @@ Outbound webhooks notify external systems (supplier APIs, tracking providers) on
 
 > ⚠️ Human-editable
 
-### Data Model
+### Users Data Model
 
 **User** (Prisma): `id`, `email` (unique), `password` (hashed), `firstName`, `lastName`, `phone`, `isEmailVerified`, `isAdmin`, `preferences` (JSON), `createdAt`, `updatedAt`
 
@@ -196,6 +198,7 @@ Outbound webhooks notify external systems (supplier APIs, tracking providers) on
 ### auth-microservice JWT Integration
 
 Authentication is delegated to `auth-microservice:3370`:
+
 - Registration: flipflop `user-service` creates `User` record, calls auth-microservice to issue JWT.
 - Login: credentials forwarded to auth-microservice; JWT returned to client.
 - Token validation: all protected flipflop API routes validate JWT via auth-microservice on each request.
@@ -220,6 +223,7 @@ Authentication is delegated to `auth-microservice:3370`:
 ### warehouse-microservice Sync
 
 `warehouse-microservice:3201` is the authoritative stock source. flipflop `warehouse-service` (internal) syncs with it:
+
 - `Product.stockQuantity` and `ProductVariant.stockQuantity` are local cache mirrors updated by warehouse-microservice push events.
 - At cart add-time: real-time stock check against warehouse-microservice before allowing add.
 - At checkout initiation: soft reservation created in warehouse-microservice.
@@ -227,7 +231,7 @@ Authentication is delegated to `auth-microservice:3370`:
 ### Stock Reservation Flow
 
 | Event | warehouse-microservice Action |
-|-------|-------------------------------|
+| ----- | ----------------------------- |
 | Item added to cart | Real-time availability check (no reservation) |
 | Checkout initiated | Soft reservation for all order items (TTL: 15 minutes) |
 | Payment confirmed | Soft reservation converted to hard stock deduction |
@@ -250,6 +254,7 @@ Authentication is delegated to `auth-microservice:3370`:
 ### AI-Generated Descriptions
 
 Task pipeline via `ai-microservice:3380`:
+
 1. Orchestrator enqueues `write_product_description` or `generate_seo_meta` task for a `productId`.
 2. ai-microservice generates content using product attributes, brand, category context.
 3. Output returned as draft — stored in a staging field or flagged `pending_review`.
@@ -262,6 +267,7 @@ Next.js SSR frontend reads `Product.seoTitle`, `Product.seoDescription`, `Produc
 ### Sitemap
 
 Auto-generated XML sitemap at `/sitemap.xml` covers:
+
 - All active product pages (`/products/[slug]`)
 - All active category pages (`/categories/[slug]`)
 - Static pages (home, about, contact)
@@ -271,7 +277,7 @@ Sitemap regenerated on product/category publish events.
 ### Competitor Pricing Tasks
 
 | Task Type | Description | Output |
-|-----------|-------------|--------|
+| --------- | ----------- | ------ |
 | `analyze_competitor_prices` | Scrape/compare competitor prices for top SKUs | Report with pricing delta; no automatic price changes |
 
 **Anti-chaos rule:** Competitor price analysis produces reports only. AI must never apply pricing changes without human validation.
@@ -289,7 +295,7 @@ Sitemap regenerated on product/category publish events.
 Campaigns are drafted by AI and sent via `notifications-microservice:3368`:
 
 | Task Type | Description | Trigger |
-|-----------|-------------|---------|
+| --------- | ----------- | ------- |
 | `write_email_campaign` | Generate email copy for seasonal sale, product launch, or promotion | Manual orchestrator dispatch or scheduled |
 | `send_email_campaign` | Dispatch drafted campaign to target user segment | Human approval required before send |
 
@@ -311,7 +317,7 @@ AI tasks are budget-capped at 500,000 LLM units/month across all flipflop AI ope
 All AI tasks for flipflop-service are routed via `business-orchestrator` `ProjectCoordinator`:
 
 | Task Type | Target Service | Priority |
-|-----------|---------------|----------|
+| --------- | ------------- | -------- |
 | `write_product_description` | ai-microservice:3380 | High |
 | `generate_seo_meta` | ai-microservice:3380 | High |
 | `analyze_competitor_prices` | ai-microservice:3380 | Medium |
@@ -329,7 +335,7 @@ All AI tasks for flipflop-service are routed via `business-orchestrator` `Projec
 ### MCP Paths
 
 | Resource | Path |
-|----------|------|
+| -------- | ---- |
 | Service root | `flipflop-service/` |
 | Spec (this file) | `flipflop-service/SPEC.md` |
 | Current state | `flipflop-service/STATE.json` |
@@ -341,7 +347,7 @@ All AI tasks for flipflop-service are routed via `business-orchestrator` `Projec
 ### Required Environment Variables
 
 | Variable | Purpose |
-|----------|---------|
+| -------- | ------- |
 | `DATABASE_URL` | PostgreSQL connection via database-server:5432 |
 | `REDIS_URL` | Redis for sessions and cart |
 | `AUTH_SERVICE_URL` | auth-microservice:3370 |
@@ -356,6 +362,7 @@ All AI tasks for flipflop-service are routed via `business-orchestrator` `Projec
 ### Worker Task Routing
 
 `business-orchestrator` `ProjectCoordinator` reads this SPEC.md before each cycle to understand:
+
 1. Which task types are valid for flipflop-service.
 2. Which modules have active blockers (T0a, T0b, T0c in Module 3).
 3. Anti-chaos rules: never modify prices or cancel orders without human approval.

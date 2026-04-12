@@ -11,9 +11,10 @@
 **Priority:** 1 (high)
 
 **Description:**
-Make checkout end-to-end functional with all four payment providers: PayU, PayPal, GP WebPay (Czech bank cards via GP bank RSA-SHA1), and Stripe (international cards). 
+Make checkout end-to-end functional with all four payment providers: PayU, PayPal, GP WebPay (Czech bank cards via GP bank RSA-SHA1), and Stripe (international cards).
 
 Specific work required:
+
 - Fix `DESCRIPTION: 'SPEAKASAP'` hardcoding in `payments-microservice/src/payments/providers/webpay/webpay.service.ts:329` → derive dynamically from `applicationId`
 - Wire GP WebPay and Stripe into `flipflop-service` checkout flow alongside the existing PayU/PayPal routes
 - Migrate `speakasap-portal` from its own Django WebPay implementation (`orders/webpay/`) to call `payments-microservice` HTTP client — the Django code must remain live until migration is verified end-to-end
@@ -24,6 +25,7 @@ Specific work required:
 **Success criteria:** At least one real test order completing the full payment flow for each provider (PayU, PayPal, GP WebPay, Stripe), with correct order status, stock update, and confirmation email.
 
 **Constraints:**
+
 - Free models only — no premium LLM usage without explicit human approval
 - No pricing changes without human validation
 - No order cancellation without human approval
@@ -32,6 +34,7 @@ Specific work required:
 - Max 500k LLM units/month across all agents
 
 **References:**
+
 - Spec: `flipflop-service/SPEC.md` — Module 3 (Checkout & Payments ★)
 - Plan: `flipflop-service/PLAN.md` — Phase 1, tasks T0a through T8
 
@@ -42,10 +45,13 @@ Specific work required:
 These goals are not active. They will be activated sequentially after Phase 1 completes.
 
 ### Phase 2 — Content & SEO
+
 AI-generated product descriptions for top 50 SKUs. Meta title/description per product. Competitor pricing analysis for top 20 products. Sitemap generation.
 
 ### Phase 3 — Marketing Automation
+
 Email campaign generation. Abandoned cart recovery sequences. Seasonal promotions.
 
 ### Phase 4 — Analytics & Reporting
+
 Revenue month-over-month tracking. Conversion rate dashboard. Order fulfilment SLA tracking (target: < 48h).
