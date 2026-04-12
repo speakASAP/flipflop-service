@@ -3,13 +3,20 @@
  * Handles order creation and management
  */
 
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '@flipflop/shared';
 import { LoggerService } from '@flipflop/shared';
 import { PaymentService } from '@flipflop/shared';
 import { NotificationService } from '@flipflop/shared';
-import { OrderStatus, PaymentStatus, OrderClientService } from '@flipflop/shared';
+import { OrderStatus, PaymentStatus, OrderClientService, WarehouseClientService } from '@flipflop/shared';
 import { ConfigService } from '@nestjs/config';
+import { PaymentResultDto } from './dto/payment-result.dto';
+import { UpdateOrderPaymentStatusDto } from './dto/update-order-payment-status.dto';
 
 @Injectable()
 export class OrdersService {
@@ -20,7 +27,126 @@ export class OrdersService {
     private readonly notificationService: NotificationService,
     private readonly configService: ConfigService,
     private readonly orderClient: OrderClientService,
+    private readonly warehouseClient: WarehouseClientService,
   ) {}
+
+  assertInternalServiceKey(internalKey: string | undefined): void {
+    const expected = this.configService.get<string>('FLIPFLOP_INTERNAL_SERVICE_SECRET');
+    if (expected && internalKey !== expected) {
+      throw new UnauthorizedException('Invalid internal service key');
+    }
+  }
+
+  /**
+   * Apply payment callback from payments-microservice (via api-gateway).
+   */
+  async handlePaymentResult(body: PaymentResultDto): Promise<{ ok: boolean }> {
+    const order = await this.prisma.order.findFirst({
+      where: { orderNumber: body.orderId },
+      include: {
+        order_items: true,
+      },
+    });
+
+    if (!order) {
+      this.logger.warn('Payment webhook: order not found', { orderNumber: body.orderId });
+      return { ok: true };
+    }
+
+    const buyer = await this.prisma.user.findUnique({
+      where: { id: order.userId },
+    });
+
+    if (body.status === 'completed') {
+      await this.prisma.order.update({
+        where: { id: order.id },
+        data: {
+          paymentStatus: PaymentStatus.paid,
+          status: OrderStatus.confirmed,
+          paymentTransactionId: body.paymentId,
+        },
+      });
+
+      const warehouseId = await this.warehouseClient.getDefaultWarehouseId();
+      if (warehouseId) {
+        for (const item of order.order_items) {
+          const product = await this.prisma.product.findUnique({
+            where: { id: item.productId },
+          });
+          const catalogProductId = product?.catalogProductId;
+          if (!catalogProductId) {
+            continue;
+          }
+          try {
+            await this.warehouseClient.decrementStock(
+              catalogProductId,
+              warehouseId,
+              item.quantity,
+              `flipflop_order:${order.orderNumber}`,
+            );
+          } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            this.logger.error('Stock decrement failed after payment', {
+              message,
+              orderNumber: order.orderNumber,
+              productId: item.productId,
+            });
+          }
+        }
+      }
+
+      const recipient = buyer?.email;
+      if (recipient) {
+        try {
+          await this.notificationService.sendOrderConfirmation(
+            recipient,
+            order.orderNumber,
+            Number(order.total),
+          );
+        } catch (err: unknown) {
+          this.logger.warn('Order confirmation email failed after payment', {
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+
+      return { ok: true };
+    }
+
+    if (body.status === 'failed') {
+      await this.prisma.order.update({
+        where: { id: order.id },
+        data: { paymentStatus: PaymentStatus.failed },
+      });
+      return { ok: true };
+    }
+
+    return { ok: true };
+  }
+
+  /**
+   * Internal PATCH for payment-related order fields.
+   */
+  async updateInternalPaymentStatus(
+    orderId: string,
+    dto: UpdateOrderPaymentStatusDto,
+  ): Promise<{ ok: boolean }> {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: {
+        paymentStatus: dto.paymentStatus,
+        ...(dto.status !== undefined ? { status: dto.status } : {}),
+        ...(dto.paymentTransactionId !== undefined
+          ? { paymentTransactionId: dto.paymentTransactionId }
+          : {}),
+      },
+    });
+    return { ok: true };
+  }
 
   /**
    * Get cart items from database
@@ -49,14 +175,12 @@ export class OrdersService {
    * Create order from cart
    */
   async createOrder(userId: string, dto: any) {
-    // Get cart items
     const cartItems = await this.getCartItems(userId);
 
     if (!cartItems || cartItems.length === 0) {
       throw new BadRequestException('Cart is empty');
     }
 
-    // Verify delivery address
     const deliveryAddress = await this.prisma.deliveryAddress.findFirst({
       where: {
         id: dto.deliveryAddressId,
@@ -68,14 +192,15 @@ export class OrdersService {
       throw new NotFoundException('Delivery address not found');
     }
 
-    // Calculate totals
     let subtotal = 0;
     const orderItems = [];
 
     for (const cartItem of cartItems) {
-      const product = cartItem.products || await this.prisma.product.findUnique({
-        where: { id: cartItem.productId },
-      });
+      const product =
+        cartItem.products ||
+        (await this.prisma.product.findUnique({
+          where: { id: cartItem.productId },
+        }));
 
       if (!product || !product.isActive) {
         throw new BadRequestException(`Product ${cartItem.productId} is not available`);
@@ -98,12 +223,11 @@ export class OrdersService {
       });
     }
 
-    const tax = subtotal * 0.21; // 21% VAT for Czech Republic
+    const tax = subtotal * 0.21;
     const shippingCost = dto.shippingCost || 0;
     const discount = dto.discount || 0;
     const total = subtotal + tax + shippingCost - discount;
 
-    // Create order
     const order = await this.prisma.order.create({
       data: {
         orderNumber: this.generateOrderNumber(),
@@ -111,7 +235,7 @@ export class OrdersService {
         deliveryAddressId: dto.deliveryAddressId,
         status: OrderStatus.pending,
         paymentStatus: PaymentStatus.pending,
-        paymentMethod: dto.paymentMethod || 'payu',
+        paymentMethod: dto.paymentMethod || 'webpay',
         subtotal,
         tax,
         shippingCost,
@@ -139,29 +263,60 @@ export class OrdersService {
       },
     });
 
-    // Clear cart
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const callbackUrlBase =
+      this.configService.get<string>('API_GATEWAY_URL') || 'https://flipflop.statex.cz';
+    const callbackUrl = `${callbackUrlBase.replace(/\/$/, '')}/api/webhooks/payment-result`;
+
+    let paymentResult;
+    try {
+      paymentResult = await this.paymentService.createPayment({
+        orderId: order.orderNumber,
+        applicationId: 'flipflop-v1',
+        amount: total,
+        currency: 'CZK',
+        paymentMethod: dto.paymentMethod || 'webpay',
+        callbackUrl,
+        customer: {
+          email: user?.email || '',
+          name: `${deliveryAddress.firstName} ${deliveryAddress.lastName}`.trim(),
+        },
+        description: 'FLIPFLOP',
+      });
+    } catch (error: unknown) {
+      await this.prisma.order.delete({ where: { id: order.id } });
+      throw error;
+    }
+
+    if (!paymentResult.success || !paymentResult.data?.id) {
+      await this.prisma.order.delete({ where: { id: order.id } });
+      throw new BadRequestException('Payment initiation failed');
+    }
+
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: { paymentTransactionId: paymentResult.data.id },
+    });
+
     await this.prisma.cartItem.deleteMany({
       where: { userId },
     });
 
     this.logger.log('Order created', { orderId: order.id, orderNumber: order.orderNumber });
 
-    // Send order confirmation notification and get user for order forwarding
-    let user = null;
-    try {
-      user = await this.prisma.user.findUnique({ where: { id: userId } });
-      if (user?.email) {
-        await this.notificationService.sendOrderConfirmation(
-          user.email,
-          order.orderNumber,
-          Number(order.total),
-        );
-      }
-    } catch (error) {
-      this.logger.warn('Failed to send order confirmation notification', { error });
-    }
+    const orderWithPayment = await this.prisma.order.findUnique({
+      where: { id: order.id },
+      include: {
+        order_items: {
+          include: {
+            products: true,
+            product_variants: true,
+          },
+        },
+        delivery_addresses: true,
+      },
+    });
 
-    // Forward order to orders-microservice
     try {
       const orderData = {
         externalOrderId: order.orderNumber,
@@ -171,7 +326,7 @@ export class OrdersService {
           email: user?.email,
         },
         shippingAddress: deliveryAddress,
-        billingAddress: deliveryAddress, // Use same address for billing if not separate
+        billingAddress: deliveryAddress,
         items: orderItems.map((item) => ({
           productId: item.productId,
           sku: item.productSku,
@@ -195,16 +350,19 @@ export class OrdersService {
         orderId: order.id,
         orderNumber: order.orderNumber,
       });
-    } catch (error: any) {
-      // Log error but don't fail the order creation
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
       this.logger.error('Failed to forward order to orders-microservice', {
         orderId: order.id,
         orderNumber: order.orderNumber,
-        error: error.message,
+        error: message,
       });
     }
 
-    return this.mapOrder(order);
+    return {
+      order: this.mapOrder(orderWithPayment),
+      redirectUrl: paymentResult.data.redirectUri || null,
+    };
   }
 
   /**
@@ -225,7 +383,7 @@ export class OrdersService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return orders.map((order) => this.mapOrder(order));
+    return orders.map((o) => this.mapOrder(o));
   }
 
   /**
@@ -259,7 +417,7 @@ export class OrdersService {
   }
 
   /**
-   * Create payment for order
+   * Create payment for order (legacy PayU route — same payments-microservice contract)
    */
   async createPayment(userId: string, orderId: string) {
     const order = await this.prisma.order.findFirst({
@@ -277,29 +435,34 @@ export class OrdersService {
       throw new BadRequestException('Order is already paid');
     }
 
-    // Create payment via payment service
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const callbackUrlBase =
+      this.configService.get<string>('API_GATEWAY_URL') || 'https://flipflop.statex.cz';
+    const callbackUrl = `${callbackUrlBase.replace(/\/$/, '')}/api/webhooks/payment-result`;
+
     const paymentResponse = await this.paymentService.createPayment({
-      orderId: order.id,
+      orderId: order.orderNumber,
+      applicationId: 'flipflop-v1',
       amount: Number(order.total),
       currency: 'CZK',
-      paymentMethod: order.paymentMethod || 'payu',
-      returnUrl: `${this.configService.get('FRONTEND_URL')}/orders/${order.id}`,
-      cancelUrl: `${this.configService.get('FRONTEND_URL')}/checkout`,
-      metadata: {
-        orderNumber: order.orderNumber,
-        userId,
+      paymentMethod: order.paymentMethod || 'webpay',
+      callbackUrl,
+      customer: {
+        email: user?.email || '',
+        name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '',
       },
+      description: 'FLIPFLOP',
     });
 
     if (!paymentResponse.success || !paymentResponse.data) {
       throw new BadRequestException('Failed to create payment');
     }
 
-    // Update order with payment transaction ID
     await this.prisma.order.update({
       where: { id: orderId },
       data: {
-        paymentTransactionId: paymentResponse.data.transactionId || paymentResponse.data.id,
+        paymentTransactionId:
+          paymentResponse.data.transactionId || paymentResponse.data.id,
       },
     });
 
@@ -313,6 +476,7 @@ export class OrdersService {
    * Map order to response format
    */
   private mapOrder(order: any) {
+    const lines = order.order_items || order.items || [];
     return {
       id: order.id,
       orderNumber: order.orderNumber,
@@ -320,7 +484,7 @@ export class OrdersService {
       status: order.status,
       paymentStatus: order.paymentStatus,
       paymentMethod: order.paymentMethod,
-      items: order.items.map((item: any) => ({
+      items: lines.map((item: any) => ({
         id: item.id,
         productId: item.productId,
         variantId: item.variantId || undefined,
@@ -349,9 +513,9 @@ export class OrdersService {
       discount: Number(order.discount),
       total: Number(order.total),
       notes: order.notes || undefined,
+      paymentTransactionId: order.paymentTransactionId || undefined,
       createdAt: order.createdAt.toISOString(),
       updatedAt: order.updatedAt.toISOString(),
     };
   }
 }
-

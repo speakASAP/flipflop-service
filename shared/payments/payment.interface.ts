@@ -8,6 +8,13 @@ export interface CreatePaymentDto {
   amount: number;
   currency?: string;
   paymentMethod?: string;
+  applicationId: string;
+  callbackUrl: string;
+  customer: {
+    email: string;
+    name?: string;
+  };
+  description?: string;
   returnUrl?: string;
   cancelUrl?: string;
   metadata?: Record<string, any>;
@@ -17,9 +24,11 @@ export interface PaymentResponse {
   success: boolean;
   data?: {
     id: string;
-    orderId: string;
-    status: PaymentStatus;
+    paymentId?: string;
+    orderId?: string;
+    status: PaymentStatus | string;
     redirectUri?: string;
+    redirectUrl?: string;
     transactionId?: string;
   };
   error?: {

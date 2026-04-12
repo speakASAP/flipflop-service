@@ -78,7 +78,24 @@ export class PaymentService {
    * Create payment for an order
    */
   async createPayment(dto: CreatePaymentDto): Promise<PaymentResponse> {
-    const callFn = async () => this.callPaymentService<PaymentResponse>('/payments/create', dto);
+    const payload: Record<string, unknown> = {
+      orderId: dto.orderId,
+      applicationId: dto.applicationId,
+      amount: dto.amount,
+      currency: dto.currency || 'CZK',
+      paymentMethod: (dto.paymentMethod || 'webpay').toLowerCase(),
+      callbackUrl: dto.callbackUrl,
+      customer: dto.customer,
+    };
+    if (dto.description) {
+      payload.description = dto.description;
+    }
+    if (dto.metadata) {
+      payload.metadata = dto.metadata;
+    }
+
+    const callFn = async () =>
+      this.callPaymentService<Record<string, unknown>>('/payments/create', payload);
 
     const breaker = this.circuitBreakerService.create(
       'payment-service',
@@ -94,7 +111,7 @@ export class PaymentService {
     }
 
     try {
-      const response = await this.retryService.execute(
+      const raw = await this.retryService.execute(
         async () => {
           return await breaker.fire();
         },
@@ -107,12 +124,14 @@ export class PaymentService {
 
       this.resilienceMonitor.recordRetryAttempt('payment-service', true);
 
+      const response = this.normalizeCreatePaymentResponse(raw, dto.orderId);
+
       this.logger.log(`Payment created successfully`, {
         orderId: dto.orderId,
-        paymentId: (response as PaymentResponse)?.data?.id,
+        paymentId: response?.data?.id,
       });
 
-      return response as PaymentResponse;
+      return response;
     } catch (error: any) {
       this.resilienceMonitor.recordRetryAttempt('payment-service', false);
 
@@ -131,7 +150,7 @@ export class PaymentService {
    */
   async getPaymentStatus(paymentId: string): Promise<PaymentStatusResponse> {
     const callFn = async () =>
-      this.callPaymentService<PaymentStatusResponse>(`/payments/${paymentId}/status`, undefined, 'GET');
+      this.callPaymentService<PaymentStatusResponse>(`/payments/${paymentId}`, undefined, 'GET');
 
     const breaker = this.circuitBreakerService.create(
       'payment-service',
@@ -225,6 +244,32 @@ export class PaymentService {
 
       throw error;
     }
+  }
+
+  /**
+   * Map payments-microservice POST /payments/create response to PaymentResponse.
+   */
+  private normalizeCreatePaymentResponse(raw: any, orderId: string): PaymentResponse {
+    if (!raw || raw.success === false) {
+      return raw as PaymentResponse;
+    }
+    const d = raw.data || {};
+    const paymentId = d.paymentId || d.id;
+    const redirectUri = d.redirectUrl || d.redirectUri;
+    return {
+      success: !!raw.success,
+      data: paymentId
+        ? {
+            id: paymentId,
+            paymentId,
+            orderId: d.orderId || orderId,
+            status: d.status,
+            redirectUri,
+            redirectUrl: d.redirectUrl,
+            transactionId: d.providerTransactionId || paymentId,
+          }
+        : undefined,
+    };
   }
 }
 

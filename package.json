@@ -13,6 +13,7 @@
     "migrate:products:skip-stock": "ts-node scripts/migrate-products-to-catalog.ts --skip-stock"
   },
   "dependencies": {
+    "@nestjs-modules/ioredis": "^2.2.1",
     "@nestjs/axios": "^3.0.1",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",
@@ -21,12 +22,15 @@
     "@nestjs/passport": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "@prisma/client": "^5.7.1",
-    "amqplib": "^0.10.3",
+    "@types/opossum": "^8.1.9",
     "amqp-connection-manager": "^4.1.14",
+    "amqplib": "^0.10.3",
     "axios": "^1.6.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "csv-parse": "^6.1.0",
+    "ioredis": "^5.10.1",
+    "opossum": "^8.5.0",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "prisma": "^5.7.1",
@@ -34,11 +38,11 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@types/amqplib": "^0.10.4",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^4.17.21",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.10.0",
-    "@types/amqplib": "^0.10.4",
     "@types/passport-jwt": "^3.0.13",
     "@types/pg": "^8.15.6",
     "@types/xml2js": "^0.4.14",

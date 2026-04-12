@@ -6,6 +6,7 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GatewayController } from './gateway.controller';
+import { PaymentWebhookController } from './payment-webhook.controller';
 import { GatewayService } from './gateway.service';
 import { AuthModule } from '@flipflop/shared';
 import * as https from 'https';
@@ -30,7 +31,7 @@ import * as https from 'https';
     }),
     AuthModule,
   ],
-  controllers: [GatewayController],
+  controllers: [GatewayController, PaymentWebhookController],
   providers: [GatewayService],
   exports: [GatewayService],
 })

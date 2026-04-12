@@ -4,8 +4,16 @@
 
 import { Module } from '@nestjs/common';
 import { OrdersController, PaymentController } from './orders.controller';
+import { OrdersInternalController } from './orders-internal.controller';
 import { OrdersService } from './orders.service';
-import { PrismaModule, AuthModule, PaymentModule, NotificationModule, LoggerModule } from '@flipflop/shared';
+import {
+  PrismaModule,
+  AuthModule,
+  PaymentModule,
+  NotificationModule,
+  LoggerModule,
+  ClientsModule,
+} from '@flipflop/shared';
 
 @Module({
   imports: [
@@ -14,8 +22,9 @@ import { PrismaModule, AuthModule, PaymentModule, NotificationModule, LoggerModu
     AuthModule,
     PaymentModule,
     NotificationModule,
+    ClientsModule,
   ],
-  controllers: [OrdersController, PaymentController],
+  controllers: [OrdersController, PaymentController, OrdersInternalController],
   providers: [OrdersService],
   exports: [OrdersService],
 })
