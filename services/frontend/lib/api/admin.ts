@@ -13,6 +13,7 @@ import type {
   LowStockItem,
   DeadStockItem,
   SupplierPerformance,
+  ReviewRequest,
 } from '../admin';
 
 // Re-export Order type for convenience
@@ -24,6 +25,7 @@ export type {
   LowStockItem,
   DeadStockItem,
   SupplierPerformance,
+  ReviewRequest,
 } from '../admin';
 
 export interface CompanySettings {
@@ -226,6 +228,13 @@ export const adminApi = {
   async getSupplierPerformance() {
     return apiClient.get<{ suppliers: SupplierPerformance[] }>(
       '/admin/inventory/supplier-performance',
+    );
+  },
+
+  async getReviewRequests(days?: number) {
+    const d = days !== undefined && Number.isFinite(days) && days > 0 ? days : 30;
+    return apiClient.get<{ total: number; items: ReviewRequest[] }>(
+      `/admin/retention/review-requests?days=${d}`,
     );
   },
 

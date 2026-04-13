@@ -206,6 +206,7 @@ model Order {
   createdAt            DateTime             @default(now()) @db.Timestamp(6)
   updatedAt            DateTime             @default(now()) @db.Timestamp(6)
   fulfilledAt          DateTime?            @db.Timestamp(6)
+  reviewRequestedAt    DateTime?            @db.Timestamp(6)
   invoices             Invoice[]
   order_items          OrderItem[]
   order_status_history OrderStatusHistory[]

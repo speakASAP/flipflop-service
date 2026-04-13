@@ -15,6 +15,7 @@ import type {
   LowStockItem,
   DeadStockItem,
   SupplierPerformance,
+  ReviewRequest,
 } from '@/lib/admin';
 import { ordersApi, Order } from '@/lib/api/orders';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -31,6 +32,8 @@ export default function AdminDashboardPage() {
   const [deadStockItems, setDeadStockItems] = useState<DeadStockItem[]>([]);
   const [deadStockLoading, setDeadStockLoading] = useState(true);
   const [supplierPerformance, setSupplierPerformance] = useState<SupplierPerformance[]>([]);
+  const [reviewRequests, setReviewRequests] = useState<ReviewRequest[]>([]);
+  const [reviewRequestsTotal, setReviewRequestsTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -67,6 +70,7 @@ export default function AdminDashboardPage() {
         slaResponse,
         lowStockResponse,
         supplierPerfResponse,
+        reviewRequestsResponse,
       ] = await Promise.all([
         adminApi.getSales(),
         adminApi.getRevenue(),
@@ -76,6 +80,7 @@ export default function AdminDashboardPage() {
         adminApi.getSlaStats(30),
         adminApi.getLowStock(10),
         adminApi.getSupplierPerformance(),
+        adminApi.getReviewRequests(30),
       ]);
 
       if (salesResponse.success && salesResponse.data) {
@@ -102,6 +107,10 @@ export default function AdminDashboardPage() {
       }
       if (supplierPerfResponse.success && supplierPerfResponse.data) {
         setSupplierPerformance(supplierPerfResponse.data.suppliers);
+      }
+      if (reviewRequestsResponse.success && reviewRequestsResponse.data) {
+        setReviewRequestsTotal(reviewRequestsResponse.data.total);
+        setReviewRequests(reviewRequestsResponse.data.items);
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -254,6 +263,48 @@ export default function AdminDashboardPage() {
               </tbody>
             </table>
           )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+        <div className="bg-slate-50 border-b border-slate-200 px-6 py-4">
+          <h2 className="text-lg font-bold text-slate-900">Žádosti o recenze</h2>
+          <p className="text-sm text-slate-600 mt-1">Odesláno za posledních 30 dní</p>
+          <p className="text-sm font-semibold text-slate-800 mt-2">
+            Celkem: <span className="tabular-nums">{reviewRequestsTotal}</span>
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 text-left text-gray-600 border-b border-gray-200">
+                <th className="px-4 py-3 font-semibold">Objednávka</th>
+                <th className="px-4 py-3 font-semibold">E-mail</th>
+                <th className="px-4 py-3 font-semibold">Odesláno</th>
+                <th className="px-4 py-3 font-semibold">Položek</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reviewRequests.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                    Zatím žádné žádosti o recenzi v tomto období.
+                  </td>
+                </tr>
+              ) : (
+                reviewRequests.map((row) => (
+                  <tr key={row.orderId} className="border-b border-gray-100">
+                    <td className="px-4 py-3 font-mono text-xs text-gray-800">{row.orderId}</td>
+                    <td className="px-4 py-3 text-gray-900">{row.customerEmail}</td>
+                    <td className="px-4 py-3 tabular-nums text-gray-700">
+                      {new Date(row.sentAt).toLocaleString('cs-CZ')}
+                    </td>
+                    <td className="px-4 py-3 tabular-nums">{row.productCount}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

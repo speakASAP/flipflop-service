@@ -21,6 +21,7 @@
     "@nestjs/jwt": "^10.0.0",
     "@nestjs/passport": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/schedule": "^4.0.0",
     "@prisma/client": "^5.7.1",
     "@types/opossum": "^8.1.9",
     "amqp-connection-manager": "^4.1.14",

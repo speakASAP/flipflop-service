@@ -45,3 +45,10 @@ export type SupplierPerformance = {
   pendingOrders: number;
   flagged: boolean;
 };
+
+export type ReviewRequest = {
+  orderId: string;
+  customerEmail: string;
+  sentAt: string;
+  productCount: number;
+};

@@ -51,6 +51,14 @@ export class AdminOrdersController {
     return ApiResponse.success(payload);
   }
 
+  @Get('retention/review-requests')
+  async getReviewRequests(@Query('days') days?: string) {
+    const parsed = days !== undefined && days !== '' ? parseInt(days, 10) : NaN;
+    const d = Number.isFinite(parsed) && parsed > 0 ? parsed : 30;
+    const payload = await this.ordersService.getAdminReviewRequests(d);
+    return ApiResponse.success(payload);
+  }
+
   /** Dead stock: stock > 0, no confirmed order line in the last N days; AI markdown via ai-microservice (cheap). */
   @Get('inventory/dead-stock')
   async getDeadStock(@Query('days') days?: string, @Req() req?: Request) {

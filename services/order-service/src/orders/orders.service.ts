@@ -22,6 +22,7 @@ import {
   OrderClientService,
   WarehouseClientService,
   InventoryEventsPublisher,
+  CustomerEventsPublisher,
 } from '@flipflop/shared';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
@@ -46,6 +47,7 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
     private readonly warehouseClient: WarehouseClientService,
     private readonly discountService: DiscountService,
     private readonly inventoryEventsPublisher: InventoryEventsPublisher,
+    private readonly customerEventsPublisher: CustomerEventsPublisher,
   ) {}
 
   private static readonly DEFAULT_LOW_STOCK_THRESHOLD = 10;
@@ -1406,6 +1408,114 @@ ORDER BY MAX(sd.supplier_name)
       orderedAt: row.orderedAt.toISOString(),
       receivedAt: row.receivedAt ? row.receivedAt.toISOString() : null,
       createdAt: row.createdAt.toISOString(),
+    };
+  }
+
+  /**
+   * Daily job: delivered orders fulfilled 3+ days ago → RabbitMQ customer.review_request, then mark sent.
+   * Uses status delivered (schema has no fulfilled); fulfilledAt is set on ship/deliver transitions.
+   */
+  async runReviewSolicitationJob(): Promise<void> {
+    const started = Date.now();
+    const isoStart = new Date().toISOString();
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+    const orders = await this.prisma.order.findMany({
+      where: {
+        status: OrderStatus.delivered,
+        fulfilledAt: { not: null, lt: threeDaysAgo },
+        reviewRequestedAt: null,
+      } as Prisma.OrderWhereInput,
+      include: {
+        users: { select: { email: true } },
+        order_items: { select: { productName: true } },
+      },
+      take: 150,
+    });
+
+    this.logger.log(
+      `review_solicitation: at=${isoStart} candidates=${orders.length}`,
+      'OrdersService',
+    );
+
+    for (const order of orders) {
+      if (!order.fulfilledAt) {
+        continue;
+      }
+      const productNames = order.order_items.map((i) => i.productName);
+      const published = await this.customerEventsPublisher.publishReviewRequest({
+        orderId: order.id,
+        customerId: order.userId,
+        customerEmail: order.users.email,
+        productNames,
+        fulfilledAt: order.fulfilledAt.toISOString(),
+      });
+      if (!published) {
+        this.logger.warn(
+          `review_solicitation: publish_failed orderId=${order.id}`,
+          'OrdersService',
+        );
+        continue;
+      }
+      await this.prisma.order.update({
+        where: { id: order.id },
+        data: { reviewRequestedAt: new Date() } as Prisma.OrderUpdateInput,
+      });
+    }
+
+    this.logger.log(
+      `review_solicitation: done duration_ms=${Date.now() - started}`,
+      'OrdersService',
+    );
+  }
+
+  async getAdminReviewRequests(days: number): Promise<{
+    total: number;
+    items: Array<{
+      orderId: string;
+      customerEmail: string;
+      sentAt: string;
+      productCount: number;
+    }>;
+  }> {
+    const d = Number.isFinite(days) && days > 0 ? Math.min(days, 366) : 30;
+    const since = new Date();
+    since.setDate(since.getDate() - d);
+
+    const where = {
+      reviewRequestedAt: {
+        not: null,
+        gte: since,
+      },
+    } as Prisma.OrderWhereInput;
+
+    const total = await this.prisma.order.count({ where });
+    const rows = await this.prisma.order.findMany({
+      where,
+      orderBy: { reviewRequestedAt: 'desc' } as Prisma.OrderOrderByWithRelationInput,
+      take: 10,
+      include: {
+        users: { select: { email: true } },
+        order_items: { select: { id: true } },
+      },
+    });
+
+    return {
+      total,
+      items: rows.map((r) => {
+        const row = r as typeof r & {
+          users: { email: string };
+          order_items: { id: string }[];
+          reviewRequestedAt: Date | null;
+        };
+        return {
+          orderId: row.id,
+          customerEmail: row.users.email,
+          sentAt: row.reviewRequestedAt!.toISOString(),
+          productCount: row.order_items.length,
+        };
+      }),
     };
   }
 
