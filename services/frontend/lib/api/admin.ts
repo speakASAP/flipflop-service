@@ -6,11 +6,25 @@
 import { apiClient } from './client';
 import { Product, PaginatedResponse } from './products';
 import { Order, OrderStatus, PaymentStatus } from './orders';
-import type { RevenueMoM, ConversionRate, SlaStats, LowStockItem, DeadStockItem } from '../admin';
+import type {
+  RevenueMoM,
+  ConversionRate,
+  SlaStats,
+  LowStockItem,
+  DeadStockItem,
+  SupplierPerformance,
+} from '../admin';
 
 // Re-export Order type for convenience
 export type { Order };
-export type { RevenueMoM, ConversionRate, SlaStats, LowStockItem, DeadStockItem } from '../admin';
+export type {
+  RevenueMoM,
+  ConversionRate,
+  SlaStats,
+  LowStockItem,
+  DeadStockItem,
+  SupplierPerformance,
+} from '../admin';
 
 export interface CompanySettings {
   id: string;
@@ -206,6 +220,12 @@ export const adminApi = {
     const d = days !== undefined && Number.isFinite(days) && days > 0 ? days : 90;
     return apiClient.get<{ items: DeadStockItem[]; total: number }>(
       `/admin/inventory/dead-stock?days=${d}`,
+    );
+  },
+
+  async getSupplierPerformance() {
+    return apiClient.get<{ suppliers: SupplierPerformance[] }>(
+      '/admin/inventory/supplier-performance',
     );
   },
 

@@ -28,6 +28,7 @@ import { Prisma } from '@prisma/client';
 import { PaymentResultDto } from './dto/payment-result.dto';
 import { UpdateOrderPaymentStatusDto } from './dto/update-order-payment-status.dto';
 import { UpdateAdminOrderStatusDto } from './dto/update-admin-order-status.dto';
+import { CreateSupplierDeliveryDto } from './dto/create-supplier-delivery.dto';
 import { DiscountService } from '../marketing/discount.service';
 
 @Injectable()
@@ -1317,6 +1318,95 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
     });
 
     return { items, total: items.length };
+  }
+
+  /**
+   * Admin: aggregate supplier_delivery rows — avg lead time (days), counts, flag if avg > 7 days.
+   */
+  async getSupplierPerformance(): Promise<{
+    suppliers: Array<{
+      supplierId: string;
+      supplierName: string;
+      avgLeadTimeDays: number | null;
+      totalOrders: number;
+      pendingOrders: number;
+      flagged: boolean;
+    }>;
+  }> {
+    const methodStartedAt = Date.now();
+    const methodTimestamp = new Date().toISOString();
+    const rows = await this.prisma.$queryRaw<
+      Array<{
+        supplier_id: string;
+        supplier_name: string;
+        avg_lead_days: number | null;
+        total_orders: number;
+        pending_orders: number;
+      }>
+    >`
+SELECT
+  sd.supplier_id,
+  MAX(sd.supplier_name)::text AS supplier_name,
+  AVG(
+    CASE WHEN sd.received_at IS NOT NULL THEN
+      EXTRACT(EPOCH FROM (sd.received_at - sd.ordered_at)) / 86400.0
+    END
+  )::double precision AS avg_lead_days,
+  COUNT(*)::int AS total_orders,
+  COALESCE(
+    SUM(CASE WHEN sd.received_at IS NULL THEN 1 ELSE 0 END),
+    0
+  )::int AS pending_orders
+FROM supplier_delivery sd
+GROUP BY sd.supplier_id
+ORDER BY MAX(sd.supplier_name)
+`;
+    this.logger.log('Supplier performance aggregation completed', {
+      timestamp: new Date().toISOString(),
+      duration_ms: Date.now() - methodStartedAt,
+      started_at: methodTimestamp,
+      supplier_count: rows.length,
+    });
+    const suppliers = rows.map((r) => {
+      const rawAvg = r.avg_lead_days;
+      const avgLeadTimeDays =
+        rawAvg === null || rawAvg === undefined || Number.isNaN(Number(rawAvg))
+          ? null
+          : Math.round(Number(rawAvg) * 100) / 100;
+      const flagged = avgLeadTimeDays !== null && avgLeadTimeDays > 7;
+      return {
+        supplierId: r.supplier_id,
+        supplierName: r.supplier_name,
+        avgLeadTimeDays,
+        totalOrders: r.total_orders,
+        pendingOrders: r.pending_orders,
+        flagged,
+      };
+    });
+    return { suppliers };
+  }
+
+  async createSupplierDelivery(dto: CreateSupplierDeliveryDto) {
+    const row = await this.prisma.supplierDelivery.create({
+      data: {
+        supplierId: dto.supplierId,
+        supplierName: dto.supplierName,
+        productId: dto.productId,
+        quantity: dto.quantity,
+        orderedAt: new Date(dto.orderedAt),
+        receivedAt: dto.receivedAt ? new Date(dto.receivedAt) : null,
+      },
+    });
+    return {
+      id: row.id,
+      supplierId: row.supplierId,
+      supplierName: row.supplierName,
+      productId: row.productId,
+      quantity: row.quantity,
+      orderedAt: row.orderedAt.toISOString(),
+      receivedAt: row.receivedAt ? row.receivedAt.toISOString() : null,
+      createdAt: row.createdAt.toISOString(),
+    };
   }
 
   /**

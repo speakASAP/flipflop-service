@@ -8,7 +8,14 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi, SalesData, RevenueData } from '@/lib/api/admin';
-import type { RevenueMoM, ConversionRate, SlaStats, LowStockItem, DeadStockItem } from '@/lib/admin';
+import type {
+  RevenueMoM,
+  ConversionRate,
+  SlaStats,
+  LowStockItem,
+  DeadStockItem,
+  SupplierPerformance,
+} from '@/lib/admin';
 import { ordersApi, Order } from '@/lib/api/orders';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { RevenueMomBarChart } from '@/components/admin/RevenueMomBarChart';
@@ -23,6 +30,7 @@ export default function AdminDashboardPage() {
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
   const [deadStockItems, setDeadStockItems] = useState<DeadStockItem[]>([]);
   const [deadStockLoading, setDeadStockLoading] = useState(true);
+  const [supplierPerformance, setSupplierPerformance] = useState<SupplierPerformance[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -58,6 +66,7 @@ export default function AdminDashboardPage() {
         conversionResponse,
         slaResponse,
         lowStockResponse,
+        supplierPerfResponse,
       ] = await Promise.all([
         adminApi.getSales(),
         adminApi.getRevenue(),
@@ -66,6 +75,7 @@ export default function AdminDashboardPage() {
         adminApi.getConversionRate(30),
         adminApi.getSlaStats(30),
         adminApi.getLowStock(10),
+        adminApi.getSupplierPerformance(),
       ]);
 
       if (salesResponse.success && salesResponse.data) {
@@ -89,6 +99,9 @@ export default function AdminDashboardPage() {
       }
       if (lowStockResponse.success && lowStockResponse.data) {
         setLowStockItems(lowStockResponse.data.items);
+      }
+      if (supplierPerfResponse.success && supplierPerfResponse.data) {
+        setSupplierPerformance(supplierPerfResponse.data.suppliers);
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -188,6 +201,61 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       ) : null}
+
+      <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+        <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Dodavatelé — výkonnost</h2>
+            <p className="text-sm text-slate-600 mt-1">
+              Průměrná dodací lhůta od objednání po příjem skladu · označení při průměru nad 7 dní
+            </p>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          {supplierPerformance.length === 0 ? (
+            <p className="px-6 py-8 text-sm text-slate-500">Žádné záznamy dodávek.</p>
+          ) : (
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-gray-600 border-b border-gray-200">
+                  <th className="px-4 py-3 font-semibold">Dodavatel</th>
+                  <th className="px-4 py-3 font-semibold">Průměrná dodací lhůta</th>
+                  <th className="px-4 py-3 font-semibold">Objednávky</th>
+                  <th className="px-4 py-3 font-semibold">Čeká</th>
+                </tr>
+              </thead>
+              <tbody>
+                {supplierPerformance.map((row) => (
+                  <tr
+                    key={row.supplierId}
+                    className={
+                      row.flagged
+                        ? 'bg-red-50 border-b border-red-100'
+                        : 'border-b border-gray-100'
+                    }
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-gray-900">{row.supplierName}</span>
+                        {row.flagged ? (
+                          <span className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                            Pomalý
+                          </span>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 tabular-nums text-gray-800">
+                      {row.avgLeadTimeDays === null ? '—' : `${row.avgLeadTimeDays} d`}
+                    </td>
+                    <td className="px-4 py-3 tabular-nums">{row.totalOrders}</td>
+                    <td className="px-4 py-3 tabular-nums">{row.pendingOrders}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
 
       <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
         <div className="bg-slate-50 border-b border-slate-200 px-6 py-4">

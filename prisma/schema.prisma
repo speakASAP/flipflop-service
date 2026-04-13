@@ -151,6 +151,20 @@ model SupplierProduct {
   @@map("supplier_products")
 }
 
+model SupplierDelivery {
+  id           String    @id(map: "PK_supplier_delivery") @default(cuid())
+  supplierId   String    @map("supplier_id") @db.VarChar(255)
+  supplierName String    @map("supplier_name") @db.VarChar(255)
+  orderedAt    DateTime  @map("ordered_at") @db.Timestamp(6)
+  receivedAt   DateTime? @map("received_at") @db.Timestamp(6)
+  productId    String    @map("product_id") @db.VarChar(255)
+  quantity     Int
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@index([supplierId], map: "IDX_supplier_delivery_supplier_id")
+  @@map("supplier_delivery")
+}
+
 model DeliveryAddress {
   id         String   @id(map: "PK_138238d6ec62ef07449c2a8fb11") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId     String   @db.Uuid

@@ -36,3 +36,12 @@ export type DeadStockItem = {
   currentPrice: number;
   suggestedMarkdown: number | null;
 };
+
+export type SupplierPerformance = {
+  supplierId: string;
+  supplierName: string;
+  avgLeadTimeDays: number | null;
+  totalOrders: number;
+  pendingOrders: number;
+  flagged: boolean;
+};
