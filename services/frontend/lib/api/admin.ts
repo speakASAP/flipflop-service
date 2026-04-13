@@ -86,6 +86,12 @@ export interface CheckoutFunnel {
   abandonment_rate_pct: number;
 }
 
+export interface CompetitorAnalysis {
+  generatedAt: string;
+  commentary: string;
+  products: Array<{ name: string; price: number }>;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -160,6 +166,10 @@ export const adminApi = {
   async getCheckoutFunnel(days?: number) {
     const params = days !== undefined && days > 0 ? `?days=${days}` : '';
     return apiClient.get<CheckoutFunnel>(`/admin/checkout-funnel${params}`);
+  },
+
+  async getCompetitorAnalysis() {
+    return apiClient.get<CompetitorAnalysis>('/admin/competitor-analysis');
   },
 
   // Products (Admin CRUD)

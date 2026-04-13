@@ -3,6 +3,7 @@
  */
 
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { AdminOrdersController, OrdersController, PaymentController } from './orders.controller';
 import { OrdersInternalController } from './orders-internal.controller';
 import { OrdersService } from './orders.service';
@@ -17,6 +18,7 @@ import {
 
 @Module({
   imports: [
+    HttpModule,
     LoggerModule,
     PrismaModule,
     AuthModule,

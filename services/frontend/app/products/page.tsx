@@ -1,6 +1,19 @@
 import { productsApi, Product } from '@/lib/api/products';
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Všechny produkty | flipflop.statex.cz',
+  description: 'Prohlédněte si náš kompletní sortiment. Rychlé doručení, snadné platby, kvalitní zboží za skvělé ceny.',
+  openGraph: {
+    title: 'Všechny produkty | flipflop.statex.cz',
+    description: 'Prohlédněte si náš kompletní sortiment.',
+    type: 'website',
+    locale: 'cs_CZ',
+    siteName: 'flipflop.statex.cz',
+  },
+};
 
 interface ProductsPageProps {
   searchParams: {

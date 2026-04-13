@@ -11,6 +11,7 @@ import {
   RevenueData,
   MarginAnalysis,
   CheckoutFunnel,
+  CompetitorAnalysis,
 } from '@/lib/api/admin';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -19,6 +20,7 @@ export default function AdminAnalyticsPage() {
   const [revenueData, setRevenueData] = useState<RevenueData | null>(null);
   const [marginData, setMarginData] = useState<MarginAnalysis | null>(null);
   const [funnelData, setFunnelData] = useState<CheckoutFunnel | null>(null);
+  const [competitorData, setCompetitorData] = useState<CompetitorAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState({
     startDate: '',
@@ -28,7 +30,7 @@ export default function AdminAnalyticsPage() {
   const loadAnalytics = useCallback(async () => {
     setLoading(true);
     try {
-      const [salesResponse, revenueResponse, marginResponse, funnelResponse] =
+      const [salesResponse, revenueResponse, marginResponse, funnelResponse, competitorResponse] =
         await Promise.all([
           adminApi.getSales(
             dateRange.startDate || undefined,
@@ -43,6 +45,7 @@ export default function AdminAnalyticsPage() {
             dateRange.endDate || undefined
           ),
           adminApi.getCheckoutFunnel(30),
+          adminApi.getCompetitorAnalysis(),
         ]);
 
       if (salesResponse.success && salesResponse.data) {
@@ -56,6 +59,9 @@ export default function AdminAnalyticsPage() {
       }
       if (funnelResponse.success && funnelResponse.data) {
         setFunnelData(funnelResponse.data);
+      }
+      if (competitorResponse.success && competitorResponse.data) {
+        setCompetitorData(competitorResponse.data);
       }
     } catch (error) {
       console.error('Failed to load analytics:', error);
@@ -260,6 +266,33 @@ export default function AdminAnalyticsPage() {
               <p className="text-sm text-gray-500">Míra opuštění</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {competitorData && (
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+          <h3 className="text-lg font-bold mb-3 text-slate-900">Cenová konkurenceschopnost (AI)</h3>
+          <p className="text-xs text-gray-400 mb-3">
+            Generováno: {new Date(competitorData.generatedAt).toLocaleString('cs-CZ')}
+          </p>
+          <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+            {competitorData.commentary}
+          </p>
+          {competitorData.products.length > 0 && (
+            <ul className="mt-4 space-y-1">
+              {competitorData.products.map((product, index) => (
+                <li
+                  key={`${product.name}-${index}`}
+                  className="text-sm text-gray-600 flex justify-between"
+                >
+                  <span>{product.name}</span>
+                  <span className="font-semibold">
+                    {product.price.toLocaleString('cs-CZ')} Kč
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>

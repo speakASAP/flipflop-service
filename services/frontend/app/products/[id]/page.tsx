@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import AddToCartButton from '@/components/AddToCartButton';
 import Link from 'next/link';
 import Image from 'next/image';
+import type { Metadata } from 'next';
 
 interface ProductPageProps {
   params: {
@@ -40,6 +41,35 @@ const getGradient = (name: string) => {
   }
   return 'from-gray-100 via-slate-50 to-gray-200';
 };
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const response = await productsApi.getProduct(params.id);
+  if (!response.success || !response.data) {
+    return { title: 'Produkt nenalezen | flipflop.statex.cz' };
+  }
+
+  const product = response.data;
+  const description = product.description
+    ? product.description.slice(0, 160)
+    : `Koupit ${product.name} za ${product.price.toLocaleString('cs-CZ')} Kč. Rychlé doručení po celé ČR.`;
+  const title = product.brand
+    ? `${product.brand} ${product.name} | flipflop.statex.cz`
+    : `${product.name} | flipflop.statex.cz`;
+  const image = product.mainImageUrl ?? product.imageUrls?.[0] ?? product.images?.[0];
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      locale: 'cs_CZ',
+      siteName: 'flipflop.statex.cz',
+      ...(image ? { images: [{ url: image, width: 800, height: 800, alt: product.name }] } : {}),
+    },
+  };
+}
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const response = await productsApi.getProduct(params.id);

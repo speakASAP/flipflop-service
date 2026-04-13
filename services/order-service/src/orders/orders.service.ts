@@ -11,6 +11,7 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { PrismaService } from '@flipflop/shared';
 import { LoggerService } from '@flipflop/shared';
 import { PaymentService } from '@flipflop/shared';
@@ -29,6 +30,7 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
     private readonly logger: LoggerService,
     private readonly paymentService: PaymentService,
     private readonly notificationService: NotificationService,
+    private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly orderClient: OrderClientService,
     private readonly warehouseClient: WarehouseClientService,
@@ -663,6 +665,80 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
       redirectUri: paymentResponse.data.redirectUri,
       orderId: order.id,
     };
+  }
+
+  async getCompetitorAnalysis(): Promise<{
+    generatedAt: string;
+    commentary: string;
+    products: Array<{ name: string; price: number }>;
+  }> {
+    const methodStartedAt = Date.now();
+    const methodTimestamp = new Date().toISOString();
+
+    let products: Array<{ name: string; price: number }> = [];
+    try {
+      const productServiceUrl =
+        this.configService.get<string>('PRODUCT_SERVICE_URL') ?? 'http://flipflop-product-service:3002';
+      const requestStartedAt = Date.now();
+      const productsRes = await this.httpService.axiosRef.get(
+        `${productServiceUrl}/products?limit=10&sortBy=price&sortOrder=desc`,
+      );
+      const items: any[] =
+        productsRes.data?.data?.items ?? productsRes.data?.items ?? productsRes.data?.data ?? [];
+      products = items
+        .map((item: any) => ({ name: item.name, price: Number(item.price) }))
+        .filter((item) => item.name && Number.isFinite(item.price));
+
+      this.logger.log('Competitor analysis products loaded', {
+        timestamp: new Date().toISOString(),
+        duration_ms: Date.now() - requestStartedAt,
+        products_count: products.length,
+      });
+    } catch (error: unknown) {
+      this.logger.error('Competitor analysis product fetch failed', {
+        timestamp: new Date().toISOString(),
+        duration_ms: Date.now() - methodStartedAt,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
+    let commentary = 'Analýza není dostupná — AI služba nedosažitelná.';
+    try {
+      const aiUrl = this.configService.get<string>('AI_SERVICE_URL') ?? 'http://e-commerce-ai-service:3007';
+      const prompt =
+        products.length > 0
+          ? `Jako e-commerce analytik ohodnoť cenovou konkurenceschopnost těchto produktů pro český trh. Produkty: ${products.map((item) => `${item.name} (${item.price} Kč)`).join(', ')}. Napiš krátkou analýzu (max 150 slov) v češtině s doporučením.`
+          : 'Napiš krátkou obecnou analýzu cenové konkurenceschopnosti pro český e-commerce trh (max 100 slov, česky).';
+
+      const requestStartedAt = Date.now();
+      const aiRes = await this.httpService.axiosRef.post(`${aiUrl}/ai/complete`, {
+        model_tier: 'free',
+        user_prompt: prompt,
+        max_tokens: 400,
+        correlation_id: `competitor-analysis-${Date.now()}`,
+      });
+      commentary = aiRes.data?.text ?? aiRes.data?.content ?? aiRes.data?.result ?? commentary;
+
+      this.logger.log('Competitor analysis AI commentary generated', {
+        timestamp: new Date().toISOString(),
+        duration_ms: Date.now() - requestStartedAt,
+        used_products_count: products.length,
+      });
+    } catch (error: unknown) {
+      this.logger.error('Competitor analysis AI request failed', {
+        timestamp: new Date().toISOString(),
+        duration_ms: Date.now() - methodStartedAt,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
+    this.logger.log('Competitor analysis completed', {
+      timestamp: new Date().toISOString(),
+      duration_ms: Date.now() - methodStartedAt,
+      generated_at: methodTimestamp,
+    });
+
+    return { generatedAt: methodTimestamp, commentary, products };
   }
 
   async getCheckoutFunnel(since?: Date): Promise<{
