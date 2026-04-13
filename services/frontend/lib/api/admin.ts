@@ -14,6 +14,8 @@ import type {
   DeadStockItem,
   SupplierPerformance,
   ReviewRequest,
+  LoyaltyAccount,
+  RepeatBuyer,
 } from '../admin';
 
 // Re-export Order type for convenience
@@ -26,6 +28,8 @@ export type {
   DeadStockItem,
   SupplierPerformance,
   ReviewRequest,
+  LoyaltyAccount,
+  RepeatBuyer,
 } from '../admin';
 
 export interface CompanySettings {
@@ -235,6 +239,24 @@ export const adminApi = {
     const d = days !== undefined && Number.isFinite(days) && days > 0 ? days : 30;
     return apiClient.get<{ total: number; items: ReviewRequest[] }>(
       `/admin/retention/review-requests?days=${d}`,
+    );
+  },
+
+  async getLoyaltyLeaderboard(limit?: number) {
+    const l = limit !== undefined && Number.isFinite(limit) && limit > 0 ? limit : 20;
+    return apiClient.get<{ total: number; items: LoyaltyAccount[] }>(
+      `/admin/retention/loyalty?limit=${l}`,
+    );
+  },
+
+  async getRepeatBuyers(minOrders?: number, days?: number) {
+    const params = new URLSearchParams();
+    const mo = minOrders !== undefined && Number.isFinite(minOrders) && minOrders > 0 ? minOrders : 2;
+    const d = days !== undefined && Number.isFinite(days) && days > 0 ? days : 90;
+    params.set('minOrders', String(mo));
+    params.set('days', String(d));
+    return apiClient.get<{ total: number; items: RepeatBuyer[] }>(
+      `/admin/retention/repeat-buyers?${params.toString()}`,
     );
   },
 

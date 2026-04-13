@@ -16,6 +16,8 @@ import type {
   DeadStockItem,
   SupplierPerformance,
   ReviewRequest,
+  LoyaltyAccount,
+  RepeatBuyer,
 } from '@/lib/admin';
 import { ordersApi, Order } from '@/lib/api/orders';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -34,6 +36,11 @@ export default function AdminDashboardPage() {
   const [supplierPerformance, setSupplierPerformance] = useState<SupplierPerformance[]>([]);
   const [reviewRequests, setReviewRequests] = useState<ReviewRequest[]>([]);
   const [reviewRequestsTotal, setReviewRequestsTotal] = useState(0);
+  const [loyaltyAccounts, setLoyaltyAccounts] = useState<LoyaltyAccount[]>([]);
+  const [loyaltyTotal, setLoyaltyTotal] = useState(0);
+  const [repeatBuyers, setRepeatBuyers] = useState<RepeatBuyer[]>([]);
+  const [repeatBuyersTotal, setRepeatBuyersTotal] = useState(0);
+  const [repeatBuyersLoading, setRepeatBuyersLoading] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,6 +66,26 @@ export default function AdminDashboardPage() {
     return () => window.clearTimeout(handle);
   }, []);
 
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      void (async () => {
+        try {
+          setRepeatBuyersLoading(true);
+          const res = await adminApi.getRepeatBuyers(2, 90);
+          if (res.success && res.data) {
+            setRepeatBuyers(res.data.items);
+            setRepeatBuyersTotal(res.data.total);
+          }
+        } catch (e) {
+          console.error('Repeat buyers load failed:', e);
+        } finally {
+          setRepeatBuyersLoading(false);
+        }
+      })();
+    }, 550);
+    return () => window.clearTimeout(handle);
+  }, []);
+
   const loadDashboardData = async () => {
     try {
       const [
@@ -71,6 +98,7 @@ export default function AdminDashboardPage() {
         lowStockResponse,
         supplierPerfResponse,
         reviewRequestsResponse,
+        loyaltyResponse,
       ] = await Promise.all([
         adminApi.getSales(),
         adminApi.getRevenue(),
@@ -81,6 +109,7 @@ export default function AdminDashboardPage() {
         adminApi.getLowStock(10),
         adminApi.getSupplierPerformance(),
         adminApi.getReviewRequests(30),
+        adminApi.getLoyaltyLeaderboard(20),
       ]);
 
       if (salesResponse.success && salesResponse.data) {
@@ -111,6 +140,10 @@ export default function AdminDashboardPage() {
       if (reviewRequestsResponse.success && reviewRequestsResponse.data) {
         setReviewRequestsTotal(reviewRequestsResponse.data.total);
         setReviewRequests(reviewRequestsResponse.data.items);
+      }
+      if (loyaltyResponse.success && loyaltyResponse.data) {
+        setLoyaltyTotal(loyaltyResponse.data.total);
+        setLoyaltyAccounts(loyaltyResponse.data.items);
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -305,6 +338,107 @@ export default function AdminDashboardPage() {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-lg border border-emerald-200 overflow-hidden">
+        <div className="bg-emerald-50 border-b border-emerald-200 px-6 py-4">
+          <h2 className="text-lg font-bold text-emerald-900">Věrnostní body — Top zákazníci</h2>
+          <p className="text-sm text-emerald-800 mt-1">1 bod za každých 10 Kč u potvrzených objednávek</p>
+          <p className="text-sm font-semibold text-emerald-900 mt-2">
+            Celkem účtů: <span className="tabular-nums">{loyaltyTotal}</span>
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 text-left text-gray-600 border-b border-gray-200">
+                <th className="px-4 py-3 font-semibold">E-mail</th>
+                <th className="px-4 py-3 font-semibold">Body</th>
+                <th className="px-4 py-3 font-semibold">Aktualizováno</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loyaltyAccounts.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
+                    Zatím žádné věrnostní body.
+                  </td>
+                </tr>
+              ) : (
+                loyaltyAccounts.map((row) => (
+                  <tr key={row.customerId} className="border-b border-gray-100">
+                    <td className="px-4 py-3 text-gray-900">{row.customerEmail}</td>
+                    <td className="px-4 py-3 tabular-nums font-medium text-gray-900">
+                      {row.totalPoints}
+                    </td>
+                    <td className="px-4 py-3 tabular-nums text-gray-700">
+                      {new Date(row.lastUpdated).toLocaleString('cs-CZ')}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-lg border border-violet-200 overflow-hidden">
+        <div className="bg-violet-50 border-b border-violet-200 px-6 py-4">
+          <h2 className="text-lg font-bold text-violet-900">
+            Zákazníci s vysokou pravděpodobností nákupu
+          </h2>
+          <p className="text-sm text-violet-800 mt-1">
+            ≥ 2 potvrzené objednávky za 90 dní · doporučení AI (cheap)
+          </p>
+          <p className="text-sm font-semibold text-violet-900 mt-2">
+            Celkem odpovídajících zákazníků:{' '}
+            <span className="tabular-nums">{repeatBuyersTotal}</span>
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          {repeatBuyersLoading ? (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner size="md" />
+            </div>
+          ) : (
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-gray-600 border-b border-gray-200">
+                  <th className="px-4 py-3 font-semibold">E-mail</th>
+                  <th className="px-4 py-3 font-semibold">Objednávky</th>
+                  <th className="px-4 py-3 font-semibold">Utraceno</th>
+                  <th className="px-4 py-3 font-semibold">AI doporučení</th>
+                </tr>
+              </thead>
+              <tbody>
+                {repeatBuyers.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                      Žádní zákazníci v tomto období.
+                    </td>
+                  </tr>
+                ) : (
+                  repeatBuyers.map((row) => (
+                    <tr key={row.customerId} className="border-b border-gray-100">
+                      <td className="px-4 py-3 text-gray-900">{row.customerEmail}</td>
+                      <td className="px-4 py-3 tabular-nums">{row.orderCount}</td>
+                      <td className="px-4 py-3 tabular-nums">
+                        {new Intl.NumberFormat('cs-CZ', {
+                          style: 'currency',
+                          currency: 'CZK',
+                          maximumFractionDigits: 0,
+                        }).format(row.totalSpent)}
+                      </td>
+                      <td className="px-4 py-3 text-gray-800">
+                        {row.recommendedProduct ?? '—'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 

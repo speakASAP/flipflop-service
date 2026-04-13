@@ -303,6 +303,8 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
         },
       });
 
+      await this.tryAccrueLoyaltyPointsForOrder(order.id);
+
       const warehouseId = await this.warehouseClient.getDefaultWarehouseId();
       if (warehouseId) {
         for (const item of order.order_items) {
@@ -482,7 +484,117 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
         delivery_addresses: true,
       },
     });
+    if (
+      dto.status !== undefined &&
+      dto.status === OrderStatus.confirmed &&
+      order.status !== OrderStatus.confirmed
+    ) {
+      await this.tryAccrueLoyaltyPointsForOrder(orderId);
+    }
     return this.mapOrder(updated);
+  }
+
+  private isLoyaltyPointsAwardedMetadata(metadata: unknown): boolean {
+    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+      return false;
+    }
+    return (metadata as Record<string, unknown>).loyaltyPointsAwarded === true;
+  }
+
+  private mergeMetadataWithLoyaltyAwarded(metadata: Prisma.JsonValue | null): Prisma.InputJsonValue {
+    const prev =
+      metadata && typeof metadata === 'object' && !Array.isArray(metadata)
+        ? { ...(metadata as Record<string, unknown>) }
+        : {};
+    prev.loyaltyPointsAwarded = true;
+    return prev as Prisma.InputJsonValue;
+  }
+
+  /**
+   * Loyalty: 1 point per 10 CZK on confirmed orders; accrues at most once per order.
+   * (Schema has no `fulfilled` status; confirmation is the earning event.)
+   */
+  private async tryAccrueLoyaltyPointsForOrder(orderId: string): Promise<void> {
+    const startedAt = Date.now();
+    const timestamp = new Date().toISOString();
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const row = await tx.order.findUnique({
+          where: { id: orderId },
+          include: { users: true },
+        });
+        if (!row || row.status !== OrderStatus.confirmed) {
+          return;
+        }
+        if (this.isLoyaltyPointsAwardedMetadata(row.metadata)) {
+          return;
+        }
+        const points = Math.floor(Number(row.total) / 10);
+        const customerEmail = row.users?.email ?? '';
+        if (points > 0) {
+          await tx.loyaltyAccount.upsert({
+            where: { customerId: row.userId },
+            create: {
+              customerId: row.userId,
+              customerEmail,
+              totalPoints: points,
+            },
+            update: {
+              totalPoints: { increment: points },
+              customerEmail,
+            },
+          });
+        }
+        await tx.order.update({
+          where: { id: orderId },
+          data: { metadata: this.mergeMetadataWithLoyaltyAwarded(row.metadata) },
+        });
+      });
+    } catch (err: unknown) {
+      this.logger.error('Loyalty accrual failed', {
+        timestamp,
+        duration_ms: Date.now() - startedAt,
+        orderId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  async getAdminLoyaltyAccounts(limitParam?: string): Promise<{
+    items: Array<{
+      customerId: string;
+      customerEmail: string;
+      totalPoints: number;
+      lastUpdated: string;
+    }>;
+    total: number;
+  }> {
+    const parsed =
+      limitParam !== undefined && limitParam !== '' ? parseInt(limitParam, 10) : NaN;
+    const raw = Number.isFinite(parsed) && parsed > 0 ? parsed : 20;
+    const limit = Math.min(Math.max(raw, 1), 200);
+    const [rows, total] = await Promise.all([
+      this.prisma.loyaltyAccount.findMany({
+        orderBy: { totalPoints: 'desc' },
+        take: limit,
+        select: {
+          customerId: true,
+          customerEmail: true,
+          totalPoints: true,
+          updatedAt: true,
+        },
+      }),
+      this.prisma.loyaltyAccount.count(),
+    ]);
+    return {
+      items: rows.map((r) => ({
+        customerId: r.customerId,
+        customerEmail: r.customerEmail,
+        totalPoints: r.totalPoints,
+        lastUpdated: r.updatedAt.toISOString(),
+      })),
+      total,
+    };
   }
 
   /**
@@ -1320,6 +1432,230 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
     });
 
     return { items, total: items.length };
+  }
+
+  /**
+   * Admin: customers with ≥ minOrders confirmed orders in the last N days; AI next-purchase hint (cheap tier).
+   */
+  async getRepeatBuyers(
+    minOrdersParam?: string,
+    daysParam?: string,
+    authorizationHeader?: string,
+  ): Promise<{
+    items: Array<{
+      customerId: string;
+      customerEmail: string;
+      orderCount: number;
+      totalSpent: number;
+      lastOrderAt: string;
+      recommendedProduct: string | null;
+    }>;
+    total: number;
+  }> {
+    const methodStartedAt = Date.now();
+    const methodTimestamp = new Date().toISOString();
+    const minParsed =
+      minOrdersParam !== undefined && minOrdersParam !== ''
+        ? parseInt(minOrdersParam, 10)
+        : NaN;
+    const minOrders = Number.isFinite(minParsed) && minParsed > 0 ? Math.min(minParsed, 1000) : 2;
+    const daysParsed =
+      daysParam !== undefined && daysParam !== '' ? parseInt(daysParam, 10) : NaN;
+    const daysRaw = Number.isFinite(daysParsed) && daysParsed > 0 ? daysParsed : 90;
+    const days = Math.min(Math.max(daysRaw, 1), 3650);
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const countStartedAt = Date.now();
+    const countRows = await this.prisma.$queryRaw<Array<{ n: bigint }>>(
+      Prisma.sql`
+        SELECT COUNT(*)::bigint AS n
+        FROM (
+          SELECT o."userId"
+          FROM orders o
+          WHERE o.status = ${OrderStatus.confirmed}::order_status_enum
+            AND o."createdAt" >= ${since}
+          GROUP BY o."userId"
+          HAVING COUNT(o.id) >= ${minOrders}
+        ) t
+      `,
+    );
+    const total = Number(countRows[0]?.n ?? 0);
+
+    this.logger.log('Repeat buyers count query completed', {
+      timestamp: new Date().toISOString(),
+      duration_ms: Date.now() - countStartedAt,
+      total,
+      minOrders,
+      days,
+    });
+
+    const topGroups = await this.prisma.$queryRaw<
+      Array<{
+        userId: string;
+        orderCount: number;
+        totalSpent: unknown;
+        lastOrderAt: Date;
+      }>
+    >(
+      Prisma.sql`
+        SELECT o."userId",
+               COUNT(o.id)::int AS "orderCount",
+               COALESCE(SUM(o.total), 0) AS "totalSpent",
+               MAX(o."createdAt") AS "lastOrderAt"
+        FROM orders o
+        WHERE o.status = ${OrderStatus.confirmed}::order_status_enum
+          AND o."createdAt" >= ${since}
+        GROUP BY o."userId"
+        HAVING COUNT(o.id) >= ${minOrders}
+        ORDER BY COUNT(o.id) DESC
+        LIMIT 20
+      `,
+    );
+
+    if (topGroups.length === 0) {
+      this.logger.log('Repeat buyers completed (empty)', {
+        timestamp: new Date().toISOString(),
+        duration_ms: Date.now() - methodStartedAt,
+        started_at: methodTimestamp,
+        total,
+      });
+      return { items: [], total };
+    }
+
+    const userIds = topGroups.map((g) => g.userId);
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, email: true },
+    });
+    const emailById = new Map(users.map((u) => [u.id, u.email ?? '']));
+
+    const productLinesByUser = new Map<string, string[]>();
+    const orderItems = await this.prisma.orderItem.findMany({
+      where: {
+        orders: {
+          userId: { in: userIds },
+          status: OrderStatus.confirmed,
+          createdAt: { gte: since },
+        },
+      },
+      select: {
+        productName: true,
+        orders: { select: { userId: true } },
+      },
+    });
+    for (const row of orderItems) {
+      const uid = row.orders.userId;
+      const arr = productLinesByUser.get(uid) ?? [];
+      if (!arr.includes(row.productName)) {
+        arr.push(row.productName);
+      }
+      productLinesByUser.set(uid, arr);
+    }
+
+    const aiBase =
+      this.configService.get<string>('AI_SERVICE_URL') ?? 'http://ai-microservice:3380';
+    const aiUrl = `${aiBase.replace(/\/$/, '')}/ai/complete`;
+
+    const resolveProduct = (data: Record<string, unknown> | null | undefined): string | null => {
+      if (!data || typeof data !== 'object') {
+        return null;
+      }
+      const product = (data as { product?: unknown }).product;
+      if (typeof product === 'string' && product.trim()) {
+        return product.trim();
+      }
+      const text = (data as { text?: unknown }).text;
+      if (typeof text === 'string') {
+        try {
+          const inner = JSON.parse(text) as { product?: unknown };
+          if (typeof inner.product === 'string' && inner.product.trim()) {
+            return inner.product.trim();
+          }
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    };
+
+    const items: Array<{
+      customerId: string;
+      customerEmail: string;
+      orderCount: number;
+      totalSpent: number;
+      lastOrderAt: string;
+      recommendedProduct: string | null;
+    }> = [];
+
+    for (const g of topGroups) {
+      const customerId = g.userId;
+      const customerEmail = emailById.get(customerId) ?? '';
+      const orderCount = g.orderCount;
+      const totalSpent = Number(g.totalSpent ?? 0);
+      const lastAt = g.lastOrderAt ?? since;
+      const names = productLinesByUser.get(customerId) ?? [];
+      const productNamesStr = names.slice(0, 20).join(', ') || 'žádné názvy produktů';
+      const amount = Math.round(totalSpent);
+      const userPrompt =
+        `Customer has placed ${orderCount} orders totaling ${amount} CZK. ` +
+        `Their recent purchases: ${productNamesStr}. ` +
+        `Suggest one product or category they are most likely to buy next. ` +
+        `Reply with JSON: { "product": string, "reason": string }`;
+
+      let recommendedProduct: string | null = null;
+      const aiStartedAt = Date.now();
+      try {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (authorizationHeader) {
+          headers.Authorization = authorizationHeader;
+        }
+        const aiRes = await this.httpService.axiosRef.post(
+          aiUrl,
+          {
+            model_tier: 'cheap',
+            system_prompt:
+              'Reply only with one JSON object, no markdown. Keys: product (short string, Czech), reason (short string, Czech).',
+            user_prompt: userPrompt,
+            max_tokens: 256,
+            correlation_id: `repeat-buyer-${customerId}-${Date.now()}`,
+          },
+          { headers, timeout: 25000 },
+        );
+        recommendedProduct = resolveProduct(aiRes.data as Record<string, unknown>);
+        this.logger.log('Repeat buyer AI suggestion', {
+          timestamp: new Date().toISOString(),
+          duration_ms: Date.now() - aiStartedAt,
+          customer_id: customerId,
+        });
+      } catch (error: unknown) {
+        this.logger.error('Repeat buyer AI request failed', {
+          timestamp: new Date().toISOString(),
+          duration_ms: Date.now() - aiStartedAt,
+          customer_id: customerId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        recommendedProduct = null;
+      }
+
+      items.push({
+        customerId,
+        customerEmail,
+        orderCount,
+        totalSpent,
+        lastOrderAt: lastAt.toISOString(),
+        recommendedProduct,
+      });
+    }
+
+    this.logger.log('Repeat buyers completed', {
+      timestamp: new Date().toISOString(),
+      duration_ms: Date.now() - methodStartedAt,
+      started_at: methodTimestamp,
+      returned: items.length,
+      total,
+    });
+
+    return { items, total };
   }
 
   /**

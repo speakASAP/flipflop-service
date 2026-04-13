@@ -59,6 +59,30 @@ export class AdminOrdersController {
     return ApiResponse.success(payload);
   }
 
+  @Get('retention/loyalty')
+  async getLoyaltyLeaderboard(@Query('limit') limit?: string) {
+    const payload = await this.ordersService.getAdminLoyaltyAccounts(limit);
+    return ApiResponse.success(payload);
+  }
+
+  /** Repeat buyers: confirmed orders in window; next purchase via ai-microservice (cheap). */
+  @Get('retention/repeat-buyers')
+  async getRepeatBuyers(
+    @Query('minOrders') minOrders?: string,
+    @Query('days') days?: string,
+    @Req() req?: Request,
+  ) {
+    const raw = req?.headers?.authorization;
+    const authorizationHeader =
+      typeof raw === 'string' ? raw : Array.isArray(raw) ? raw[0] : undefined;
+    const payload = await this.ordersService.getRepeatBuyers(
+      minOrders,
+      days,
+      authorizationHeader,
+    );
+    return ApiResponse.success(payload);
+  }
+
   /** Dead stock: stock > 0, no confirmed order line in the last N days; AI markdown via ai-microservice (cheap). */
   @Get('inventory/dead-stock')
   async getDeadStock(@Query('days') days?: string, @Req() req?: Request) {

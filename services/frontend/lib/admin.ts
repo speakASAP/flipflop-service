@@ -52,3 +52,19 @@ export type ReviewRequest = {
   sentAt: string;
   productCount: number;
 };
+
+export type LoyaltyAccount = {
+  customerId: string;
+  customerEmail: string;
+  totalPoints: number;
+  lastUpdated: string;
+};
+
+export type RepeatBuyer = {
+  customerId: string;
+  customerEmail: string;
+  orderCount: number;
+  totalSpent: number;
+  lastOrderAt: string;
+  recommendedProduct: string | null;
+};

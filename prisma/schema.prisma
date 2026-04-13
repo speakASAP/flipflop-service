@@ -373,6 +373,17 @@ model AbandonedCartLog {
   @@map("abandoned_cart_log")
 }
 
+model LoyaltyAccount {
+  id             String   @id @default(cuid())
+  customerId     String   @unique @map("customer_id")
+  customerEmail  String   @map("customer_email")
+  totalPoints    Int      @default(0) @map("total_points")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("loyalty_account")
+}
+
 model DiscountCodeRedemption {
   codeId       String       @db.Uuid
   orderId      String       @db.Uuid
