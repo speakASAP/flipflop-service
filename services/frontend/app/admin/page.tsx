@@ -8,12 +8,18 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi, SalesData, RevenueData } from '@/lib/api/admin';
+import type { RevenueMoM, ConversionRate, SlaStats } from '@/lib/admin';
 import { ordersApi, Order } from '@/lib/api/orders';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { RevenueMomBarChart } from '@/components/admin/RevenueMomBarChart';
+
 export default function AdminDashboardPage() {
   const [salesData, setSalesData] = useState<SalesData | null>(null);
   const [revenueData, setRevenueData] = useState<RevenueData | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [revenueMom, setRevenueMom] = useState<RevenueMoM[]>([]);
+  const [conversionRate, setConversionRate] = useState<ConversionRate | null>(null);
+  const [slaStats, setSlaStats] = useState<SlaStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,10 +28,20 @@ export default function AdminDashboardPage() {
 
   const loadDashboardData = async () => {
     try {
-      const [salesResponse, revenueResponse, ordersResponse] = await Promise.all([
+      const [
+        salesResponse,
+        revenueResponse,
+        ordersResponse,
+        revenueMomResponse,
+        conversionResponse,
+        slaResponse,
+      ] = await Promise.all([
         adminApi.getSales(),
         adminApi.getRevenue(),
         ordersApi.getOrders(),
+        adminApi.getRevenueMoM(6),
+        adminApi.getConversionRate(30),
+        adminApi.getSlaStats(30),
       ]);
 
       if (salesResponse.success && salesResponse.data) {
@@ -37,6 +53,15 @@ export default function AdminDashboardPage() {
       if (ordersResponse.success && ordersResponse.data) {
         // Get last 5 orders
         setRecentOrders(ordersResponse.data.slice(0, 5));
+      }
+      if (revenueMomResponse.success && revenueMomResponse.data) {
+        setRevenueMom(revenueMomResponse.data);
+      }
+      if (conversionResponse.success && conversionResponse.data) {
+        setConversionRate(conversionResponse.data);
+      }
+      if (slaResponse.success && slaResponse.data) {
+        setSlaStats(slaResponse.data);
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -169,6 +194,96 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+        <p className="text-sm font-semibold text-gray-600 mb-1">Konverzní poměr</p>
+        <p className="text-xs text-gray-500 mb-4">
+          Cíl: {'>'} 2 % · posledních 30 dní (potvrzené / všechny)
+        </p>
+        {conversionRate ? (
+          <div className="flex flex-wrap items-end gap-6">
+            <p
+              className={`text-5xl md:text-6xl font-extrabold tabular-nums ${
+                conversionRate.conversionRate >= conversionRate.targetPct
+                  ? 'text-green-600'
+                  : 'text-red-600'
+              }`}
+            >
+              {new Intl.NumberFormat('cs-CZ', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(conversionRate.conversionRate)}
+              %
+            </p>
+            <p className="text-sm text-gray-600 pb-2">
+              {conversionRate.confirmedOrders} potvrzených / {conversionRate.totalOrders} celkem
+            </p>
+          </div>
+        ) : (
+          <p className="text-gray-500">Nepodařilo se načíst konverzi.</p>
+        )}
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+        <p className="text-sm font-semibold text-gray-600 mb-1">SLA plnění objednávek</p>
+        <p className="text-xs text-gray-500 mb-4">
+          Cíl: &lt;48 h · posledních 30 dní (odesláno/doručeno → čas od potvrzení nebo vytvoření)
+        </p>
+        {slaStats ? (
+          <div className="flex flex-wrap items-end gap-8">
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                Průměr (h)
+              </p>
+              <p
+                className={`text-5xl md:text-6xl font-extrabold tabular-nums ${
+                  slaStats.avgFulfilmentHours < slaStats.slaTargetHours
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                }`}
+              >
+                {new Intl.NumberFormat('cs-CZ', {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                }).format(slaStats.avgFulfilmentHours)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                V cíli SLA
+              </p>
+              <p
+                className={`text-4xl md:text-5xl font-extrabold tabular-nums ${
+                  slaStats.avgFulfilmentHours < slaStats.slaTargetHours
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                }`}
+              >
+                {new Intl.NumberFormat('cs-CZ', {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                }).format(slaStats.pctMeetingSla)}
+                %
+              </p>
+            </div>
+            <p className="text-sm text-gray-600 pb-2">
+              {slaStats.totalFulfilled} dokončených zásilek v období
+            </p>
+          </div>
+        ) : (
+          <p className="text-gray-500">Nepodařilo se načíst SLA.</p>
+        )}
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+        <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Tržby MoM (CZK)</h2>
+        <p className="text-sm text-gray-500 mb-6">
+          Potvrzené objednávky — součet <code className="text-xs">total</code> za kalendářní měsíc
+          (posledních 6 měsíců).{' '}
+          <code className="text-xs bg-gray-100 px-1 rounded">GET /api/admin/analytics/revenue-mom?months=6</code>
+        </p>
+        <RevenueMomBarChart rows={revenueMom} />
       </div>
 
       {/* Quick Actions */}

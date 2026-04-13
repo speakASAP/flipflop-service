@@ -3,16 +3,7 @@
  * Handles HTTP requests for order operations
  */
 
-import {
-  Controller,
-  Get,
-  Post,
-  Param,
-  Body,
-  UseGuards,
-  Request,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Request } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { JwtAuthGuard, ApiResponse } from '@flipflop/shared';
@@ -52,27 +43,3 @@ export class PaymentController {
     return ApiResponse.success(payment);
   }
 }
-
-@Controller('admin')
-@UseGuards(JwtAuthGuard)
-export class AdminOrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
-
-  @Get('competitor-analysis')
-  async getCompetitorAnalysis() {
-    const result = await this.ordersService.getCompetitorAnalysis();
-    return ApiResponse.success(result);
-  }
-
-  @Get('checkout-funnel')
-  async getCheckoutFunnel(@Query('days') days?: string) {
-    const parsed = days !== undefined && days !== '' ? parseInt(days, 10) : NaN;
-    const since =
-      Number.isFinite(parsed) && parsed > 0
-        ? new Date(Date.now() - parsed * 24 * 60 * 60 * 1000)
-        : undefined;
-    const funnel = await this.ordersService.getCheckoutFunnel(since);
-    return ApiResponse.success(funnel);
-  }
-}
-

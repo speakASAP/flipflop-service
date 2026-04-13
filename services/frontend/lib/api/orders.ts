@@ -61,6 +61,7 @@ export interface Order {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  fulfilledAt?: string;
 }
 
 export interface CreateOrderData {

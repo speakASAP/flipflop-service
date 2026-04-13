@@ -291,6 +291,16 @@ if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
     # Print summary before final message
     print_phase_summary 2>&1
     echo ""
+    echo -e "${BLUE}Running post-deploy smoke test...${NC}"
+    cd "$PROJECT_ROOT"
+    if bash "$SCRIPT_DIR/smoke-test.sh"; then
+      echo -e "${GREEN}✅ Smoke test passed${NC}"
+    else
+      echo -e "${YELLOW}⚠️  Smoke test failed — deploy succeeded but service may be degraded${NC}"
+      echo "   Re-run manually: ./scripts/smoke-test.sh"
+    fi
+    cd "$NGINX_MICROSERVICE_PATH"
+    echo ""
     echo -e "${GREEN}╔══════════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${GREEN}║  ✅ ${DISPLAY_NAME} deployment completed successfully!               ║${NC}"
     echo -e "${GREEN}║     Total deployment time: ${TOTAL_DURATION_FORMATTED}s                        ║${NC}"

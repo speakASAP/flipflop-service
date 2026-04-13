@@ -21,5 +21,9 @@ export class CreateOrderDto {
   @IsNumber()
   @Min(0)
   discount?: number;
+
+  @IsOptional()
+  @IsString()
+  discountCode?: string;
 }
 

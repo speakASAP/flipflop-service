@@ -4,7 +4,8 @@
 
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { AdminOrdersController, OrdersController, PaymentController } from './orders.controller';
+import { OrdersController, PaymentController } from './orders.controller';
+import { AdminOrdersController } from './admin-orders.controller';
 import { OrdersInternalController } from './orders-internal.controller';
 import { OrdersService } from './orders.service';
 import {
@@ -15,6 +16,7 @@ import {
   LoggerModule,
   ClientsModule,
 } from '@flipflop/shared';
+import { MarketingModule } from '../marketing/marketing.module';
 
 @Module({
   imports: [
@@ -25,6 +27,7 @@ import {
     PaymentModule,
     NotificationModule,
     ClientsModule,
+    MarketingModule,
   ],
   controllers: [OrdersController, PaymentController, AdminOrdersController, OrdersInternalController],
   providers: [OrdersService],

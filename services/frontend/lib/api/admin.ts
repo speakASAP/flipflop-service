@@ -6,9 +6,11 @@
 import { apiClient } from './client';
 import { Product, PaginatedResponse } from './products';
 import { Order, OrderStatus, PaymentStatus } from './orders';
+import type { RevenueMoM, ConversionRate, SlaStats } from '../admin';
 
 // Re-export Order type for convenience
 export type { Order };
+export type { RevenueMoM, ConversionRate, SlaStats } from '../admin';
 
 export interface CompanySettings {
   id: string;
@@ -170,6 +172,24 @@ export const adminApi = {
 
   async getCompetitorAnalysis() {
     return apiClient.get<CompetitorAnalysis>('/admin/competitor-analysis');
+  },
+
+  async getRevenueMoM(months?: number) {
+    const q =
+      months !== undefined && Number.isFinite(months) && months > 0 ? `?months=${months}` : '';
+    return apiClient.get<RevenueMoM[]>(`/admin/analytics/revenue-mom${q}`);
+  },
+
+  async getConversionRate(days?: number) {
+    const q =
+      days !== undefined && Number.isFinite(days) && days > 0 ? `?days=${days}` : '?days=30';
+    return apiClient.get<ConversionRate>(`/admin/analytics/conversion-rate${q}`);
+  },
+
+  async getSlaStats(days?: number) {
+    const q =
+      days !== undefined && Number.isFinite(days) && days > 0 ? `?days=${days}` : '?days=30';
+    return apiClient.get<SlaStats>(`/admin/analytics/sla${q}`);
   },
 
   // Products (Admin CRUD)

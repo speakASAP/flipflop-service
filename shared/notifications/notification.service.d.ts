@@ -22,4 +22,5 @@ export declare class NotificationService {
     sendPaymentConfirmation(recipient: string, orderNumber: string, paymentAmount: number, channel?: NotificationChannel): Promise<NotificationResponse>;
     sendOrderStatusUpdate(recipient: string, orderNumber: string, status: string, channel?: NotificationChannel): Promise<NotificationResponse>;
     sendShipmentTracking(recipient: string, orderNumber: string, trackingNumber: string, channel?: NotificationChannel): Promise<NotificationResponse>;
+    sendMarketingEmail(to: string, subject: string, body: string): Promise<void>;
 }

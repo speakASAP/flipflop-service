@@ -13,7 +13,9 @@ import {
   CheckoutFunnel,
   CompetitorAnalysis,
 } from '@/lib/api/admin';
+import type { RevenueMoM } from '@/lib/admin';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { RevenueMomBarChart } from '@/components/admin/RevenueMomBarChart';
 
 export default function AdminAnalyticsPage() {
   const [salesData, setSalesData] = useState<SalesData | null>(null);
@@ -21,6 +23,7 @@ export default function AdminAnalyticsPage() {
   const [marginData, setMarginData] = useState<MarginAnalysis | null>(null);
   const [funnelData, setFunnelData] = useState<CheckoutFunnel | null>(null);
   const [competitorData, setCompetitorData] = useState<CompetitorAnalysis | null>(null);
+  const [revenueMom, setRevenueMom] = useState<RevenueMoM[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState({
     startDate: '',
@@ -30,23 +33,30 @@ export default function AdminAnalyticsPage() {
   const loadAnalytics = useCallback(async () => {
     setLoading(true);
     try {
-      const [salesResponse, revenueResponse, marginResponse, funnelResponse, competitorResponse] =
-        await Promise.all([
-          adminApi.getSales(
-            dateRange.startDate || undefined,
-            dateRange.endDate || undefined
-          ),
-          adminApi.getRevenue(
-            dateRange.startDate || undefined,
-            dateRange.endDate || undefined
-          ),
-          adminApi.getMarginAnalysis(
-            dateRange.startDate || undefined,
-            dateRange.endDate || undefined
-          ),
-          adminApi.getCheckoutFunnel(30),
-          adminApi.getCompetitorAnalysis(),
-        ]);
+      const [
+        salesResponse,
+        revenueResponse,
+        marginResponse,
+        funnelResponse,
+        competitorResponse,
+        revenueMomResponse,
+      ] = await Promise.all([
+        adminApi.getSales(
+          dateRange.startDate || undefined,
+          dateRange.endDate || undefined
+        ),
+        adminApi.getRevenue(
+          dateRange.startDate || undefined,
+          dateRange.endDate || undefined
+        ),
+        adminApi.getMarginAnalysis(
+          dateRange.startDate || undefined,
+          dateRange.endDate || undefined
+        ),
+        adminApi.getCheckoutFunnel(30),
+        adminApi.getCompetitorAnalysis(),
+        adminApi.getRevenueMoM(6),
+      ]);
 
       if (salesResponse.success && salesResponse.data) {
         setSalesData(salesResponse.data);
@@ -62,6 +72,9 @@ export default function AdminAnalyticsPage() {
       }
       if (competitorResponse.success && competitorResponse.data) {
         setCompetitorData(competitorResponse.data);
+      }
+      if (revenueMomResponse.success && revenueMomResponse.data) {
+        setRevenueMom(revenueMomResponse.data);
       }
     } catch (error) {
       console.error('Failed to load analytics:', error);
@@ -135,6 +148,16 @@ export default function AdminAnalyticsPage() {
             🔍 Filtrovat
           </button>
         </form>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+        <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Tržby MoM (CZK)</h2>
+        <p className="text-sm text-gray-500 mb-6">
+          Potvrzené objednávky — měsíční součty za posledních 6 měsíců (UTC; nezávislé na filtru data
+          výše).{' '}
+          <code className="text-xs bg-gray-100 px-1 rounded">GET /api/admin/analytics/revenue-mom?months=6</code>
+        </p>
+        <RevenueMomBarChart rows={revenueMom} />
       </div>
 
       {/* Statistics Cards */}

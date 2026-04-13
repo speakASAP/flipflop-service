@@ -191,6 +191,7 @@ model Order {
   metadata             Json?
   createdAt            DateTime             @default(now()) @db.Timestamp(6)
   updatedAt            DateTime             @default(now()) @db.Timestamp(6)
+  fulfilledAt          DateTime?            @db.Timestamp(6)
   invoices             Invoice[]
   order_items          OrderItem[]
   order_status_history OrderStatusHistory[]
@@ -334,6 +335,52 @@ model AdminSettings {
 
   @@index([id], map: "IDX_admin_settings_id")
   @@map("admin_settings")
+}
+
+model MarketingCampaign {
+  id        String    @id(map: "PK_marketing_campaign") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  goalId    String    @db.VarChar(255)
+  type      String    @db.VarChar(100)
+  subject   String    @db.Text
+  body      String    @db.Text
+  status    String    @default("draft") @db.VarChar(50)
+  sentAt    DateTime? @db.Timestamp(6)
+  createdAt DateTime  @default(now()) @db.Timestamp(6)
+
+  @@map("marketing_campaign")
+}
+
+model AbandonedCartLog {
+  id      String   @id(map: "PK_abandoned_cart_log") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId String   @unique @map("order_id") @db.Uuid
+  sentAt  DateTime @default(now()) @map("sent_at") @db.Timestamp(6)
+
+  @@map("abandoned_cart_log")
+}
+
+model DiscountCodeRedemption {
+  codeId       String       @db.Uuid
+  orderId      String       @db.Uuid
+  @@unique([codeId, orderId], map: "IDX_discount_redemption_code_order")
+  id           String       @id(map: "PK_discount_code_redemptions") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  discountCode DiscountCode @relation(fields: [codeId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_discount_redemption_code")
+
+  @@map("discount_code_redemptions")
+}
+
+model DiscountCode {
+  id          String                 @id(map: "PK_discount_codes") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String                 @unique(map: "IDX_discount_codes_code") @db.VarChar(32)
+  type        String                 @db.VarChar(20)
+  value       Float
+  maxUses     Int                    @default(100)
+  usedCount   Int                    @default(0)
+  expiresAt   DateTime?              @db.Timestamp(6)
+  createdAt   DateTime               @default(now()) @db.Timestamp(6)
+  goalId      String?                @db.VarChar(255)
+  redemptions DiscountCodeRedemption[]
+
+  @@map("discount_codes")
 }
 
 model migrations {

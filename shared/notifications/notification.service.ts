@@ -255,4 +255,28 @@ export class NotificationService {
       },
     });
   }
+
+  /**
+   * Marketing campaign email (notifications-ms: type custom; marketing_email is not in upstream enum).
+   */
+  async sendMarketingEmail(to: string, subject: string, body: string): Promise<void> {
+    try {
+      await this.sendNotification({
+        channel: 'email',
+        type: 'custom',
+        recipient: to,
+        subject,
+        message: body,
+        templateData: { campaignType: 'seasonal_sale' },
+      });
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      this.logger.error('sendMarketingEmail failed', {
+        timestamp: new Date().toISOString(),
+        recipient: to,
+        error: err.message,
+        stack: err.stack,
+      });
+    }
+  }
 }
