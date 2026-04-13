@@ -27,3 +27,12 @@ export type LowStockItem = {
   stock: number;
   threshold: number;
 };
+
+export type DeadStockItem = {
+  productId: string;
+  productName: string;
+  stock: number;
+  lastSoldAt: string | null;
+  currentPrice: number;
+  suggestedMarkdown: number | null;
+};

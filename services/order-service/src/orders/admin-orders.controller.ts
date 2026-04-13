@@ -2,7 +2,8 @@
  * Admin order analytics and management routes (proxied via api-gateway /api/admin/*)
  */
 
-import { Body, Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, Query, Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard, ApiResponse } from '@flipflop/shared';
 import { UpdateAdminOrderStatusDto } from './dto/update-admin-order-status.dto';
@@ -47,6 +48,16 @@ export class AdminOrdersController {
   @Get('analytics/sla')
   async getFulfillmentSla(@Query('days') days?: string) {
     const payload = await this.ordersService.getFulfillmentSla(days);
+    return ApiResponse.success(payload);
+  }
+
+  /** Dead stock: stock > 0, no confirmed order line in the last N days; AI markdown via ai-microservice (cheap). */
+  @Get('inventory/dead-stock')
+  async getDeadStock(@Query('days') days?: string, @Req() req?: Request) {
+    const raw = req?.headers?.authorization;
+    const authorizationHeader =
+      typeof raw === 'string' ? raw : Array.isArray(raw) ? raw[0] : undefined;
+    const payload = await this.ordersService.getDeadStockItems(days, authorizationHeader);
     return ApiResponse.success(payload);
   }
 

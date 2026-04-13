@@ -1143,6 +1143,183 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * Admin: products with stock > 0 and no confirmed order including the SKU in the last N days.
+   * Optional `suggestedMarkdown` is 0–50 (% discount) from ai-microservice `/ai/complete` (cheap tier).
+   */
+  async getDeadStockItems(
+    daysParam?: string,
+    authorizationHeader?: string,
+  ): Promise<{
+    items: Array<{
+      productId: string;
+      productName: string;
+      stock: number;
+      lastSoldAt: string | null;
+      currentPrice: number;
+      suggestedMarkdown: number | null;
+    }>;
+    total: number;
+  }> {
+    const methodStartedAt = Date.now();
+    const methodTimestamp = new Date().toISOString();
+    const parsed =
+      daysParam !== undefined && daysParam !== '' ? parseInt(daysParam, 10) : NaN;
+    const daysRaw = Number.isFinite(parsed) && parsed > 0 ? parsed : 90;
+    const days = Math.min(Math.max(daysRaw, 1), 3650);
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const queryDbStartedAt = Date.now();
+    const [recentItems, candidates] = await Promise.all([
+      this.prisma.orderItem.findMany({
+        where: {
+          orders: {
+            status: OrderStatus.confirmed,
+            createdAt: { gte: since },
+          },
+        },
+        select: { productId: true },
+      }),
+      this.prisma.product.findMany({
+        where: { stockQuantity: { gt: 0 } },
+        select: { id: true, name: true, stockQuantity: true, price: true },
+        orderBy: { name: 'asc' },
+      }),
+    ]);
+
+    const recentlySoldIds = new Set(recentItems.map((i) => i.productId));
+    const dead = candidates.filter((p) => !recentlySoldIds.has(p.id));
+
+    this.logger.log('Dead stock DB query completed', {
+      timestamp: new Date().toISOString(),
+      duration_ms: Date.now() - queryDbStartedAt,
+      days,
+      dead_count: dead.length,
+    });
+
+    const lastSoldMap = new Map<string, Date>();
+    if (dead.length > 0) {
+      const ids = dead.map((p) => p.id);
+      const pastSales = await this.prisma.orderItem.findMany({
+        where: {
+          productId: { in: ids },
+          orders: { status: OrderStatus.confirmed },
+        },
+        select: { productId: true, orders: { select: { createdAt: true } } },
+      });
+      for (const row of pastSales) {
+        const d = row.orders.createdAt;
+        const prev = lastSoldMap.get(row.productId);
+        if (!prev || d > prev) {
+          lastSoldMap.set(row.productId, d);
+        }
+      }
+    }
+
+    const aiBase =
+      this.configService.get<string>('AI_SERVICE_URL') ?? 'http://ai-microservice:3380';
+    const aiUrl = `${aiBase.replace(/\/$/, '')}/ai/complete`;
+    const aiCache = new Map<string, number | null>();
+
+    const resolveMarkdownPct = (data: Record<string, unknown> | null | undefined): number | null => {
+      if (!data || typeof data !== 'object') {
+        return null;
+      }
+      const direct = (data as { markdownPct?: unknown }).markdownPct;
+      if (typeof direct === 'number' && Number.isFinite(direct)) {
+        return Math.min(50, Math.max(0, Math.round(direct)));
+      }
+      const text = (data as { text?: unknown }).text;
+      if (typeof text === 'string') {
+        try {
+          const inner = JSON.parse(text) as { markdownPct?: unknown };
+          if (typeof inner.markdownPct === 'number' && Number.isFinite(inner.markdownPct)) {
+            return Math.min(50, Math.max(0, Math.round(inner.markdownPct)));
+          }
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    };
+
+    const items: Array<{
+      productId: string;
+      productName: string;
+      stock: number;
+      lastSoldAt: string | null;
+      currentPrice: number;
+      suggestedMarkdown: number | null;
+    }> = [];
+
+    for (const p of dead) {
+      let suggestedMarkdown: number | null = null;
+      if (aiCache.has(p.id)) {
+        suggestedMarkdown = aiCache.get(p.id) ?? null;
+      } else {
+        const aiStartedAt = Date.now();
+        try {
+          const lastSold = lastSoldMap.get(p.id);
+          const unsoldDays = lastSold
+            ? Math.max(0, Math.floor((Date.now() - lastSold.getTime()) / (24 * 60 * 60 * 1000)))
+            : days;
+          const userPrompt = `Product: ${p.name}, price: ${Number(p.price)} CZK, stock: ${p.stockQuantity} units, unsold for ${unsoldDays} days. Suggest a markdown percentage (0-50%) to clear stock. Reply with JSON: { "markdownPct": number, "reason": string }`;
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+          if (authorizationHeader) {
+            headers.Authorization = authorizationHeader;
+          }
+          const aiRes = await this.httpService.axiosRef.post(
+            aiUrl,
+            {
+              model_tier: 'cheap',
+              system_prompt:
+                'Reply only with one JSON object, no markdown. Keys: markdownPct (integer 0-50), reason (short string, Czech).',
+              user_prompt: userPrompt,
+              max_tokens: 256,
+              correlation_id: `dead-stock-${p.id}-${Date.now()}`,
+            },
+            { headers, timeout: 25000 },
+          );
+          suggestedMarkdown = resolveMarkdownPct(aiRes.data as Record<string, unknown>);
+          this.logger.log('Dead stock AI suggestion', {
+            timestamp: new Date().toISOString(),
+            duration_ms: Date.now() - aiStartedAt,
+            product_id: p.id,
+            suggested_markdown: suggestedMarkdown,
+          });
+        } catch (error: unknown) {
+          this.logger.error('Dead stock AI request failed', {
+            timestamp: new Date().toISOString(),
+            duration_ms: Date.now() - aiStartedAt,
+            product_id: p.id,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          suggestedMarkdown = null;
+        }
+        aiCache.set(p.id, suggestedMarkdown);
+      }
+
+      const last = lastSoldMap.get(p.id);
+      items.push({
+        productId: p.id,
+        productName: p.name,
+        stock: p.stockQuantity,
+        lastSoldAt: last ? last.toISOString() : null,
+        currentPrice: Number(p.price),
+        suggestedMarkdown,
+      });
+    }
+
+    this.logger.log('Dead stock completed', {
+      timestamp: new Date().toISOString(),
+      duration_ms: Date.now() - methodStartedAt,
+      started_at: methodTimestamp,
+      total: items.length,
+    });
+
+    return { items, total: items.length };
+  }
+
+  /**
    * Map order to response format
    */
   private mapOrder(order: any) {

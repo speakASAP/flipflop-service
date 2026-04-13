@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi, SalesData, RevenueData } from '@/lib/api/admin';
-import type { RevenueMoM, ConversionRate, SlaStats, LowStockItem } from '@/lib/admin';
+import type { RevenueMoM, ConversionRate, SlaStats, LowStockItem, DeadStockItem } from '@/lib/admin';
 import { ordersApi, Order } from '@/lib/api/orders';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { RevenueMomBarChart } from '@/components/admin/RevenueMomBarChart';
@@ -21,10 +21,31 @@ export default function AdminDashboardPage() {
   const [conversionRate, setConversionRate] = useState<ConversionRate | null>(null);
   const [slaStats, setSlaStats] = useState<SlaStats | null>(null);
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
+  const [deadStockItems, setDeadStockItems] = useState<DeadStockItem[]>([]);
+  const [deadStockLoading, setDeadStockLoading] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadDashboardData();
+  }, []);
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      void (async () => {
+        try {
+          setDeadStockLoading(true);
+          const res = await adminApi.getDeadStock(90);
+          if (res.success && res.data) {
+            setDeadStockItems(res.data.items);
+          }
+        } catch (e) {
+          console.error('Dead stock load failed:', e);
+        } finally {
+          setDeadStockLoading(false);
+        }
+      })();
+    }, 450);
+    return () => window.clearTimeout(handle);
   }, []);
 
   const loadDashboardData = async () => {
@@ -167,6 +188,65 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       ) : null}
+
+      <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+        <div className="bg-slate-50 border-b border-slate-200 px-6 py-4">
+          <h2 className="text-lg font-bold text-slate-900">Mrtvý sklad</h2>
+          <p className="text-sm text-slate-600 mt-1">
+            Sklad {'>'} 0, žádná potvrzená objednávka za 90 dní · doporučení AI (cheap)
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          {deadStockLoading ? (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner size="md" />
+            </div>
+          ) : (
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-gray-600 border-b border-gray-200">
+                  <th className="px-4 py-3 font-semibold">Produkt</th>
+                  <th className="px-4 py-3 font-semibold">Sklad</th>
+                  <th className="px-4 py-3 font-semibold">Cena (CZK)</th>
+                  <th className="px-4 py-3 font-semibold">Doporučená sleva</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deadStockItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                      Žádné položky mrtvého skladu.
+                    </td>
+                  </tr>
+                ) : (
+                  deadStockItems.map((row) => (
+                    <tr key={row.productId} className="border-b border-gray-100">
+                      <td className="px-4 py-3 font-medium text-gray-900">{row.productName}</td>
+                      <td className="px-4 py-3 tabular-nums">{row.stock}</td>
+                      <td className="px-4 py-3 tabular-nums">
+                        {new Intl.NumberFormat('cs-CZ', {
+                          style: 'currency',
+                          currency: 'CZK',
+                          maximumFractionDigits: 0,
+                        }).format(row.currentPrice)}
+                      </td>
+                      <td className="px-4 py-3">
+                        {row.suggestedMarkdown != null ? (
+                          <span className="inline-flex items-center rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-800">
+                            -{row.suggestedMarkdown}%
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
