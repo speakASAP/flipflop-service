@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi, SalesData, RevenueData } from '@/lib/api/admin';
-import type { RevenueMoM, ConversionRate, SlaStats } from '@/lib/admin';
+import type { RevenueMoM, ConversionRate, SlaStats, LowStockItem } from '@/lib/admin';
 import { ordersApi, Order } from '@/lib/api/orders';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { RevenueMomBarChart } from '@/components/admin/RevenueMomBarChart';
@@ -20,6 +20,7 @@ export default function AdminDashboardPage() {
   const [revenueMom, setRevenueMom] = useState<RevenueMoM[]>([]);
   const [conversionRate, setConversionRate] = useState<ConversionRate | null>(null);
   const [slaStats, setSlaStats] = useState<SlaStats | null>(null);
+  const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function AdminDashboardPage() {
         revenueMomResponse,
         conversionResponse,
         slaResponse,
+        lowStockResponse,
       ] = await Promise.all([
         adminApi.getSales(),
         adminApi.getRevenue(),
@@ -42,6 +44,7 @@ export default function AdminDashboardPage() {
         adminApi.getRevenueMoM(6),
         adminApi.getConversionRate(30),
         adminApi.getSlaStats(30),
+        adminApi.getLowStock(10),
       ]);
 
       if (salesResponse.success && salesResponse.data) {
@@ -62,6 +65,9 @@ export default function AdminDashboardPage() {
       }
       if (slaResponse.success && slaResponse.data) {
         setSlaStats(slaResponse.data);
+      }
+      if (lowStockResponse.success && lowStockResponse.data) {
+        setLowStockItems(lowStockResponse.data.items);
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -121,6 +127,46 @@ export default function AdminDashboardPage() {
           Přehled prodeje a aktivit na platformě
         </p>
       </div>
+
+      {lowStockItems.length > 0 ? (
+        <div className="bg-white rounded-2xl shadow-lg border border-amber-200 overflow-hidden">
+          <div className="bg-amber-50 border-b border-amber-200 px-6 py-4">
+            <h2 className="text-lg font-bold text-amber-900">Nízký sklad — produkty</h2>
+            <p className="text-sm text-amber-800 mt-1">
+              {lowStockItems.length} položek pod prahem (skladem &lt; 10)
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-gray-600 border-b border-gray-200">
+                  <th className="px-4 py-3 font-semibold">Produkt</th>
+                  <th className="px-4 py-3 font-semibold">Sklad</th>
+                  <th className="px-4 py-3 font-semibold">Práh</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lowStockItems.map((row) => (
+                  <tr
+                    key={row.productId}
+                    className={
+                      row.stock === 0
+                        ? 'bg-red-50 border-b border-red-100'
+                        : row.stock < row.threshold
+                          ? 'bg-orange-50 border-b border-orange-100'
+                          : 'border-b border-gray-100'
+                    }
+                  >
+                    <td className="px-4 py-3 font-medium text-gray-900">{row.productName}</td>
+                    <td className="px-4 py-3 tabular-nums">{row.stock}</td>
+                    <td className="px-4 py-3 tabular-nums">{row.threshold}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

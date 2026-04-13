@@ -16,7 +16,13 @@ import { PrismaService } from '@flipflop/shared';
 import { LoggerService } from '@flipflop/shared';
 import { PaymentService } from '@flipflop/shared';
 import { NotificationService } from '@flipflop/shared';
-import { OrderStatus, PaymentStatus, OrderClientService, WarehouseClientService } from '@flipflop/shared';
+import {
+  OrderStatus,
+  PaymentStatus,
+  OrderClientService,
+  WarehouseClientService,
+  InventoryEventsPublisher,
+} from '@flipflop/shared';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { PaymentResultDto } from './dto/payment-result.dto';
@@ -38,7 +44,53 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
     private readonly orderClient: OrderClientService,
     private readonly warehouseClient: WarehouseClientService,
     private readonly discountService: DiscountService,
+    private readonly inventoryEventsPublisher: InventoryEventsPublisher,
   ) {}
+
+  private static readonly DEFAULT_LOW_STOCK_THRESHOLD = 10;
+
+  /**
+   * Admin: products tracked in inventory with stock below threshold (local DB mirror).
+   */
+  async getLowStockItems(thresholdParam?: string): Promise<{
+    items: Array<{
+      productId: string;
+      productName: string;
+      stock: number;
+      threshold: number;
+    }>;
+    total: number;
+  }> {
+    const parsed =
+      thresholdParam !== undefined && thresholdParam !== ''
+        ? parseInt(thresholdParam, 10)
+        : NaN;
+    const threshold =
+      Number.isFinite(parsed) && parsed > 0
+        ? parsed
+        : OrdersService.DEFAULT_LOW_STOCK_THRESHOLD;
+    const products = await this.prisma.product.findMany({
+      where: {
+        trackInventory: true,
+        stockQuantity: { lt: threshold },
+      },
+      select: {
+        id: true,
+        name: true,
+        stockQuantity: true,
+      },
+      orderBy: { stockQuantity: 'asc' },
+    });
+    return {
+      items: products.map((p) => ({
+        productId: p.id,
+        productName: p.name,
+        stock: p.stockQuantity,
+        threshold,
+      })),
+      total: products.length,
+    };
+  }
 
   onModuleInit(): void {
     const hourMs = 60 * 60 * 1000;
@@ -279,6 +331,17 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
               item.quantity,
               `flipflop_order:${order.orderNumber}`,
             );
+            const totalAvailable = await this.warehouseClient.getTotalAvailable(catalogProductId);
+            const lowTh = OrdersService.DEFAULT_LOW_STOCK_THRESHOLD;
+            if (totalAvailable < lowTh) {
+              void this.inventoryEventsPublisher.publishLowStock({
+                productId: item.productId,
+                productName: item.productName,
+                currentStock: totalAvailable,
+                threshold: lowTh,
+                timestamp: new Date().toISOString(),
+              });
+            }
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err);
             this.logger.error('Stock decrement failed after payment', {

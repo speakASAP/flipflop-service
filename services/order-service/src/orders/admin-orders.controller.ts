@@ -41,6 +41,9 @@ export class AdminOrdersController {
     return ApiResponse.success(payload);
   }
 
+  /**
+   * GET admin/analytics/sla — JSON includes slaTargetHours, avgFulfilmentHours, pctMeetingSla.
+   */
   @Get('analytics/sla')
   async getFulfillmentSla(@Query('days') days?: string) {
     const payload = await this.ordersService.getFulfillmentSla(days);

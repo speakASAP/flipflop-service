@@ -20,3 +20,10 @@ export type SlaStats = {
   pctMeetingSla: number;
   totalFulfilled: number;
 };
+
+export type LowStockItem = {
+  productId: string;
+  productName: string;
+  stock: number;
+  threshold: number;
+};

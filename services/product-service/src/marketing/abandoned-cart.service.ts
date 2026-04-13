@@ -18,6 +18,9 @@ import {
   PrismaService,
 } from '@flipflop/shared';
 
+/** Explicit shape so declaration emit (TS2742) does not reference shared/.prisma paths. */
+type AbandonedOrderRow = { id: string; orderNumber: string };
+
 @Injectable()
 export class AbandonedCartService implements OnModuleInit, OnModuleDestroy {
   private recoveryInterval?: ReturnType<typeof setInterval>;
@@ -51,7 +54,9 @@ export class AbandonedCartService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async findAbandonedOrders(thresholdMinutes: number = this.defaultThresholdMinutes) {
+  async findAbandonedOrders(
+    thresholdMinutes: number = this.defaultThresholdMinutes,
+  ): Promise<AbandonedOrderRow[]> {
     const safeMinutes = Number.isFinite(thresholdMinutes) && thresholdMinutes > 0
       ? thresholdMinutes
       : this.defaultThresholdMinutes;

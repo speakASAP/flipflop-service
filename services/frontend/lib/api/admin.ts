@@ -6,11 +6,11 @@
 import { apiClient } from './client';
 import { Product, PaginatedResponse } from './products';
 import { Order, OrderStatus, PaymentStatus } from './orders';
-import type { RevenueMoM, ConversionRate, SlaStats } from '../admin';
+import type { RevenueMoM, ConversionRate, SlaStats, LowStockItem } from '../admin';
 
 // Re-export Order type for convenience
 export type { Order };
-export type { RevenueMoM, ConversionRate, SlaStats } from '../admin';
+export type { RevenueMoM, ConversionRate, SlaStats, LowStockItem } from '../admin';
 
 export interface CompanySettings {
   id: string;
@@ -190,6 +190,16 @@ export const adminApi = {
     const q =
       days !== undefined && Number.isFinite(days) && days > 0 ? `?days=${days}` : '?days=30';
     return apiClient.get<SlaStats>(`/admin/analytics/sla${q}`);
+  },
+
+  async getLowStock(threshold?: number) {
+    const q =
+      threshold !== undefined && Number.isFinite(threshold) && threshold > 0
+        ? `?threshold=${threshold}`
+        : '';
+    return apiClient.get<{ items: LowStockItem[]; total: number }>(
+      `/admin/inventory/low-stock${q}`,
+    );
   },
 
   // Products (Admin CRUD)

@@ -69,3 +69,4 @@ export * from './clients/order-client.service';
 // RabbitMQ
 export * from './rabbitmq/rabbitmq.module';
 export * from './rabbitmq/stock-events.subscriber';
+export * from './rabbitmq/inventory-events.publisher';
