@@ -46,7 +46,7 @@ Services use host ports in the 35xx range, mapping to standard container ports:
 1. **Auth Microservice** (`https://auth.statex.cz`) - Centralized authentication service (user registration, login, JWT tokens, password reset)
 2. **Notification Microservice** (`https://notifications.statex.cz`) - Multi-channel notifications (Email, Telegram, WhatsApp)
 3. **Logging Microservice** (`https://logging.statex.cz`) - Centralized logging service
-4. **Payment Microservice** (`https://payments.statex.cz`) - Centralized payment processing (PayPal, Stripe, PayU, Fio Banka, ComGate)
+4. **Payment Microservice** (`https://payments.alfares.cz`) - Centralized payment processing (PayPal, Stripe, PayU, Fio Banka, ComGate)
 5. **Database Server** (`db-server-postgres`) - Shared PostgreSQL database server
 6. **Redis Server** (`db-server-redis`) - Shared Redis cache server
 7. **Nginx Microservice** - Reverse proxy and SSL termination for all applications
@@ -145,7 +145,7 @@ Configure services via `.env` files.
   - Production: `https://logging.statex.cz`
   - Docker/Development: `http://logging-microservice:3367`
 - `PAYMENT_SERVICE_URL` - Payment microservice URL (REQUIRED)
-  - Production: `https://payments.statex.cz`
+  - Production: `https://payments.alfares.cz`
   - Docker/Development: `http://payments-microservice:3468`
 - `PAYMENT_API_KEY` - Sent as `X-API-Key` on **outbound** calls to payments-microservice (REQUIRED in production). Must match **one** of the comma-separated values in `payments-microservice` `API_KEYS` when that variable is set.
 - `API_GATEWAY_URL` - Public base URL of flipflop api-gateway (no trailing slash), used to build `callbackUrl` for payments (for example `https://flipflop.statex.cz`).

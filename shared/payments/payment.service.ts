@@ -39,7 +39,7 @@ export class PaymentService {
   ) {
     this.paymentServiceUrl =
       this.configService.get<string>('PAYMENT_SERVICE_URL') ||
-      'https://payments.statex.cz';
+      'https://payments.alfares.cz';
     this.paymentServiceFallbackUrls = this.buildPaymentServiceFallbackUrls();
     this.logger = logger;
     this.circuitBreakerService = circuitBreakerService;

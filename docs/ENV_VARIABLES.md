@@ -28,8 +28,8 @@ NOTIFICATION_SERVICE_URL=https://notifications.statex.cz
 # Logging Microservice (https://logging.statex.cz)
 LOGGING_SERVICE_URL=https://logging.statex.cz
 
-# Payment Microservice (https://payments.statex.cz)
-PAYMENT_SERVICE_URL=https://payments.statex.cz
+# Payment Microservice (https://payments.alfares.cz)
+PAYMENT_SERVICE_URL=https://payments.alfares.cz
 PAYMENT_API_KEY=<must-match-one-entry-in-payments-API_KEYS>
 API_GATEWAY_URL=https://flipflop.statex.cz
 PAYMENT_WEBHOOK_API_KEY=<same-as-payments-SPEAKASAP_PORTAL_API_KEY-if-used>
@@ -143,7 +143,7 @@ LOGGING_SERVICE_URL=https://logging.statex.cz
 
 # Payment Microservice
 # Option 1: Use production URL (if accessible)
-PAYMENT_SERVICE_URL=https://payments.statex.cz
+PAYMENT_SERVICE_URL=https://payments.alfares.cz
 # Option 2: Use Docker network (if running locally)
 # PAYMENT_SERVICE_URL=http://payments-microservice:${SERVICE_PORT:-3468}  # port configured in payments-microservice/.env
 PAYMENT_API_KEY=<must-match-one-entry-in-payments-API_KEYS>
@@ -230,7 +230,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 | `AUTH_SERVICE_URL` | Yes | Auth microservice URL | `https://auth.statex.cz` | `https://auth.statex.cz` or `http://auth-microservice:${PORT:-3370}` (port configured in `auth-microservice/.env`) |
 | `NOTIFICATION_SERVICE_URL` | Yes | Notification microservice URL | `https://notifications.statex.cz` | `https://notifications.statex.cz` or `http://notifications-microservice:${PORT:-3368}` (port configured in `notifications-microservice/.env`) |
 | `LOGGING_SERVICE_URL` | Yes | Logging microservice URL | `https://logging.statex.cz` | `https://logging.statex.cz` or `http://logging-microservice:${PORT:-3367}` (port configured in `logging-microservice/.env`) |
-| `PAYMENT_SERVICE_URL` | Yes | Payment microservice URL | `https://payments.statex.cz` | `https://payments.statex.cz` or `http://payments-microservice:${SERVICE_PORT:-3468}` (port configured in `payments-microservice/.env`) |
+| `PAYMENT_SERVICE_URL` | Yes | Payment microservice URL | `https://payments.alfares.cz` | `https://payments.alfares.cz` or `http://payments-microservice:${SERVICE_PORT:-3468}` (port configured in `payments-microservice/.env`) |
 | `PAYMENT_API_KEY` | Yes | Outbound `X-API-Key` for `POST /payments/create` etc. | One of `API_KEYS` on payments | Same |
 | `API_GATEWAY_URL` | Yes (checkout) | Public HTTPS base for `callbackUrl` (no trailing slash) | `https://flipflop.statex.cz` | `http://localhost:3511` only if payments can reach host |
 | `PAYMENT_WEBHOOK_API_KEY` | No | If set, validates incoming `X-API-Key` on `POST /api/webhooks/payment-result` | Same as payments `SPEAKASAP_PORTAL_API_KEY` | Omit in dev |

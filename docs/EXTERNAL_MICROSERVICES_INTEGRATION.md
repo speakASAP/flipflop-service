@@ -96,7 +96,7 @@ All external microservices are **fully integrated** and being used throughout th
 
 **Service URL**:
 
-- Production: `https://payments.statex.cz`
+- Production: `https://payments.alfares.cz`
 - Docker Network: `http://payments-microservice:3468`
 
 **Implementation**:
@@ -114,7 +114,7 @@ All external microservices are **fully integrated** and being used throughout th
 
 **Environment Variables**:
 
-- `PAYMENT_SERVICE_URL` — base URL for REST calls (for example `https://payments.statex.cz` or `http://payments-microservice:3468` on Docker network).
+- `PAYMENT_SERVICE_URL` — base URL for REST calls (for example `https://payments.alfares.cz` or `http://payments-microservice:3468` on Docker network).
 - `PAYMENT_API_KEY` — value sent as `X-API-Key` on every outbound request to payments-microservice. When `payments-microservice` has **`API_KEYS`** set (comma-separated allowlist), this value must **match one entry exactly**. Add each legitimate client key to `API_KEYS` on the payment service, then restart payments-microservice.
 - `API_GATEWAY_URL`, `PAYMENT_WEBHOOK_API_KEY`, `FLIPFLOP_INTERNAL_SERVICE_SECRET` — used by flipflop checkout and application callbacks from payments; see [ENV_VARIABLES.md](./ENV_VARIABLES.md).
 
@@ -190,7 +190,7 @@ All services require these environment variables:
 AUTH_SERVICE_URL=https://auth.statex.cz
 NOTIFICATION_SERVICE_URL=https://notifications.statex.cz
 LOGGING_SERVICE_URL=https://logging.statex.cz
-PAYMENT_SERVICE_URL=https://payments.statex.cz
+PAYMENT_SERVICE_URL=https://payments.alfares.cz
 PAYMENT_API_KEY=<one-of-payments-microservice-API_KEYS>
 
 # Database
