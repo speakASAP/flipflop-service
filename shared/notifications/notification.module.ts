@@ -9,7 +9,7 @@ import { HttpModule } from '@nestjs/axios';
 import { NotificationService } from './notification.service';
 import { LoggerModule } from '../logger/logger.module';
 import { ResilienceModule } from '../resilience/resilience.module';
-import https from 'https';
+import * as https from 'https';
 
 @Module({
   imports: [

@@ -409,6 +409,21 @@ model DiscountCode {
   @@map("discount_codes")
 }
 
+model PriceSuggestion {
+  id             String   @id @default(cuid())
+  productId      String
+  productName    String
+  currentPrice   Float
+  suggestedPrice Float
+  changePercent  Float
+  rationale      String?
+  status         String   @default("pending")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("price_suggestion")
+}
+
 model migrations {
   id        Int    @id @default(autoincrement())
   timestamp BigInt

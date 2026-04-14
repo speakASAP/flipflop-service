@@ -68,3 +68,16 @@ export type RepeatBuyer = {
   lastOrderAt: string;
   recommendedProduct: string | null;
 };
+
+export type PriceSuggestion = {
+  id: string;
+  productId: string;
+  productName: string;
+  currentPrice: number;
+  suggestedPrice: number;
+  changePercent: number;
+  rationale: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};

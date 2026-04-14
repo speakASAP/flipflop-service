@@ -9,7 +9,7 @@ import { HttpModule } from '@nestjs/axios';
 import { PrismaModule } from '../database/prisma.module';
 import { HealthService } from './health.service';
 import { ResilienceModule } from '../resilience/resilience.module';
-import https from 'https';
+import * as https from 'https';
 
 @Module({
   imports: [

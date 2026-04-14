@@ -18,6 +18,7 @@ import type {
   ReviewRequest,
   LoyaltyAccount,
   RepeatBuyer,
+  PriceSuggestion,
 } from '@/lib/admin';
 import { ordersApi, Order } from '@/lib/api/orders';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -41,6 +42,14 @@ export default function AdminDashboardPage() {
   const [repeatBuyers, setRepeatBuyers] = useState<RepeatBuyer[]>([]);
   const [repeatBuyersTotal, setRepeatBuyersTotal] = useState(0);
   const [repeatBuyersLoading, setRepeatBuyersLoading] = useState(true);
+  const [pricingSuggestions, setPricingSuggestions] = useState<PriceSuggestion[]>([]);
+  const [pricingSuggestionsTotal, setPricingSuggestionsTotal] = useState(0);
+  const [pricingSuggestionsLoading, setPricingSuggestionsLoading] = useState(true);
+  const [pricingGenerating, setPricingGenerating] = useState(false);
+  const [pricingActionById, setPricingActionById] = useState<Record<string, 'approve' | 'reject'>>(
+    {},
+  );
+  const [pricingToastMessage, setPricingToastMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,6 +72,13 @@ export default function AdminDashboardPage() {
         }
       })();
     }, 450);
+    return () => window.clearTimeout(handle);
+  }, []);
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      void loadPricingSuggestions();
+    }, 650);
     return () => window.clearTimeout(handle);
   }, []);
 
@@ -149,6 +165,83 @@ export default function AdminDashboardPage() {
       console.error('Failed to load dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPricingSuggestions = async () => {
+    try {
+      setPricingSuggestionsLoading(true);
+      const response = await adminApi.getPricingSuggestions(50, 'pending');
+      if (response.success && response.data) {
+        setPricingSuggestions(response.data.items);
+        setPricingSuggestionsTotal(response.data.total);
+      }
+    } catch (error) {
+      console.error('Pricing suggestions load failed:', error);
+    } finally {
+      setPricingSuggestionsLoading(false);
+    }
+  };
+
+  const handleGeneratePricingSuggestions = async () => {
+    try {
+      setPricingGenerating(true);
+      const response = await adminApi.generatePricingSuggestions();
+      if (response.success) {
+        await loadPricingSuggestions();
+      }
+    } catch (error) {
+      console.error('Pricing suggestions generation failed:', error);
+    } finally {
+      setPricingGenerating(false);
+    }
+  };
+
+  const handleApprovePricingSuggestion = async (id: string) => {
+    try {
+      setPricingActionById((prev) => ({ ...prev, [id]: 'approve' }));
+      const response = await adminApi.approvePricingSuggestion(id);
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Nepodařilo se schválit návrh ceny');
+      }
+      setPricingSuggestions((prev) => prev.filter((row) => row.id !== id));
+      setPricingSuggestionsTotal((prev) => Math.max(0, prev - 1));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Nepodařilo se schválit návrh ceny';
+      setPricingToastMessage(message);
+      window.setTimeout(() => {
+        setPricingToastMessage((current) => (current === message ? null : current));
+      }, 4000);
+    } finally {
+      setPricingActionById((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
+  };
+
+  const handleRejectPricingSuggestion = async (id: string) => {
+    try {
+      setPricingActionById((prev) => ({ ...prev, [id]: 'reject' }));
+      const response = await adminApi.rejectPricingSuggestion(id);
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Nepodařilo se zamítnout návrh ceny');
+      }
+      setPricingSuggestions((prev) => prev.filter((row) => row.id !== id));
+      setPricingSuggestionsTotal((prev) => Math.max(0, prev - 1));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Nepodařilo se zamítnout návrh ceny';
+      setPricingToastMessage(message);
+      window.setTimeout(() => {
+        setPricingToastMessage((current) => (current === message ? null : current));
+      }, 4000);
+    } finally {
+      setPricingActionById((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
     }
   };
 
@@ -432,6 +525,112 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="px-4 py-3 text-gray-800">
                         {row.recommendedProduct ?? '—'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-lg border border-amber-200 overflow-hidden">
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-amber-900">Cenové návrhy AI</h2>
+            <p className="text-sm text-amber-800 mt-1">
+              Návrhy pouze ke schválení, bez automatické změny cen
+            </p>
+            <p className="text-sm font-semibold text-amber-900 mt-2">
+              Čekající návrhy: <span className="tabular-nums">{pricingSuggestionsTotal}</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void handleGeneratePricingSuggestions()}
+            disabled={pricingGenerating}
+            className="inline-flex items-center rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {pricingGenerating ? 'Generuji...' : 'Generovat návrhy'}
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          {pricingSuggestionsLoading ? (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner size="md" />
+            </div>
+          ) : (
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-gray-600 border-b border-gray-200">
+                  <th className="px-4 py-3 font-semibold">Produkt</th>
+                  <th className="px-4 py-3 font-semibold">Aktuální cena</th>
+                  <th className="px-4 py-3 font-semibold">Navrhovaná cena</th>
+                  <th className="px-4 py-3 font-semibold">Změna %</th>
+                  <th className="px-4 py-3 font-semibold">Odůvodnění</th>
+                  <th className="px-4 py-3 font-semibold">Akce</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pricingSuggestions.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                      Zatím nejsou dostupné žádné čekající návrhy.
+                    </td>
+                  </tr>
+                ) : (
+                  pricingSuggestions.map((row) => (
+                    <tr
+                      key={row.id}
+                      className={
+                        Math.abs(row.changePercent) > 10
+                          ? 'bg-amber-50 border-b border-amber-100'
+                          : 'border-b border-gray-100'
+                      }
+                    >
+                      <td className="px-4 py-3 font-medium text-gray-900">{row.productName}</td>
+                      <td className="px-4 py-3 tabular-nums">
+                        {new Intl.NumberFormat('cs-CZ', {
+                          style: 'currency',
+                          currency: 'CZK',
+                          maximumFractionDigits: 2,
+                        }).format(row.currentPrice)}
+                      </td>
+                      <td className="px-4 py-3 tabular-nums">
+                        {new Intl.NumberFormat('cs-CZ', {
+                          style: 'currency',
+                          currency: 'CZK',
+                          maximumFractionDigits: 2,
+                        }).format(row.suggestedPrice)}
+                      </td>
+                      <td className="px-4 py-3 tabular-nums">
+                        {new Intl.NumberFormat('cs-CZ', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }).format(row.changePercent)}
+                        %
+                      </td>
+                      <td className="px-4 py-3 text-gray-800">{row.rationale ?? '—'}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void handleApprovePricingSuggestion(row.id)}
+                            disabled={pricingActionById[row.id] !== undefined}
+                            className="inline-flex items-center rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Schválit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleRejectPricingSuggestion(row.id)}
+                            disabled={pricingActionById[row.id] !== undefined}
+                            className="inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Zamítnout
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -778,6 +977,11 @@ export default function AdminDashboardPage() {
           </div>
         )}
       </div>
+      {pricingToastMessage ? (
+        <div className="fixed right-4 top-4 z-50 max-w-sm rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800 shadow-xl">
+          {pricingToastMessage}
+        </div>
+      ) : null}
     </div>
   );
 }

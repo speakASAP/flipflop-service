@@ -16,6 +16,7 @@ import type {
   ReviewRequest,
   LoyaltyAccount,
   RepeatBuyer,
+  PriceSuggestion,
 } from '../admin';
 
 // Re-export Order type for convenience
@@ -30,6 +31,7 @@ export type {
   ReviewRequest,
   LoyaltyAccount,
   RepeatBuyer,
+  PriceSuggestion,
 } from '../admin';
 
 export interface CompanySettings {
@@ -258,6 +260,34 @@ export const adminApi = {
     return apiClient.get<{ total: number; items: RepeatBuyer[] }>(
       `/admin/retention/repeat-buyers?${params.toString()}`,
     );
+  },
+
+  async getPricingSuggestions(limit?: number, status?: string) {
+    const params = new URLSearchParams();
+    const l = limit !== undefined && Number.isFinite(limit) && limit > 0 ? Math.min(limit, 50) : 50;
+    params.set('limit', String(l));
+    params.set('status', status && status.trim() ? status.trim() : 'pending');
+    return apiClient.get<{
+      items: PriceSuggestion[];
+      total: number;
+      limit: number;
+      status: string;
+    }>(`/admin/pricing/suggestions?${params.toString()}`);
+  },
+
+  async generatePricingSuggestions() {
+    return apiClient.post<{ generated: number }>('/admin/pricing/generate', {});
+  },
+
+  async approvePricingSuggestion(id: string) {
+    return apiClient.patch<{ success: true; newPrice: number }>(
+      `/admin/pricing/suggestions/${id}/approve`,
+      {},
+    );
+  },
+
+  async rejectPricingSuggestion(id: string) {
+    return apiClient.patch<{ success: true }>(`/admin/pricing/suggestions/${id}/reject`, {});
   },
 
   // Products (Admin CRUD)

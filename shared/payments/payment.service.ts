@@ -23,6 +23,7 @@ import { ResilienceMonitor } from '../resilience/resilience.monitor';
 @Injectable()
 export class PaymentService {
   private readonly paymentServiceUrl: string;
+  private readonly paymentServiceFallbackUrls: string[];
   private readonly logger: LoggerService;
   private readonly circuitBreakerService: CircuitBreakerService;
   private readonly retryService: RetryService;
@@ -39,6 +40,7 @@ export class PaymentService {
     this.paymentServiceUrl =
       this.configService.get<string>('PAYMENT_SERVICE_URL') ||
       'https://payments.statex.cz';
+    this.paymentServiceFallbackUrls = this.buildPaymentServiceFallbackUrls();
     this.logger = logger;
     this.circuitBreakerService = circuitBreakerService;
     this.retryService = retryService;
@@ -53,7 +55,6 @@ export class PaymentService {
     data?: any,
     method: 'GET' | 'POST' | 'PUT' = 'POST',
   ): Promise<T> {
-    const url = `${this.paymentServiceUrl}${endpoint}`;
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -61,17 +62,92 @@ export class PaymentService {
       },
       timeout: 30000,
     };
+    const candidateUrls = [this.paymentServiceUrl, ...this.paymentServiceFallbackUrls];
+    const callStartedAt = Date.now();
+    let lastError: unknown;
 
-    let response;
-    if (method === 'GET') {
-      response = await firstValueFrom(this.httpService.get<T>(url, config));
-    } else if (method === 'PUT') {
-      response = await firstValueFrom(this.httpService.put<T>(url, data, config));
-    } else {
-      response = await firstValueFrom(this.httpService.post<T>(url, data, config));
+    for (let i = 0; i < candidateUrls.length; i += 1) {
+      const baseUrl = candidateUrls[i];
+      const url = `${baseUrl}${endpoint}`;
+      try {
+        let response;
+        if (method === 'GET') {
+          response = await firstValueFrom(this.httpService.get<T>(url, config));
+        } else if (method === 'PUT') {
+          response = await firstValueFrom(this.httpService.put<T>(url, data, config));
+        } else {
+          response = await firstValueFrom(this.httpService.post<T>(url, data, config));
+        }
+
+        if (i > 0) {
+          this.logger.warn('Payment service fallback URL succeeded', {
+            timestamp: new Date().toISOString(),
+            duration_ms: Date.now() - callStartedAt,
+            endpoint,
+            method,
+            fallbackUrl: baseUrl,
+          });
+        }
+        return response.data;
+      } catch (error: unknown) {
+        lastError = error;
+        const message = error instanceof Error ? error.message : String(error);
+        const code =
+          typeof error === 'object' && error !== null && 'code' in error
+            ? String((error as { code?: string }).code || '')
+            : '';
+        const isDnsFailure =
+          code === 'EAI_AGAIN' ||
+          code === 'ENOTFOUND' ||
+          message.includes('EAI_AGAIN') ||
+          message.includes('ENOTFOUND');
+        const hasMoreCandidates = i < candidateUrls.length - 1;
+
+        if (isDnsFailure && hasMoreCandidates) {
+          this.logger.warn('Payment service URL resolution failed, trying fallback', {
+            timestamp: new Date().toISOString(),
+            duration_ms: Date.now() - callStartedAt,
+            endpoint,
+            method,
+            failedUrl: baseUrl,
+            nextUrl: candidateUrls[i + 1],
+            error: message,
+          });
+          continue;
+        }
+        throw error;
+      }
     }
 
-    return response.data;
+    throw lastError instanceof Error
+      ? lastError
+      : new BadRequestException('Payment service request failed');
+  }
+
+  private buildPaymentServiceFallbackUrls(): string[] {
+    const configuredFallback = this.configService.get<string>('PAYMENT_SERVICE_FALLBACK_URL');
+    const discoveredFallback = this.swapServiceHost(this.paymentServiceUrl);
+    const urls = [configuredFallback, discoveredFallback].filter(
+      (url): url is string => !!url && url !== this.paymentServiceUrl,
+    );
+    return Array.from(new Set(urls));
+  }
+
+  private swapServiceHost(urlValue: string): string | undefined {
+    try {
+      const parsed = new URL(urlValue);
+      if (parsed.hostname === 'payments-microservice') {
+        parsed.hostname = 'payment-service';
+        return parsed.toString().replace(/\/$/, '');
+      }
+      if (parsed.hostname === 'payment-service') {
+        parsed.hostname = 'payments-microservice';
+        return parsed.toString().replace(/\/$/, '');
+      }
+      return undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   /**

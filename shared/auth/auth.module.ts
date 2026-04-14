@@ -12,7 +12,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
 import { LoggerModule } from '../logger/logger.module';
 import { ResilienceModule } from '../resilience/resilience.module';
-import https from 'https';
+import * as https from 'https';
 
 @Module({
   imports: [

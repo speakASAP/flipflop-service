@@ -2,24 +2,21 @@ import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { LoggerService } from '../logger/logger.service';
 
-export type InventoryLowStockPayload = {
+export type PricingPriceChangedPayload = {
   productId: string;
   productName: string;
-  currentStock: number;
-  threshold: number;
-  timestamp: string;
+  oldPrice: number;
+  newPrice: number;
+  changePercent: number;
+  approvedAt: string;
 };
 
-/**
- * Publishes inventory alerts to RabbitMQ for business-orchestrator / reorder workflows.
- * Exchange: inventory.events, routing key: inventory.low_stock
- */
 @Injectable()
-export class InventoryEventsPublisher implements OnModuleDestroy {
+export class PricingEventsPublisher implements OnModuleDestroy {
   private connection: any = null;
   private channel: amqp.Channel | null = null;
-  private readonly exchangeName = 'inventory.events';
-  private readonly routingKey = 'inventory.low_stock';
+  private readonly exchangeName = 'pricing.events';
+  private readonly routingKey = 'pricing.price_changed';
   private connectPromise: Promise<void> | null = null;
 
   constructor(private readonly logger: LoggerService) {}
@@ -58,10 +55,10 @@ export class InventoryEventsPublisher implements OnModuleDestroy {
         this.connection = conn;
         this.connection.on('error', (error: unknown) => {
           const message = error instanceof Error ? error.message : String(error);
-          this.logger.warn(`InventoryEventsPublisher: connection error: ${message}`, 'InventoryEventsPublisher');
+          this.logger.warn(`PricingEventsPublisher: connection error: ${message}`, 'PricingEventsPublisher');
         });
         this.connection.on('close', () => {
-          this.logger.warn('InventoryEventsPublisher: connection closed', 'InventoryEventsPublisher');
+          this.logger.warn('PricingEventsPublisher: connection closed', 'PricingEventsPublisher');
           this.channel = null;
           this.connection = null;
         });
@@ -69,20 +66,20 @@ export class InventoryEventsPublisher implements OnModuleDestroy {
         this.channel = ch as unknown as amqp.Channel;
         this.channel.on('error', (error: unknown) => {
           const message = error instanceof Error ? error.message : String(error);
-          this.logger.warn(`InventoryEventsPublisher: channel error: ${message}`, 'InventoryEventsPublisher');
+          this.logger.warn(`PricingEventsPublisher: channel error: ${message}`, 'PricingEventsPublisher');
         });
         this.channel.on('close', () => {
-          this.logger.warn('InventoryEventsPublisher: channel closed', 'InventoryEventsPublisher');
+          this.logger.warn('PricingEventsPublisher: channel closed', 'PricingEventsPublisher');
           this.channel = null;
         });
         await ch.assertExchange(this.exchangeName, 'topic', { durable: true });
         this.logger.log(
-          `InventoryEventsPublisher: exchange ${this.exchangeName} ready`,
-          'InventoryEventsPublisher',
+          `PricingEventsPublisher: exchange ${this.exchangeName} ready`,
+          'PricingEventsPublisher',
         );
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
-        this.logger.warn(`InventoryEventsPublisher: connect failed: ${message}`, 'InventoryEventsPublisher');
+        this.logger.warn(`PricingEventsPublisher: connect failed: ${message}`, 'PricingEventsPublisher');
         this.channel = null;
         this.connection = null;
       } finally {
@@ -93,14 +90,11 @@ export class InventoryEventsPublisher implements OnModuleDestroy {
     return this.channel;
   }
 
-  /**
-   * Fire-and-forget friendly: logs failures, never throws to callers.
-   */
-  async publishLowStock(payload: InventoryLowStockPayload): Promise<void> {
+  async publishPriceChanged(payload: PricingPriceChangedPayload): Promise<boolean> {
     try {
       const ch = await this.ensureConnected();
       if (!ch) {
-        return;
+        return false;
       }
       const body = Buffer.from(JSON.stringify(payload));
       ch.publish(this.exchangeName, this.routingKey, body, {
@@ -108,12 +102,14 @@ export class InventoryEventsPublisher implements OnModuleDestroy {
         contentType: 'application/json',
       });
       this.logger.log(
-        `Published ${this.routingKey} for product ${payload.productId} stock=${payload.currentStock}`,
-        'InventoryEventsPublisher',
+        `Published ${this.routingKey} for product ${payload.productId}`,
+        'PricingEventsPublisher',
       );
+      return true;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`InventoryEventsPublisher: publish failed: ${message}`, 'InventoryEventsPublisher');
+      this.logger.warn(`PricingEventsPublisher: publish failed: ${message}`, 'PricingEventsPublisher');
+      return false;
     }
   }
 }

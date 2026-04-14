@@ -2,16 +2,20 @@
  * Admin order analytics and management routes (proxied via api-gateway /api/admin/*)
  */
 
-import { Body, Controller, Get, Param, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard, ApiResponse } from '@flipflop/shared';
 import { UpdateAdminOrderStatusDto } from './dto/update-admin-order-status.dto';
+import { PricingService } from './pricing.service';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard)
 export class AdminOrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly pricingService: PricingService,
+  ) {}
 
   @Get('competitor-analysis')
   async getCompetitorAnalysis() {
@@ -80,6 +84,30 @@ export class AdminOrdersController {
       days,
       authorizationHeader,
     );
+    return ApiResponse.success(payload);
+  }
+
+  @Get('pricing/suggestions')
+  async getPricingSuggestions(@Query('limit') limit?: string, @Query('status') status?: string) {
+    const payload = await this.pricingService.getSuggestions(limit, status);
+    return ApiResponse.success(payload);
+  }
+
+  @Post('pricing/generate')
+  async postGeneratePricingSuggestions() {
+    const payload = await this.pricingService.generateSuggestions();
+    return ApiResponse.success(payload);
+  }
+
+  @Patch('pricing/suggestions/:id/approve')
+  async patchApprovePricingSuggestion(@Param('id') id: string) {
+    const payload = await this.pricingService.approveSuggestion(id);
+    return ApiResponse.success(payload);
+  }
+
+  @Patch('pricing/suggestions/:id/reject')
+  async patchRejectPricingSuggestion(@Param('id') id: string) {
+    const payload = await this.pricingService.rejectSuggestion(id);
     return ApiResponse.success(payload);
   }
 

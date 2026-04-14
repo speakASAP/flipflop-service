@@ -56,8 +56,25 @@ export class CustomerEventsPublisher implements OnModuleDestroy {
         const url = process.env.RABBITMQ_URL || 'amqp://guest:guest@statex_rabbitmq:5672';
         const conn = await amqp.connect(url);
         this.connection = conn;
+        this.connection.on('error', (error: unknown) => {
+          const message = error instanceof Error ? error.message : String(error);
+          this.logger.warn(`CustomerEventsPublisher: connection error: ${message}`, 'CustomerEventsPublisher');
+        });
+        this.connection.on('close', () => {
+          this.logger.warn('CustomerEventsPublisher: connection closed', 'CustomerEventsPublisher');
+          this.channel = null;
+          this.connection = null;
+        });
         const ch = await this.connection.createChannel();
         this.channel = ch as unknown as amqp.Channel;
+        this.channel.on('error', (error: unknown) => {
+          const message = error instanceof Error ? error.message : String(error);
+          this.logger.warn(`CustomerEventsPublisher: channel error: ${message}`, 'CustomerEventsPublisher');
+        });
+        this.channel.on('close', () => {
+          this.logger.warn('CustomerEventsPublisher: channel closed', 'CustomerEventsPublisher');
+          this.channel = null;
+        });
         await ch.assertExchange(this.exchangeName, 'topic', { durable: true });
         this.logger.log(
           `CustomerEventsPublisher: exchange ${this.exchangeName} ready`,

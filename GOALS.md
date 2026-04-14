@@ -55,3 +55,23 @@ Email campaign generation. Abandoned cart recovery sequences. Seasonal promotion
 ### Phase 4 — Analytics & Reporting
 
 Revenue month-over-month tracking. Conversion rate dashboard. Order fulfilment SLA tracking (target: < 48h).
+
+### Phase 5 — Inventory Management
+
+Real-time low-stock alerts, dead stock detection with AI markdown suggestions, and supplier performance scoring. All surfaced in the admin Inventory panel.
+
+### Phase 6 — Customer Retention
+
+Post-delivery review solicitation (7-day cron), loyalty points system (1 pt / 10 CZK), and AI-driven repeat purchase predictions. Admin retention panel.
+
+### Phase 7 — Dynamic Pricing
+
+AI-generated price suggestions (cheap tier via ai-microservice). Human-in-loop approval flow before any price change is applied. Max 30% change guard. Admin pricing panel.
+
+### Phase 8 — Second Business Onboarding
+
+Register `speakasap` as second orchestrated project in business-orchestrator. Activate first orchestration goal to prove multi-tenant coordinator isolation.
+
+### Phase 9 — Project Closure
+
+Final end-to-end validation, operational STATE.json, SYSTEM.md update, and HANDOFF.md ops runbook. Marks the flipflop automation programme as complete.

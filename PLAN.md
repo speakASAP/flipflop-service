@@ -9,12 +9,12 @@
 | T0a | Fix `DESCRIPTION` hardcoding in `payments-microservice/src/payments/providers/webpay/webpay.service.ts:329` → dynamic per `applicationId` | cursor-agent | done |
 | T0b | Wire GP WebPay + Stripe into flipflop-service checkout alongside PayU/PayPal | cursor-agent | done |
 | T0c | Migrate `speakasap-portal` from Django WebPay (`orders/webpay/`) → `payments-microservice` HTTP client | claude-code | impl_done — staging smoke pending |
-| T1  | Verify PayU end-to-end: initiate → webhook → order.status = paid | cursor-agent | pending |
-| T2  | Verify PayPal end-to-end: initiate → webhook → order.status = paid | cursor-agent | pending |
-| T3  | Verify GP WebPay end-to-end: redirect → PRCODE=0 callback → order.status = paid | cursor-agent | pending |
-| T4  | Verify Stripe end-to-end: PaymentIntent → webhook event → order.status = paid | cursor-agent | pending |
-| T5  | Stock reservation: deduct on payment success, release on failure/timeout | cursor-agent | pending |
-| T6  | Order confirmation email: trigger via notifications-microservice on order paid | cursor-agent | pending |
+| T1  | Verify PayU end-to-end: initiate → webhook → order.status = paid | cursor-agent | partial — runtime initiate check fails in payments-microservice with `401` (PayU auth), webhook/status path exists |
+| T2  | Verify PayPal end-to-end: initiate → webhook → order.status = paid | cursor-agent | partial — runtime initiate check fails in payments-microservice with `401` (PayPal auth), webhook/status path exists |
+| T3  | Verify GP WebPay end-to-end: redirect → PRCODE=0 callback → order.status = paid | cursor-agent | done |
+| T4  | Verify Stripe end-to-end: PaymentIntent → webhook event → order.status = paid | cursor-agent | partial — runtime initiate check fails in payments-microservice (missing Stripe API key), webhook/status path exists |
+| T5  | Stock reservation: deduct on payment success, release on failure/timeout | cursor-agent | done |
+| T6  | Order confirmation email: trigger via notifications-microservice on order paid | cursor-agent | done |
 | T7  | Payment failure UX: user-facing error message + retry path for all providers | cursor-agent | pending |
 | T8  | Checkout conversion audit: measure cart abandonment rate baseline | cursor-agent | pending |
 
@@ -62,3 +62,69 @@ Unblocks: Phase 2 complete.
 | T18 | Order fulfilment SLA tracking (target < 48h) | orchestrator-worker | backlog |
 
 Unblocks: Phase 3 complete.
+
+---
+
+## Phase 5 — Inventory Management
+
+**Goal:** Real-time stock visibility and supplier accountability.
+
+| ID  | Task | Owner | Status |
+|-----|------|-------|--------|
+| T19 | Low-stock alerts: `GET /admin/inventory/low-stock`, RabbitMQ `inventory.low_stock` event, admin warning table | cursor-agent | done |
+| T20 | Dead stock detection: products unsold >60 days, AI markdown suggestion (cheap tier), admin dead-stock panel | cursor-agent | done |
+| T21 | Supplier performance scoring: on-time rate, fill rate, admin supplier-performance table | cursor-agent | done |
+
+Unblocks: Phase 4 complete.
+
+---
+
+## Phase 6 — Customer Retention
+
+**Goal:** Increase repeat purchases and customer lifetime value.
+
+| ID  | Task | Owner | Status |
+|-----|------|-------|--------|
+| T22 | Post-delivery review solicitation: cron 7 days after delivery, `customer.review_request` RabbitMQ event, admin review-requests panel | cursor-agent | done |
+| T23 | Loyalty points: 1 pt per 10 CZK on confirmed orders, `LoyaltyAccount` model, admin loyalty leaderboard | cursor-agent | done |
+| T24 | Repeat purchase prediction: AI (cheap tier) per customer, `recommendedProduct` field, admin repeat-buyers panel | cursor-agent | done |
+
+Unblocks: Phase 5 complete.
+
+---
+
+## Phase 7 — Dynamic Pricing
+
+**Goal:** AI-driven price optimisation with human-in-loop approval.
+
+| ID  | Task | Owner | Status |
+|-----|------|-------|--------|
+| T27 | Dynamic pricing engine: AI price suggestions via ai-microservice cheap tier, `PriceSuggestion` model, admin pricing panel | cursor-agent | backlog |
+| T28 | Price approval workflow: approve/reject endpoints, safety guard (max 30% change), RabbitMQ `pricing.price_changed` event, admin approve/reject UI | cursor-agent | backlog |
+
+Unblocks: Phase 6 complete.
+
+---
+
+## Phase 8 — Second Business Onboarding
+
+**Goal:** Prove multi-tenant orchestration by activating a second project.
+
+| ID  | Task | Owner | Status |
+|-----|------|-------|--------|
+| T29 | Register `speakasap` in business-orchestrator DB; create `speakasap/docs/orchestrator/SPEC.md` + `PLAN.md`; activate first orchestration goal | cursor-agent | backlog |
+
+Unblocks: Phase 7 complete.
+
+---
+
+## Phase 9 — Project Closure
+
+**Goal:** Validate platform is fully operational; produce handoff artefacts.
+
+| ID  | Task | Owner | Status |
+|-----|------|-------|--------|
+| T30 | Final end-to-end validation: all admin panels load, all RabbitMQ events wired, TSC clean, coordinator cycle healthy for flipflop-v1 | cursor-agent | backlog |
+| T31 | Closure documentation: update `STATE.json` to `operational`, update `SYSTEM.md` architecture summary, create `docs/HANDOFF.md` ops runbook | cursor-agent | backlog |
+
+Unblocks: Phase 8 complete.

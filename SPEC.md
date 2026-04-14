@@ -356,7 +356,7 @@ All AI tasks for flipflop-service are routed via `business-orchestrator` `Projec
 | `WAREHOUSE_SERVICE_URL` | warehouse-microservice:3201 |
 | `ORDERS_SERVICE_URL` | orders-microservice:3203 |
 | `AI_SERVICE_URL` | ai-microservice:3380 |
-| `NOTIFICATIONS_SERVICE_URL` | notifications-microservice:3368 |
+| `NOTIFICATION_SERVICE_URL` | notifications-microservice:3368 |
 | `LOGGING_SERVICE_URL` | logging-microservice:3367 |
 
 ### Worker Task Routing
