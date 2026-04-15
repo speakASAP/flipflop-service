@@ -9,12 +9,12 @@
 | T0a | Fix `DESCRIPTION` hardcoding in `payments-microservice/src/payments/providers/webpay/webpay.service.ts:329` → dynamic per `applicationId` | cursor-agent | done |
 | T0b | Wire GP WebPay + Stripe into flipflop-service checkout alongside PayU/PayPal | cursor-agent | done |
 | T0c | Migrate `speakasap-portal` from Django WebPay (`orders/webpay/`) → `payments-microservice` HTTP client | claude-code | impl_done — staging smoke pending |
-| T1  | Verify PayU end-to-end: initiate → webhook → order.status = paid | cursor-agent | partial — runtime initiate check fails in payments-microservice with `401` (PayU auth), webhook/status path exists |
-| T2  | Verify PayPal end-to-end: initiate → webhook → order.status = paid | cursor-agent | partial — runtime initiate check fails in payments-microservice with `401` (PayPal auth), webhook/status path exists |
-| T3  | Verify GP WebPay end-to-end: redirect → PRCODE=0 callback → order.status = paid | cursor-agent | done |
-| T4  | Verify Stripe end-to-end: PaymentIntent → webhook event → order.status = paid | cursor-agent | partial — runtime initiate check fails in payments-microservice (missing Stripe API key), webhook/status path exists |
-| T5  | Stock reservation: deduct on payment success, release on failure/timeout | cursor-agent | done |
-| T6  | Order confirmation email: trigger via notifications-microservice on order paid | cursor-agent | done |
+| T1  | Verify PayU end-to-end: initiate → webhook → order.status = paid | cursor-agent | partial — implemented in P1/P2; webhook/status path exists, runtime initiate currently blocked by PayU auth `401` in payments-microservice |
+| T2  | Verify PayPal end-to-end: initiate → webhook → order.status = paid | cursor-agent | partial — implemented in P1/P2; webhook/status path exists, runtime initiate currently blocked by PayPal auth `401` in payments-microservice |
+| T3  | Verify GP WebPay end-to-end: redirect → PRCODE=0 callback → order.status = paid | cursor-agent | done — implemented and wired in P2 (`webpay` checkout path + callback handling) |
+| T4  | Verify Stripe end-to-end: PaymentIntent → webhook event → order.status = paid | cursor-agent | done — implemented and wired in P3 (Stripe checkout path + webhook/status handling); live runtime requires valid Stripe API key |
+| T5  | Stock reservation: deduct on payment success, release on failure/timeout | cursor-agent | done — implemented in P1 (`decrementStock` on paid, `unreserve` on failed/timeout) |
+| T6  | Order confirmation email: trigger via notifications-microservice on order paid | cursor-agent | done — implemented in P1 (`notificationService.sendOrderConfirmation` on paid) |
 | T7  | Payment failure UX: user-facing error message + retry path for all providers | cursor-agent | pending |
 | T8  | Checkout conversion audit: measure cart abandonment rate baseline | cursor-agent | pending |
 

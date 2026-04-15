@@ -120,6 +120,32 @@ echo -e "${GREEN}✅ Found nginx-microservice at: $NGINX_MICROSERVICE_PATH${NC}"
 echo -e "${GREEN}✅ Deploying service: $SERVICE_NAME${NC}"
 echo ""
 
+# docker-compose.yml (standalone dev) uses fixed names (e.g. flipflop-order-service)
+# and the same published ports as blue/green. If those containers exist, green
+# containers fail with "port is already allocated" and stay in Created; services
+# that depend_on them never start (api-gateway, cart, frontend, order chain).
+stop_flipflop_legacy_standalone_containers() {
+    local legacy_names=(
+        flipflop-frontend
+        flipflop-api-gateway
+        flipflop-user-service
+        flipflop-product-service
+        flipflop-order-service
+        flipflop-cart-service
+        flipflop-warehouse-service
+        flipflop-supplier-service
+    )
+    local name
+    for name in "${legacy_names[@]}"; do
+        if docker inspect "$name" >/dev/null 2>&1; then
+            echo -e "${YELLOW}⚠️  Removing legacy standalone container (frees host port for blue/green): ${name}${NC}"
+            docker rm -f "$name" >/dev/null 2>&1 || true
+        fi
+    done
+}
+stop_flipflop_legacy_standalone_containers
+echo ""
+
 # Timing and logging functions
 get_timestamp() {
     date '+%Y-%m-%d %H:%M:%S.%3N'
@@ -302,7 +328,7 @@ if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
     cd "$NGINX_MICROSERVICE_PATH"
     echo ""
     echo -e "${GREEN}╔══════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${GREEN}║  ✅ ${DISPLAY_NAME} deployment completed successfully!               ║${NC}"
+    echo -e "${GREEN}║       ✅ Flipflop-service deployment completed successfully!         ║${NC}"
     echo -e "${GREEN}╚══════════════════════════════════════════════════════════════════════╝${NC}"
     echo -e "${GREEN}Total deployment time: ${TOTAL_DURATION_FORMATTED}s${NC}"
     echo ""
@@ -314,14 +340,14 @@ if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
 else
     TOTAL_DURATION_FORMATTED=$(awk "BEGIN {printf \"%.2f\", $TOTAL_DURATION}")
     echo ""
-    echo -e "${RED}════════════════════════════════════════════════════════════${NC}"
-    echo -e "${RED}❌ ${DISPLAY_NAME} deployment failed!${NC}"
+    echo -e "${RED}╔════════════════════════════════════════════════════════════${NC}"
+    echo -e "${RED}║         ❌ Flipflop-service deployment failed!             ║${NC}"
+    echo -e "${RED}╚════════════════════════════════════════════════════════════${NC}"
     echo -e "${RED}   Failed after: ${TOTAL_DURATION_FORMATTED}s${NC}"
-    echo -e "${RED}════════════════════════════════════════════════════════════${NC}"
     print_phase_summary
     echo ""
     echo -e "${RED}╔══════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${RED}║  ❌ ${DISPLAY_NAME} deployment failed!                                ║${NC}"
+    echo -e "${RED}║         ❌ Flipflop-service deployment failed!                       ║${NC}"
     echo -e "${RED}╚══════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo "Please check the error messages above and:"
