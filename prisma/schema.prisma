@@ -71,6 +71,7 @@ model Product {
   updatedAt          DateTime          @default(now()) @db.Timestamp(6)
   cart_items         CartItem[]
   order_items        OrderItem[]
+  priceSuggestions   PriceSuggestion[]
   product_categories ProductCategory[]
   product_variants   ProductVariant[]
   supplier_products  SupplierProduct[]
@@ -410,18 +411,19 @@ model DiscountCode {
 }
 
 model PriceSuggestion {
-  id             String   @id @default(cuid())
-  productId      String
+  id             String   @id @default(uuid()) @db.Uuid
+  productId      String   @db.Uuid
   productName    String
-  currentPrice   Float
-  suggestedPrice Float
+  currentPrice   Decimal  @db.Decimal(10, 2)
+  suggestedPrice Decimal  @db.Decimal(10, 2)
   changePercent  Float
-  rationale      String?
+  rationale      String   @db.Text
   status         String   @default("pending")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  product        Product  @relation(fields: [productId], references: [id])
 
-  @@map("price_suggestion")
+  @@map("price_suggestions")
 }
 
 model migrations {
