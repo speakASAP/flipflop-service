@@ -82,6 +82,17 @@ export class GatewayController {
   }
 
   /**
+   * Route pricing requests (requires auth)
+   * Single entrypoint: orders-microservice pricing API.
+   */
+  @All('pricing/*')
+  @UseGuards(JwtAuthGuard)
+  async pricingRoute(@Req() req: ExpressRequest, @Res() res: ExpressResponse) {
+    const path = req.url.replace('/api/pricing', '');
+    return this.routeRequest('ordersPricing', `/pricing${path}`, req, res);
+  }
+
+  /**
    * Route admin order analytics (requires auth)
    */
   @All('admin/*')

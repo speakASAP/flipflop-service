@@ -40,7 +40,7 @@ export class EventsConsumerService implements OnModuleInit, OnModuleDestroy {
   private isSubscribed = false;
   private isShuttingDown = false;
   private readonly queueName = 'order-service.events.consumer';
-  private readonly defaultAdminEmail = 'admin@flipflop.statex.cz';
+  private readonly defaultAdminEmail = 'admin@flipflop.alfares.cz';
   private readonly reviewExchange = 'customer.events';
   private readonly lowStockExchange = 'inventory.events';
   private readonly pricingExchange = 'pricing.events';
@@ -260,7 +260,7 @@ export class EventsConsumerService implements OnModuleInit, OnModuleDestroy {
         template: 'review_request',
         data: {
           orderNumber,
-          reviewUrl: `https://flipflop.statex.cz/review/${payload.orderId}`,
+          reviewUrl: `https://flipflop.alfares.cz/review/${payload.orderId}`,
         },
       });
       await this.logger.log('review_request notification sent', {

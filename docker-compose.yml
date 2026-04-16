@@ -284,8 +284,8 @@ networks:
     name: ${NGINX_NETWORK_NAME:-nginx-network}
 
 # Note: External Shared Production Microservices (used by multiple applications):
-# - ../notifications-microservice (Port 3368, Production: https://notifications.statex.cz)
-# - ../logging-microservice (Port 3367, Production: https://logging.statex.cz)
+# - ../notifications-microservice (Port 3368, Production: https://notifications.alfares.cz)
+# - ../logging-microservice (Port 3367, Production: https://logging.alfares.cz)
 # - ../database-server (PostgreSQL + Redis, Docker network: db-server-postgres, db-server-redis)
 # - ../nginx-microservice (Reverse proxy, SSL termination, blue/green deployments)
 # These are shared services managed separately and must be running before deploying this application.

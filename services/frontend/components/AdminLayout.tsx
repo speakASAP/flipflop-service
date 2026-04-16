@@ -117,7 +117,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </span>
               </Link>
               <p className="text-sm text-blue-100 mt-1">
-                flipflop.statex.cz
+                flipflop.alfares.cz
               </p>
             </div>
 

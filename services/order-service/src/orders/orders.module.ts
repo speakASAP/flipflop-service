@@ -10,7 +10,6 @@ import { AdminInventoryController } from './admin-inventory.controller';
 import { OrdersInternalController } from './orders-internal.controller';
 import { OrdersService } from './orders.service';
 import { ReviewSolicitationScheduler } from './review-solicitation.scheduler';
-import { PricingService } from './pricing.service';
 import { EventsConsumerService } from './events.consumer';
 import {
   PrismaModule,
@@ -21,9 +20,9 @@ import {
   ClientsModule,
   InventoryEventsPublisher,
   CustomerEventsPublisher,
-  PricingEventsPublisher,
 } from '@flipflop/shared';
 import { MarketingModule } from '../marketing/marketing.module';
+import { PricingModule } from '../pricing/pricing.module';
 
 @Module({
   imports: [
@@ -35,6 +34,7 @@ import { MarketingModule } from '../marketing/marketing.module';
     NotificationModule,
     ClientsModule,
     MarketingModule,
+    PricingModule,
   ],
   controllers: [
     OrdersController,
@@ -45,11 +45,9 @@ import { MarketingModule } from '../marketing/marketing.module';
   ],
   providers: [
     OrdersService,
-    PricingService,
     EventsConsumerService,
     InventoryEventsPublisher,
     CustomerEventsPublisher,
-    PricingEventsPublisher,
     ReviewSolicitationScheduler,
   ],
   exports: [OrdersService],

@@ -38,7 +38,7 @@ export class AuthService {
   ) {
     this.authServiceUrl =
       this.configService.get<string>('AUTH_SERVICE_URL') ||
-      'https://auth.statex.cz';
+      'https://auth.alfares.cz';
     this.logger = logger;
     this.circuitBreakerService = circuitBreakerService;
     this.retryService = retryService;

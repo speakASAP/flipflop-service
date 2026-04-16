@@ -1,8 +1,8 @@
-# **Technical Specification: flipflop.statex.cz flipflop Platform**
+# **Technical Specification: flipflop.alfares.cz flipflop Platform**
 
 ## **Project Overview**
 
-Create a modern, fully automated flipflop platform for selling diverse product categories in the Czech Republic (<https://flipflop.statex.cz/>). The platform will integrate with multiple wholesale suppliers via APIs, automatically synchronize product data, process orders, and handle the entire customer journey from product discovery to delivery with minimal human intervention.
+Create a modern, fully automated flipflop platform for selling diverse product categories in the Czech Republic (<https://flipflop.alfares.cz/>). The platform will integrate with multiple wholesale suppliers via APIs, automatically synchronize product data, process orders, and handle the entire customer journey from product discovery to delivery with minimal human intervention.
 
 **Primary Goal**: Maximize conversion rates and encourage repeat purchases through automation, speed, user-friendly design, and high-quality product presentation.
 
@@ -401,13 +401,13 @@ Create a modern, fully automated flipflop platform for selling diverse product c
 * Already running in separate Docker container (`db-server-postgres`, `db-server-redis`)
 * Not part of this project deployment
 * Accessible via Docker network (`db-server-postgres:5432`) or SSH tunnel for local development
-* Used by multiple applications: flipflop, statex.cz, crypto-ai-agent, etc.
+* Used by multiple applications: flipflop, alfares.cz, crypto-ai-agent, etc.
 
 ### **8.7 Nginx**
 
 * **External Shared Production Microservice**: `nginx-microservice`
 * Reverse proxy, SSL termination, and blue/green deployment management
-* Shared service used by multiple applications (statex.cz, flipflop.statex.cz, crypto-ai-agent.statex.cz, etc.)
+* Shared service used by multiple applications (alfares.cz, flipfloalfares.czczcz, crypto-ai-agalfares.cz.cz.cz, etc.)
 * Already running in separate Docker container
 * Project only provides configuration files for this application's domain
 * Configuration files transferred to existing Nginx server
@@ -419,14 +419,14 @@ Create a modern, fully automated flipflop platform for selling diverse product c
 
 **Centralized Logging System:**
 
-* **External Shared Service**: `https://logging.statex.cz` (production) or `http://logging-microservice:3367` (Docker network)
+* **External Shared Service**: `https://logging.alfares.cz` (production) or `http://logging-microservice:3367` (Docker network)
 * Shared logging service used by multiple applications
 * Logger utility for all services acts as a client/wrapper for the external service
 * Logs are sent to the centralized service AND written locally as backup
 * Configuration via .env:  
   * `LOG_LEVEL`  
   * `LOG_TIMESTAMP_FORMAT`  
-  * `LOGGING_SERVICE_URL` (defaults to `https://logging.statex.cz` in production)
+  * `LOGGING_SERVICE_URL` (defaults to `https://logging.alfares.cz` in production)
   * Other logging parameters
 
 **Logging Requirements:**
@@ -730,7 +730,7 @@ Create a modern, fully automated flipflop platform for selling diverse product c
    * Invoice generation  
    * Notification triggers  
 6. **Notification Module (External Shared Microservice)**  
-   * **External Shared Production Microservice**: `notifications-microservice` (`https://notifications.statex.cz`)
+   * **External Shared Production Microservice**: `notifications-microservice` (`https://notifications.alfares.cz`)
    * Multi-channel notification system (Email, Telegram, WhatsApp, SMS)
    * Shared service used by multiple applications  
    * Notification templates  

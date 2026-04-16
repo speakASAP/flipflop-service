@@ -6,7 +6,7 @@
 
 ## Overview
 
-FlipFlop (flipflop.statex.cz) is an automated Czech e-commerce platform selling diverse product categories, powered by a NestJS backend with modular services, a Next.js SSR frontend, and AI-driven product management, pricing, and marketing. The platform integrates with shared ecosystem microservices for authentication, payments, cataloguing, warehousing, and order processing. Business goals are conversion rate > 2% and order fulfilment < 48 hours.
+FlipFlop (flipflop.alfares.cz) is an automated Czech e-commerce platform selling diverse product categories, powered by a NestJS backend with modular services, a Next.js SSR frontend, and AI-driven product management, pricing, and marketing. The platform integrates with shared ecosystem microservices for authentication, payments, cataloguing, warehousing, and order processing. Business goals are conversion rate > 2% and order fulfilment < 48 hours.
 
 ---
 
@@ -168,6 +168,8 @@ delivered → refunded (14-day Czech law window)
 ### orders-microservice Integration
 
 `orders-microservice:3203` handles order processing logic (fulfilment routing, supplier forwarding). flipflop `order-service` delegates complex order orchestration to it via HTTP. Supplier `autoForwardOrders` flag on `Supplier` model controls automatic order forwarding.
+
+**Product list pricing** (AI suggestions, approve/reject, updating `Product.price`) is part of the **orders** domain and belongs with **`orders-microservice`**, not `payments-microservice` (payment capture only) and not `business-orchestrator`. Today those HTTP routes and Prisma access ship inside flipflop’s Nest **`order-service`** (`flipflop-service/services/order-service/`), colocated with the flipflop catalog database, until consolidated into the standalone `orders-microservice` repo.
 
 ### Czech Consumer Law Compliance
 

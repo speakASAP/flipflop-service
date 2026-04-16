@@ -12,7 +12,7 @@ All external microservices are **fully integrated** and being used throughout th
 
 **Service URL**:
 
-- Production: `https://auth.statex.cz`
+- Production: `https://auth.alfares.cz`
 - Docker Network: `http://auth-microservice:3370`
 
 **Implementation**:
@@ -39,7 +39,7 @@ All external microservices are **fully integrated** and being used throughout th
 
 **Service URL**:
 
-- Production: `https://notifications.statex.cz`
+- Production: `https://notifications.alfares.cz`
 - Docker Network: `http://notifications-microservice:3368`
 
 **Implementation**:
@@ -68,7 +68,7 @@ All external microservices are **fully integrated** and being used throughout th
 
 **Service URL**:
 
-- Production: `https://logging.statex.cz`
+- Production: `https://logging.alfares.cz`
 - Docker Network: `http://logging-microservice:3367`
 
 **Implementation**:
@@ -187,9 +187,9 @@ All services require these environment variables:
 
 ```bash
 # External Microservices
-AUTH_SERVICE_URL=https://auth.statex.cz
-NOTIFICATION_SERVICE_URL=https://notifications.statex.cz
-LOGGING_SERVICE_URL=https://logging.statex.cz
+AUTH_SERVICE_URL=https://auth.alfares.cz
+NOTIFICATION_SERVICE_URL=https://notifications.alfares.cz
+LOGGING_SERVICE_URL=https://logging.alfares.cz
 PAYMENT_SERVICE_URL=https://payments.alfares.cz
 PAYMENT_API_KEY=<one-of-payments-microservice-API_KEYS>
 
@@ -211,7 +211,7 @@ For local development, use:
 
 ```bash
 # Use production URLs or Docker network URLs
-AUTH_SERVICE_URL=https://auth.statex.cz
+AUTH_SERVICE_URL=https://auth.alfares.cz
 # or
 AUTH_SERVICE_URL=http://auth-microservice:3370
 

@@ -272,22 +272,22 @@ export const adminApi = {
       total: number;
       limit: number;
       status: string;
-    }>(`/admin/pricing/suggestions?${params.toString()}`);
+    }>(`/pricing/suggestions?${params.toString()}`);
   },
 
   async generatePricingSuggestions() {
-    return apiClient.post<{ generated: number }>('/admin/pricing/generate', {});
+    return apiClient.post<{ generated: number }>('/pricing/generate', {});
   },
 
   async approvePricingSuggestion(id: string) {
     return apiClient.patch<{ success: true; newPrice: number }>(
-      `/admin/pricing/suggestions/${id}/approve`,
+      `/pricing/suggestions/${id}/approve`,
       {},
     );
   },
 
   async rejectPricingSuggestion(id: string) {
-    return apiClient.patch<{ success: true }>(`/admin/pricing/suggestions/${id}/reject`, {});
+    return apiClient.patch<{ success: true }>(`/pricing/suggestions/${id}/reject`, {});
   },
 
   // Products (Admin CRUD)

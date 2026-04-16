@@ -40,7 +40,7 @@ There must be **no duplicated functionality**: single entry points, minimal surf
 Design and coordinate the implementation of a **unified e-commerce dataflow** where:
 
 1. **Products**
-   - All product data lives in **catalog-microservice**. Manual product creation is **only** in the catalog-microservice admin frontend (`catalog.statex.cz/admin`). No product-creation forms in FlipFlop, Allegro, or other channel apps.
+   - All product data lives in **catalog-microservice**. Manual product creation is **only** in the catalog-microservice admin frontend (`catalog.alfares.cz/admin`). No product-creation forms in FlipFlop, Allegro, or other channel apps.
    - After creating a product in catalog, initial stock and warehouse location are created in **warehouse-microservice** (one orchestrated step or explicit "Create stock" action). Products visible on FlipFlop are those that are active in catalog and have pricing; stock is always read from warehouse-microservice.
 
 2. **Orders**
@@ -366,7 +366,7 @@ interface CreatePaymentResponse {
 
 ## Manual Product Creation Flow (Catalog Admin → Warehouse)
 
-1. **Admin** opens **catalog-microservice admin frontend** (`catalog.statex.cz/admin`) and creates a product (SKU, title, description, brand, EAN, categories, attributes, media, pricing, `isActive`, and any channel visibility flags).
+1. **Admin** opens **catalog-microservice admin frontend** (`catalog.alfares.cz/admin`) and creates a product (SKU, title, description, brand, EAN, categories, attributes, media, pricing, `isActive`, and any channel visibility flags).
 2. **Catalog-microservice** persists the product (and pricing, media, categories). Product gets a UUID.
 3. **Create initial stock (orchestrated step):**
    - Either: catalog admin has a single action "Create stock" that calls **warehouse-microservice** to create/update stock for this `catalogProductId` with chosen **warehouse ID**, **location** (e.g. shelf/aisle), and **quantity**.

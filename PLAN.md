@@ -97,6 +97,8 @@ Unblocks: Phase 5 complete.
 
 **Goal:** AI-driven price optimisation with human-in-loop approval.
 
+**Ownership:** Ecosystem rule — product list pricing belongs to **`orders-microservice`** (orders domain), not `payments-microservice` or `business-orchestrator`. This repo’s **`order-service`** hosts the API/DB access for flipflop until consolidated.
+
 | ID  | Task | Owner | Status |
 |-----|------|-------|--------|
 | T27 | Dynamic pricing engine: AI price suggestions via ai-microservice cheap tier, `PriceSuggestion` model, admin pricing panel | cursor-agent | backlog |

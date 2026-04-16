@@ -8,8 +8,8 @@ Read this repo's `BUSINESS.md` → `SYSTEM.md` → `AGENTS.md` → `TASKS.md` �
 
 ## flipflop-service
 
-**Purpose**: Automated Czech e-commerce platform (flipflop.statex.cz) — AI-driven product management, pricing, and marketing.  
-**Domain**: https://flipflop.statex.cz  
+**Purpose**: Automated Czech e-commerce platform (flipflop.alfares.cz) — AI-driven product management, pricing, and marketing.  
+**Domain**: https://flipflop.alfares.cz  
 **Stack**: NestJS (backend) · Next.js SSR + Tailwind (frontend) · PostgreSQL · Redis
 
 ### Key constraints

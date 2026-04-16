@@ -39,7 +39,7 @@ export class NotificationService {
   ) {
     this.notificationServiceUrl =
       this.configService.get<string>('NOTIFICATION_SERVICE_URL') ||
-      'https://notifications.statex.cz';
+      'https://notifications.alfares.cz';
     this.logger = logger;
     this.circuitBreakerService = circuitBreakerService;
     this.retryService = retryService;

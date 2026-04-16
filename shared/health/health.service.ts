@@ -91,7 +91,7 @@ export class HealthService {
     try {
       const loggingServiceUrl =
         this.configService.get<string>('LOGGING_SERVICE_URL') ||
-        'https://logging.statex.cz';
+        'https://logging.alfares.cz';
       const url = loggingServiceUrl.replace('/api/logs', '/health');
 
       const response = await firstValueFrom(
@@ -126,7 +126,7 @@ export class HealthService {
     try {
       const notificationServiceUrl =
         this.configService.get<string>('NOTIFICATION_SERVICE_URL') ||
-        'https://notifications.statex.cz';
+        'https://notifications.alfares.cz';
 
       const response = await firstValueFrom(
         this.httpService.get(`${notificationServiceUrl}/health`).pipe(
@@ -160,7 +160,7 @@ export class HealthService {
     try {
       const authServiceUrl =
         this.configService.get<string>('AUTH_SERVICE_URL') ||
-        'https://auth.statex.cz';
+        'https://auth.alfares.cz';
 
       const response = await firstValueFrom(
         this.httpService.get(`${authServiceUrl}/health`).pipe(

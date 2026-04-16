@@ -148,7 +148,7 @@ You must read and respect:
 
 FlipFlop **does not implement** login or registration. It **consumes** auth as follows:
 
-- **Entry:** User clicks "Login" or "Register" on FlipFlop → redirect to auth-microservice URL (e.g. `https://auth.statex.cz/login?return_url=https://flipflop.statex.cz/...&state=...`). Exact URL and parameters are defined in `UNIFIED_AUTH_CONTRACT.md`.
+- **Entry:** User clicks "Login" or "Register" on FlipFlop → redirect to auth-microservice URL (e.g. `https://auth.alfares.cz/login?return_url=https://flipflop.alfares.cz/...&state=...`). Exact URL and parameters are defined in `UNIFIED_AUTH_CONTRACT.md`.
 - **Auth methods (all in auth-microservice):** OAuth (Google, Facebook, Apple), magic link (email), email+password. Deferred data collection: no delivery address at registration; auth stores only identity data.
 - **Return:** After success, auth redirects to `return_url` with token in fragment (or query) or sends token via postMessage to opener. FlipFlop reads the token, stores it securely, and uses it for API calls (`Authorization: Bearer <token>`).
 - **Profile:** Profile updates (name, email, phone) are done via auth-microservice (profile page or API). Leads-microservice does not duplicate identity; it references `auth_user_id` and optionally caches display name for convenience, with sync rules so auth remains source of truth.
@@ -205,7 +205,7 @@ FlipFlop must not:
 
 - **Prerequisite:** Auth-microservice refactor delivers unified form, OAuth, magic link, return_url, token handoff, and integration guide.
 - **Tasks:** Remove or replace any existing FlipFlop login/register forms with a single "Login"/"Register" entry that redirects to auth-microservice with correct `return_url` and handles token on return (fragment or postMessage per contract). Ensure CORS and redirect allowlist include FlipFlop origin. No auth UI implemented in FlipFlop.
-- **Output:** Users can click Login on FlipFlop, complete auth on auth.statex.cz, and return to FlipFlop with a valid token.
+- **Output:** Users can click Login on FlipFlop, complete auth on auth.alfares.cz, and return to FlipFlop with a valid token.
 
 ### Phase 2: Orders, Payments, Catalog, and Leads (FlipFlop)
 

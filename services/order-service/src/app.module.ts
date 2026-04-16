@@ -6,6 +6,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { OrdersModule } from './orders/orders.module';
+import { PricingModule } from './pricing/pricing.module';
 import { HealthModule, PrismaModule, LoggerModule, AuthModule, ClientsModule } from '@flipflop/shared';
 import { HealthController } from './health/health.controller';
 
@@ -22,6 +23,7 @@ import { HealthController } from './health/health.controller';
     ClientsModule,
     HealthModule,
     OrdersModule,
+    PricingModule,
   ],
   controllers: [HealthController],
 })

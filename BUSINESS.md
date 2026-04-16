@@ -4,7 +4,7 @@
 
 ## Goal
 
-Automated Czech e-commerce platform (flipflop.statex.cz) selling diverse product categories. AI-driven product management, pricing, and marketing.
+Automated Czech e-commerce platform (flipflop.alfares.cz) selling diverse product categories. AI-driven product management, pricing, and marketing.
 
 ## Constraints
 

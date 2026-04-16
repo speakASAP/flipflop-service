@@ -13,25 +13,25 @@ This document lists all required and optional environment variables for the flip
 NODE_ENV=production
 SERVICE_NAME=flipflop
 # DOMAIN is used by nginx-microservice for auto-registry generation (required for correct SSL certificate paths)
-DOMAIN=flipflop.statex.cz
+DOMAIN=flipflop.alfares.cz
 
 # ============================================
 # External Shared Microservices
 # ============================================
 
-# Auth Microservice (https://auth.statex.cz)
-AUTH_SERVICE_URL=https://auth.statex.cz
+# Auth Microservice (https://auth.alfares.cz)
+AUTH_SERVICE_URL=https://auth.alfares.cz
 
-# Notification Microservice (https://notifications.statex.cz)
-NOTIFICATION_SERVICE_URL=https://notifications.statex.cz
+# Notification Microservice (https://notifications.alfares.cz)
+NOTIFICATION_SERVICE_URL=https://notifications.alfares.cz
 
-# Logging Microservice (https://logging.statex.cz)
-LOGGING_SERVICE_URL=https://logging.statex.cz
+# Logging Microservice (https://logging.alfares.cz)
+LOGGING_SERVICE_URL=https://logging.alfares.cz
 
 # Payment Microservice (https://payments.alfares.cz)
 PAYMENT_SERVICE_URL=https://payments.alfares.cz
 PAYMENT_API_KEY=<must-match-one-entry-in-payments-API_KEYS>
-API_GATEWAY_URL=https://flipflop.statex.cz
+API_GATEWAY_URL=https://flipflop.alfares.cz
 PAYMENT_WEBHOOK_API_KEY=<same-as-payments-SPEAKASAP_PORTAL_API_KEY-if-used>
 FLIPFLOP_INTERNAL_SERVICE_SECRET=<shared-secret-api-gateway-and-order-service>
 
@@ -104,8 +104,8 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 # ============================================
 # Frontend Configuration
 # ============================================
-API_URL=https://flipflop.statex.cz/api
-NEXT_PUBLIC_API_URL=https://flipflop.statex.cz/api
+API_URL=https://flipflop.alfares.cz/api
+NEXT_PUBLIC_API_URL=https://flipflop.alfares.cz/api
 ```
 
 ### Development Environment Variables
@@ -117,7 +117,7 @@ NEXT_PUBLIC_API_URL=https://flipflop.statex.cz/api
 NODE_ENV=development
 SERVICE_NAME=flipflop
 # DOMAIN is used by nginx-microservice for auto-registry generation (required for correct SSL certificate paths)
-DOMAIN=flipflop.statex.cz
+DOMAIN=flipflop.alfares.cz
 
 # ============================================
 # External Shared Microservices
@@ -125,19 +125,19 @@ DOMAIN=flipflop.statex.cz
 
 # Auth Microservice
 # Option 1: Use production URL (if accessible)
-AUTH_SERVICE_URL=https://auth.statex.cz
+AUTH_SERVICE_URL=https://auth.alfares.cz
 # Option 2: Use Docker network (if running locally)
 # AUTH_SERVICE_URL=http://auth-microservice:${PORT:-3370}  # port configured in auth-microservice/.env
 
 # Notification Microservice
 # Option 1: Use production URL (if accessible)
-NOTIFICATION_SERVICE_URL=https://notifications.statex.cz
+NOTIFICATION_SERVICE_URL=https://notifications.alfares.cz
 # Option 2: Use Docker network (if running locally)
 # NOTIFICATION_SERVICE_URL=http://notifications-microservice:${PORT:-3368}  # port configured in notifications-microservice/.env
 
 # Logging Microservice
 # Option 1: Use production URL (if accessible)
-LOGGING_SERVICE_URL=https://logging.statex.cz
+LOGGING_SERVICE_URL=https://logging.alfares.cz
 # Option 2: Use Docker network (if running locally)
 # LOGGING_SERVICE_URL=http://logging-microservice:${PORT:-3367}  # port configured in logging-microservice/.env
 
@@ -227,12 +227,12 @@ NEXT_PUBLIC_API_URL=http://localhost:3011/api
 
 | Variable | Required | Description | Production | Development |
 | -------- | -------- | ----------- | ---------- | ----------- |
-| `AUTH_SERVICE_URL` | Yes | Auth microservice URL | `https://auth.statex.cz` | `https://auth.statex.cz` or `http://auth-microservice:${PORT:-3370}` (port configured in `auth-microservice/.env`) |
-| `NOTIFICATION_SERVICE_URL` | Yes | Notification microservice URL | `https://notifications.statex.cz` | `https://notifications.statex.cz` or `http://notifications-microservice:${PORT:-3368}` (port configured in `notifications-microservice/.env`) |
-| `LOGGING_SERVICE_URL` | Yes | Logging microservice URL | `https://logging.statex.cz` | `https://logging.statex.cz` or `http://logging-microservice:${PORT:-3367}` (port configured in `logging-microservice/.env`) |
+| `AUTH_SERVICE_URL` | Yes | Auth microservice URL | `https://auth.alfares.cz` | `https://autalfares.czczcz` or `http://auth-microservice:${PORT:-3370}` (port configured in `auth-microservice/.env`) |
+| `NOTIFICATION_SERVICE_URL` | Yes | Notification microservice URL | `https://notifications.alfares.cz` | `https://notificationalfares.czczcz` or `http://notifications-microservice:${PORT:-3368}` (port configured in `notifications-microservice/.env`) |
+| `LOGGING_SERVICE_URL` | Yes | Logging microservice URL | `https://logging.alfares.cz` | `https://logginalfares.czczcz` or `http://logging-microservice:${PORT:-3367}` (port configured in `logging-microservice/.env`) |
 | `PAYMENT_SERVICE_URL` | Yes | Payment microservice URL | `https://payments.alfares.cz` | `https://payments.alfares.cz` or `http://payments-microservice:${SERVICE_PORT:-3468}` (port configured in `payments-microservice/.env`) |
 | `PAYMENT_API_KEY` | Yes | Outbound `X-API-Key` for `POST /payments/create` etc. | One of `API_KEYS` on payments | Same |
-| `API_GATEWAY_URL` | Yes (checkout) | Public HTTPS base for `callbackUrl` (no trailing slash) | `https://flipflop.statex.cz` | `http://localhost:3511` only if payments can reach host |
+| `API_GATEWAY_URL` | Yes (checkout) | Public HTTPS base for `callbackUrl` (no trailing slash) | `https://flipflop.alfares.cz` | `http://localhost:3511` only if payments can reach host |
 | `PAYMENT_WEBHOOK_API_KEY` | No | If set, validates incoming `X-API-Key` on `POST /api/webhooks/payment-result` | Same as payments `SPEAKASAP_PORTAL_API_KEY` | Omit in dev |
 | `FLIPFLOP_INTERNAL_SERVICE_SECRET` | Yes (checkout) | api-gateway → order-service internal header | Strong random string | Strong random string |
 

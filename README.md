@@ -1,4 +1,4 @@
-# flipflop.statex.cz flipflop Platform
+# flipflop.alfares.cz flipflop Platform
 
 Modern, fully automated flipflop platform for selling diverse product categories in the Czech Republic.
 
@@ -43,9 +43,9 @@ Services use host ports in the 35xx range, mapping to standard container ports:
 
 **Note**: These are external shared production microservices used by multiple applications. They are not part of this project's deployment but must be running and accessible before deployment.
 
-1. **Auth Microservice** (`https://auth.statex.cz`) - Centralized authentication service (user registration, login, JWT tokens, password reset)
-2. **Notification Microservice** (`https://notifications.statex.cz`) - Multi-channel notifications (Email, Telegram, WhatsApp)
-3. **Logging Microservice** (`https://logging.statex.cz`) - Centralized logging service
+1. **Auth Microservice** (`https://auth.alfares.cz`) - Centralized authentication service (user registration, login, JWT tokens, password reset)
+2. **Notification Microservice** (`https://notifications.alfares.cz`) - Multi-channel notifications (Email, Telegram, WhatsApp)
+3. **Logging Microservice** (`https://logging.alfares.cz`) - Centralized logging service
 4. **Payment Microservice** (`https://payments.alfares.cz`) - Centralized payment processing (PayPal, Stripe, PayU, Fio Banka, ComGate)
 5. **Database Server** (`db-server-postgres`) - Shared PostgreSQL database server
 6. **Redis Server** (`db-server-redis`) - Shared Redis cache server
@@ -136,19 +136,19 @@ Configure services via `.env` files.
 **Key variables:**
 
 - `AUTH_SERVICE_URL` - Auth microservice URL (REQUIRED)
-  - Production: `https://auth.statex.cz`
+  - Production: `https://auth.alfares.cz`
   - Docker/Development: `http://auth-microservice:3370`
 - `NOTIFICATION_SERVICE_URL` - Notification microservice URL (REQUIRED)
-  - Production: `https://notifications.statex.cz`
+  - Production: `https://notifications.alfares.cz`
   - Docker/Development: `http://notifications-microservice:3368`
 - `LOGGING_SERVICE_URL` - Logging microservice URL (REQUIRED)
-  - Production: `https://logging.statex.cz`
+  - Production: `https://logging.alfares.cz`
   - Docker/Development: `http://logging-microservice:3367`
 - `PAYMENT_SERVICE_URL` - Payment microservice URL (REQUIRED)
   - Production: `https://payments.alfares.cz`
   - Docker/Development: `http://payments-microservice:3468`
 - `PAYMENT_API_KEY` - Sent as `X-API-Key` on **outbound** calls to payments-microservice (REQUIRED in production). Must match **one** of the comma-separated values in `payments-microservice` `API_KEYS` when that variable is set.
-- `API_GATEWAY_URL` - Public base URL of flipflop api-gateway (no trailing slash), used to build `callbackUrl` for payments (for example `https://flipflop.statex.cz`).
+- `API_GATEWAY_URL` - Public base URL of flipflop api-gateway (no trailing slash), used to build `callbackUrl` for payments (for example `https://flipflop.alfares.cz`).
 - `PAYMENT_WEBHOOK_API_KEY` - Optional: if set, api-gateway `POST /api/webhooks/payment-result` only forwards when incoming `X-API-Key` matches. Use the **same** value as `SPEAKASAP_PORTAL_API_KEY` on payments-microservice so provider callbacks that include that header are accepted.
 - `FLIPFLOP_INTERNAL_SERVICE_SECRET` - Shared secret between api-gateway and order-service (`X-Flipflop-Internal-Key`) for internal payment-result handling. Set the **same** value in the root `.env` used by both services.
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` - Database configuration

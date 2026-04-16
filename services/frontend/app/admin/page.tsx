@@ -49,7 +49,6 @@ export default function AdminDashboardPage() {
   const [pricingActionById, setPricingActionById] = useState<Record<string, 'approve' | 'reject'>>(
     {},
   );
-  const [pricingToastMessage, setPricingToastMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -197,21 +196,34 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleApprovePricingSuggestion = async (id: string) => {
+  const approveSuggestion = async (id: string) => {
+    const row = document.querySelector(`tr[data-id="${id}"]`) as HTMLTableRowElement | null;
+    if (row) row.style.opacity = '0.5';
+
     try {
       setPricingActionById((prev) => ({ ...prev, [id]: 'approve' }));
-      const response = await adminApi.approvePricingSuggestion(id);
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Nepodařilo se schválit návrh ceny');
+      const resp = await fetch(`/admin/pricing/suggestions/${id}/approve`, { method: 'PATCH' });
+
+      if (!resp.ok) {
+        let message = 'Neznámá chyba';
+        try {
+          const err = await resp.json();
+          message = err?.message ?? message;
+        } catch {
+          // Keep default fallback message.
+        }
+        alert(`Chyba: ${message}`);
+        if (row) row.style.opacity = '1';
+        return;
       }
+
+      if (row) row.remove();
       setPricingSuggestions((prev) => prev.filter((row) => row.id !== id));
       setPricingSuggestionsTotal((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nepodařilo se schválit návrh ceny';
-      setPricingToastMessage(message);
-      window.setTimeout(() => {
-        setPricingToastMessage((current) => (current === message ? null : current));
-      }, 4000);
+      console.error('Pricing approve failed:', error);
+      alert('Chyba při schvalování ceny');
+      if (row) row.style.opacity = '1';
     } finally {
       setPricingActionById((prev) => {
         const next = { ...prev };
@@ -221,21 +233,34 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleRejectPricingSuggestion = async (id: string) => {
+  const rejectSuggestion = async (id: string) => {
+    const row = document.querySelector(`tr[data-id="${id}"]`) as HTMLTableRowElement | null;
+    if (row) row.style.opacity = '0.5';
+
     try {
       setPricingActionById((prev) => ({ ...prev, [id]: 'reject' }));
-      const response = await adminApi.rejectPricingSuggestion(id);
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Nepodařilo se zamítnout návrh ceny');
+      const resp = await fetch(`/admin/pricing/suggestions/${id}/reject`, { method: 'PATCH' });
+
+      if (!resp.ok) {
+        let message = 'Neznámá chyba';
+        try {
+          const err = await resp.json();
+          message = err?.message ?? message;
+        } catch {
+          // Keep default fallback message.
+        }
+        alert(`Chyba: ${message}`);
+        if (row) row.style.opacity = '1';
+        return;
       }
+
+      if (row) row.remove();
       setPricingSuggestions((prev) => prev.filter((row) => row.id !== id));
       setPricingSuggestionsTotal((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nepodařilo se zamítnout návrh ceny';
-      setPricingToastMessage(message);
-      window.setTimeout(() => {
-        setPricingToastMessage((current) => (current === message ? null : current));
-      }, 4000);
+      console.error('Pricing reject failed:', error);
+      alert('Chyba při zamítání ceny');
+      if (row) row.style.opacity = '1';
     } finally {
       setPricingActionById((prev) => {
         const next = { ...prev };
@@ -583,6 +608,7 @@ export default function AdminDashboardPage() {
                   pricingSuggestions.map((row) => (
                     <tr
                       key={row.id}
+                      data-id={row.id}
                       className={
                         Math.abs(row.changePercent) > 10
                           ? 'bg-amber-50 border-b border-amber-100'
@@ -616,17 +642,17 @@ export default function AdminDashboardPage() {
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => void handleApprovePricingSuggestion(row.id)}
+                            onClick={() => void approveSuggestion(row.id)}
                             disabled={pricingActionById[row.id] !== undefined}
-                            className="inline-flex items-center rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="btn-approve inline-flex items-center rounded-md px-3 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             Schválit
                           </button>
                           <button
                             type="button"
-                            onClick={() => void handleRejectPricingSuggestion(row.id)}
+                            onClick={() => void rejectSuggestion(row.id)}
                             disabled={pricingActionById[row.id] !== undefined}
-                            className="inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="btn-reject inline-flex items-center rounded-md px-3 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             Zamítnout
                           </button>
@@ -977,11 +1003,30 @@ export default function AdminDashboardPage() {
           </div>
         )}
       </div>
-      {pricingToastMessage ? (
-        <div className="fixed right-4 top-4 z-50 max-w-sm rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800 shadow-xl">
-          {pricingToastMessage}
-        </div>
-      ) : null}
+      <style jsx global>{`
+        .btn-approve {
+          background: #22c55e;
+          color: white;
+          border: none;
+          padding: 4px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        .btn-reject {
+          background: #ef4444;
+          color: white;
+          border: none;
+          padding: 4px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        .btn-approve:hover {
+          background: #16a34a;
+        }
+        .btn-reject:hover {
+          background: #dc2626;
+        }
+      `}</style>
     </div>
   );
 }

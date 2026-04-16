@@ -4,7 +4,7 @@
 
 ## Details needed
 
-Our application flipflop.statex.cz consists of several microservices in /home/statex/ (payment, logging, nginx, database, notifications, flipflop). Access via ssh statex.
+Our application flipflop.alfares.cz consists of several microservices in /home/statex/ (payment, logging, nginx, database, notifications, flipflop). Access via ssh statex.
 
 ssh statex "cd flipflop && git pull"
 
@@ -15,7 +15,7 @@ nginx-microservice handles blue/green deployments.
 
 Read docs/SMART_DEPLOYMENT.md
 
-Use the same nginx and database setup to manage flipflop.statex.cz:
+Use the same nginx and database setup to manage flipflop.alfares.cz:
 Run: ssh statex "cd nginx-microservice && ./scripts/blue-green/deploy-smart.sh flipflop"
 
 database-server is the PostgreSQL database for the app.
@@ -27,4 +27,4 @@ Environment variables are protected and stored within root folder for each proje
 
 This modular architecture improves development and separation of services.
 
-Success is when <https://flipflop.statex.cz> is accessible without console or log errors.
+Success is when <https://flipflop.alfares.cz> is accessible without console or log errors.

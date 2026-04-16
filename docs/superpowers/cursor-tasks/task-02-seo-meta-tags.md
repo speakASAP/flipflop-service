@@ -26,15 +26,15 @@ In `app/products/[id]/page.tsx`:
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const response = await productsApi.getProduct(params.id);
   if (!response.success || !response.data) {
-    return { title: 'Produkt nenalezen | flipflop.statex.cz' };
+    return { title: 'Produkt nenalezen | flipflop.alfares.cz' };
   }
   const product = response.data;
   const description = product.description
     ? product.description.slice(0, 160)
     : `Koupit ${product.name} za ${product.price.toLocaleString('cs-CZ')} Kč. Rychlé doručení po celé ČR.`;
   const title = product.brand
-    ? `${product.brand} ${product.name} | flipflop.statex.cz`
-    : `${product.name} | flipflop.statex.cz`;
+    ? `${product.brand} ${product.name} | flipflop.alfares.cz`
+    : `${product.name} | flipflop.alfares.cz`;
   const image = product.mainImageUrl ?? product.imageUrls?.[0] ?? product.images?.[0];
 
   return {
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       description,
       type: 'website',
       locale: 'cs_CZ',
-      siteName: 'flipflop.statex.cz',
+      siteName: 'flipflop.alfares.cz',
       ...(image ? { images: [{ url: image, width: 800, height: 800, alt: product.name }] } : {}),
     },
   };
@@ -63,14 +63,14 @@ In `app/products/page.tsx`:
 
 ```ts
 export const metadata: Metadata = {
-  title: 'Všechny produkty | flipflop.statex.cz',
+  title: 'Všechny produkty | flipflop.alfares.cz',
   description: 'Prohlédněte si náš kompletní sortiment. Rychlé doručení, snadné platby, kvalitní zboží za skvělé ceny.',
   openGraph: {
-    title: 'Všechny produkty | flipflop.statex.cz',
+    title: 'Všechny produkty | flipflop.alfares.cz',
     description: 'Prohlédněte si náš kompletní sortiment.',
     type: 'website',
     locale: 'cs_CZ',
-    siteName: 'flipflop.statex.cz',
+    siteName: 'flipflop.alfares.cz',
   },
 };
 ```

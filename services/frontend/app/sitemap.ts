@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next';
 const getBaseUrl = () =>
   process.env.NEXT_PUBLIC_FRONTEND_URL ||
   process.env.NEXT_PUBLIC_BASE_URL ||
-  'https://flipflop.statex.cz';
+  'https://flipflop.alfares.cz';
 
 const getApiBaseUrl = () =>
   process.env.API_URL ||

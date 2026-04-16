@@ -19,7 +19,7 @@ export default function Header() {
         {/* Top Bar */}
         <div className="flex items-center justify-between py-4">
           <Link href="/" className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transition-all drop-shadow-sm">
-            flipflop.statex.cz
+            flipflop.alfares.cz
           </Link>
 
           {/* Search Bar - Desktop */}

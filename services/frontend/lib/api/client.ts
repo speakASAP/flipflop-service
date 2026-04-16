@@ -1,5 +1,5 @@
 /**
- * API Client for flipflop.statex.cz
+ * API Client for flipflop.alfares.cz
  */
 
 // For SSR (server-side), use internal Docker network URL

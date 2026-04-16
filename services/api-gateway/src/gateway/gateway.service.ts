@@ -28,10 +28,12 @@ export class GatewayService {
     const supplierPort = this.configService.get('SUPPLIER_SERVICE_PORT') || '3006';
 
     this.serviceUrls = {
-      auth: this.configService.get('AUTH_SERVICE_URL') || 'https://auth.statex.cz',
+      auth: this.configService.get('AUTH_SERVICE_URL') || 'https://auth.alfares.cz',
       products: this.configService.get('PRODUCT_SERVICE_URL') || `http://flipflop-product-service:${productPort}`,
       cart: this.configService.get('CART_SERVICE_URL') || `http://flipflop-cart-service:${cartPort}`,
       orders: this.configService.get('ORDER_SERVICE_URL') || `http://flipflop-order-service:${orderPort}`,
+      ordersPricing:
+        this.configService.get('ORDERS_MICROSERVICE_URL') || 'http://orders-microservice:3203',
       warehouse: this.configService.get('WAREHOUSE_SERVICE_URL') || `http://flipflop-warehouse-service:${warehousePort}`,
       users: this.configService.get('USER_SERVICE_URL') || `http://flipflop-user-service:${userPort}`,
       supplier: this.configService.get('SUPPLIER_SERVICE_URL') || `http://localhost:${supplierPort}`,

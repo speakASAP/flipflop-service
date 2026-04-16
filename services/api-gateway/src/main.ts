@@ -20,8 +20,8 @@ async function bootstrap() {
   // Enable CORS
   const nodeEnv = process.env.NODE_ENV || 'development';
   const allowedOrigins = nodeEnv === 'development'
-    ? ['http://localhost:3500', 'http://localhost:3000', 'https://flipflop.statex.cz']
-    : (process.env.CORS_ORIGIN || 'https://flipflop.statex.cz');
+    ? ['http://localhost:3500', 'http://localhost:3000', 'https://flipflop.alfares.cz']
+    : (process.env.CORS_ORIGIN || 'https://flipflop.alfares.cz');
 
   app.enableCors({
     origin: allowedOrigins,

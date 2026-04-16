@@ -4,14 +4,14 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Všechny produkty | flipflop.statex.cz',
+  title: 'Všechny produkty | flipflop.alfares.cz',
   description: 'Prohlédněte si náš kompletní sortiment. Rychlé doručení, snadné platby, kvalitní zboží za skvělé ceny.',
   openGraph: {
-    title: 'Všechny produkty | flipflop.statex.cz',
+    title: 'Všechny produkty | flipflop.alfares.cz',
     description: 'Prohlédněte si náš kompletní sortiment.',
     type: 'website',
     locale: 'cs_CZ',
-    siteName: 'flipflop.statex.cz',
+    siteName: 'flipflop.alfares.cz',
   },
 };
 

@@ -100,7 +100,7 @@ export class PricingService {
     };
   }
 
-  async generateSuggestions(): Promise<{ generated: number }> {
+  async generateSuggestions(): Promise<{ created: number; skipped: number }> {
     const startedAt = Date.now();
     const timestamp = new Date().toISOString();
     const aiServiceBase =
@@ -131,7 +131,8 @@ export class PricingService {
       `,
     );
 
-    let generated = 0;
+    let created = 0;
+    let skipped = 0;
     for (const product of products) {
       const productStartedAt = Date.now();
       const currentPrice = Number(product.price);
@@ -141,6 +142,7 @@ export class PricingService {
           product_id: product.id,
           current_price: product.price,
         });
+        skipped += 1;
         continue;
       }
 
@@ -155,17 +157,19 @@ export class PricingService {
             SELECT id, status
             FROM price_suggestion
             WHERE "productId" = ${product.id}
+              AND status IN ('pending', 'approved')
             ORDER BY "createdAt" DESC
             LIMIT 1
           `,
         );
         const current = existing[0];
-        if (current && (current.status === 'approved' || current.status === 'rejected')) {
-          this.logger.log('Pricing suggestion skipped due to final status', {
+        if (current) {
+          this.logger.log('Pricing suggestion skipped due to existing pending/approved record', {
             timestamp: new Date().toISOString(),
             product_id: product.id,
             status: current.status,
           });
+          skipped += 1;
           continue;
         }
 
@@ -185,6 +189,7 @@ export class PricingService {
             timestamp: new Date().toISOString(),
             product_id: product.id,
           });
+          skipped += 1;
           continue;
         }
 
@@ -192,53 +197,36 @@ export class PricingService {
         const changePercent = ((suggestedPrice - currentPrice) / currentPrice) * 100;
         const rationale = parsed.rationale || null;
 
-        if (current?.id) {
-          await this.prisma.$executeRaw(
-            Prisma.sql`
-              UPDATE price_suggestion
-              SET
-                "productName" = ${product.name},
-                "currentPrice" = ${currentPrice},
-                "suggestedPrice" = ${suggestedPrice},
-                "changePercent" = ${changePercent},
-                rationale = ${rationale},
-                status = 'pending',
-                "updatedAt" = NOW()
-              WHERE id = ${current.id} AND status = 'pending'
-            `,
-          );
-        } else {
-          await this.prisma.$executeRaw(
-            Prisma.sql`
-              INSERT INTO price_suggestion (
-                id,
-                "productId",
-                "productName",
-                "currentPrice",
-                "suggestedPrice",
-                "changePercent",
-                rationale,
-                status,
-                "createdAt",
-                "updatedAt"
-              )
-              VALUES (
-                gen_random_uuid()::text,
-                ${product.id},
-                ${product.name},
-                ${currentPrice},
-                ${suggestedPrice},
-                ${changePercent},
-                ${rationale},
-                'pending',
-                NOW(),
-                NOW()
-              )
-            `,
-          );
-        }
+        await this.prisma.$executeRaw(
+          Prisma.sql`
+            INSERT INTO price_suggestion (
+              id,
+              "productId",
+              "productName",
+              "currentPrice",
+              "suggestedPrice",
+              "changePercent",
+              rationale,
+              status,
+              "createdAt",
+              "updatedAt"
+            )
+            VALUES (
+              gen_random_uuid()::text,
+              ${product.id},
+              ${product.name},
+              ${currentPrice},
+              ${suggestedPrice},
+              ${changePercent},
+              ${rationale},
+              'pending',
+              NOW(),
+              NOW()
+            )
+          `,
+        );
 
-        generated += 1;
+        created += 1;
         this.logger.log('Pricing suggestion generated', {
           timestamp: new Date().toISOString(),
           duration_ms: Date.now() - productStartedAt,
@@ -253,17 +241,19 @@ export class PricingService {
           product_id: product.id,
           error: error instanceof Error ? error.message : String(error),
         });
+        skipped += 1;
       }
     }
 
     this.logger.log('Pricing suggestion generation completed', {
       timestamp,
       duration_ms: Date.now() - startedAt,
-      generated,
+      created,
+      skipped,
       processed: products.length,
     });
 
-    return { generated };
+    return { created, skipped };
   }
 
   async approveSuggestion(id: string): Promise<{ success: true; newPrice: number }> {

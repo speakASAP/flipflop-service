@@ -19,7 +19,7 @@ NestJS + PostgreSQL + Redis + Next.js frontend. Blue/green deployment.
 | payments-microservice:3468 | PayU, PayPal |
 | catalog-microservice:3200 | Product data |
 | warehouse-microservice:3201 | Stock |
-| orders-microservice:3203 | Order processing |
+| orders-microservice:3203 | Order processing; **ecosystem owner for product list pricing** (flipflop hosts `order-service` pricing HTTP/DB until consolidated) |
 | ai-microservice:3380 | Product AI tasks |
 
 ## Current State
@@ -57,4 +57,35 @@ bash scripts/orch-trigger-cycle.sh flipflop-v1
 
 # Full platform validation
 bash scripts/orch-final-validation.sh
+```
+
+---
+
+## Programme Status (as of 2026-04-15)
+
+The flipflop-service has completed all orchestrated phases P1-P10 under the Business Orchestrator programme.
+
+| Phase | Feature | Status |
+|-------|---------|--------|
+| P1 | Go-live: checkout, payments (PayU, PayPal, Stripe, GP WebPay) | ✅ Complete |
+| P2 | Payment provider E2E verification | ✅ Complete |
+| P3 | Post-payment UX, Stripe raw body, checkout funnel, sitemap | ✅ Complete |
+| P4 | AI product descriptions, SEO meta tags, competitor price analysis | ✅ Complete |
+| P5 | Marketing automation (review solicitation, loyalty points, repeat purchase) | ✅ Complete |
+| P6 | Analytics: revenue dashboard, conversion monitoring, SLA tracking | ✅ Complete |
+| P7 | Inventory: stock alerts, dead stock, supplier performance | ✅ Complete |
+| P8 | Customer retention: review solicitation, loyalty, repeat purchase | ✅ Complete |
+| P9 | Documentation sync, RabbitMQ consumers, payment audit | ✅ Complete |
+| P10 | Dynamic pricing engine + approval workflow | ✅ Complete |
+
+### Ongoing Orchestration
+
+The business-orchestrator continues to run coordinator cycles every 5 minutes, dispatching AI worker tasks autonomously.
+
+**Ops commands:**
+
+```bash
+./scripts/orch-status.sh                    # platform health
+./scripts/orch-trigger-cycle.sh flipflop-v1 # manual cycle
+./scripts/orch-final-validation.sh          # full smoke test
 ```

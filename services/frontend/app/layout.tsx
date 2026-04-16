@@ -8,7 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "flipflop.statex.cz - Modern flipflop Platform",
+  title: "flipflop.alfares.cz - Modern flipflop Platform",
   description: "Modern, fully automated flipflop platform for the Czech Republic",
 };
 
@@ -26,7 +26,7 @@ export default function RootLayout({
             <main className="min-h-screen">{children}</main>
             <footer className="bg-gradient-to-r from-slate-800 to-slate-900 text-white py-8 mt-16">
               <div className="container mx-auto px-4 text-center">
-                <p>&copy; 2025 flipflop.statex.cz. Všechna práva vyhrazena.</p>
+                <p>&copy; 2025 flipflop.alfares.cz. Všechna práva vyhrazena.</p>
               </div>
             </footer>
           </AuthProvider>

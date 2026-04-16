@@ -744,7 +744,7 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     const callbackUrlBase =
-      this.configService.get<string>('API_GATEWAY_URL') || 'https://flipflop.statex.cz';
+      this.configService.get<string>('API_GATEWAY_URL') || 'https://flipflop.alfares.cz';
     const callbackUrl = `${callbackUrlBase.replace(/\/$/, '')}/api/webhooks/payment-result`;
 
     let paymentResult;
@@ -918,7 +918,7 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     const callbackUrlBase =
-      this.configService.get<string>('API_GATEWAY_URL') || 'https://flipflop.statex.cz';
+      this.configService.get<string>('API_GATEWAY_URL') || 'https://flipflop.alfares.cz';
     const callbackUrl = `${callbackUrlBase.replace(/\/$/, '')}/api/webhooks/payment-result`;
 
     const paymentResponse = await this.paymentService.createPayment({

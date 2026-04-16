@@ -47,7 +47,7 @@ export class Logger {
     // Use production URL by default, fallback to Docker internal URL
     this.loggingServiceUrl = process.env.LOGGING_SERVICE_URL || 
       (process.env.NODE_ENV === 'production' 
-        ? 'https://logging.statex.cz' 
+        ? 'https://logging.alfares.cz' 
         : `http://logging-microservice:${process.env.LOGGING_SERVICE_PORT || '3367'}`);
     this.logLevel = process.env.LOG_LEVEL || 'info';
     this.timestampFormat = process.env.LOG_TIMESTAMP_FORMAT || 'YYYY-MM-DD HH:mm:ss';

@@ -1,10 +1,19 @@
 {
-  "cycle": 21,
-  "tasks_active": 3,
-  "last_cycle_at": "2026-04-13T10:18:52.004Z",
   "status": "operational",
   "programme_phase": "P12_closure",
   "all_features_complete": true,
   "orchestrator_project_slug": "flipflop-v1",
-  "last_updated": "2026-04-14"
+  "phases_completed": [
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6",
+    "P7",
+    "P8",
+    "P9",
+    "P10"
+  ],
+  "last_updated": "2026-04-15"
 }
