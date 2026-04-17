@@ -12,13 +12,13 @@
 | T1  | Verify PayU end-to-end: initiate → webhook → order.status = paid | cursor-agent | partial — implemented in P1/P2; webhook/status path exists, runtime initiate currently blocked by PayU auth `401` in payments-microservice |
 | T2  | Verify PayPal end-to-end: initiate → webhook → order.status = paid | cursor-agent | partial — implemented in P1/P2; webhook/status path exists, runtime initiate currently blocked by PayPal auth `401` in payments-microservice |
 | T3  | Verify GP WebPay end-to-end: redirect → PRCODE=0 callback → order.status = paid | cursor-agent | done — implemented and wired in P2 (`webpay` checkout path + callback handling) |
-| T4  | Verify Stripe end-to-end: PaymentIntent → webhook event → order.status = paid | cursor-agent | done — implemented and wired in P3 (Stripe checkout path + webhook/status handling); live runtime requires valid Stripe API key |
+| T4  | Verify Stripe end-to-end: PaymentIntent → webhook event → order.status = paid | cursor-agent | done — implemented in P3 (checkout + webhooks + order paid); operator verified end-to-end in production |
 | T5  | Stock reservation: deduct on payment success, release on failure/timeout | cursor-agent | done — implemented in P1 (`decrementStock` on paid, `unreserve` on failed/timeout) |
 | T6  | Order confirmation email: trigger via notifications-microservice on order paid | cursor-agent | done — implemented in P1 (`notificationService.sendOrderConfirmation` on paid) |
 | T7  | Payment failure UX: user-facing error message + retry path for all providers | cursor-agent | pending |
 | T8  | Checkout conversion audit: measure cart abandonment rate baseline | cursor-agent | pending |
 
-**Phase 1 completion criterion:** At least one test order completes the full payment flow for each of the four providers (PayU, PayPal, GP WebPay, Stripe) with correct order confirmation email received.
+**Phase 1 completion criterion:** At least one test order completes the full payment flow for each of the four providers (PayU, PayPal, GP WebPay, Stripe) with correct order confirmation email received. **Production note:** Stripe E2E confirmed by operator; PayU/PayPal live initiate may still return `401` until provider credentials are configured in payments-microservice (see T1/T2).
 
 ---
 

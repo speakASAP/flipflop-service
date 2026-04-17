@@ -3,12 +3,21 @@
  */
 
 import { Module } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { ProductsController, CategoriesController, AdminProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 import { WarehouseService } from './warehouse.service';
-import { PrismaModule, AuthModule, LoggerModule, RedisModule, ClientsModule, RabbitMQModule } from '@flipflop/shared';
+import {
+  PrismaModule,
+  AuthModule,
+  LoggerModule,
+  RedisModule,
+  ClientsModule,
+  RabbitMQModule,
+  RolesGuard,
+} from '@flipflop/shared';
 import * as https from 'https';
 
 @Module({
@@ -34,7 +43,7 @@ import * as https from 'https';
     }),
   ],
   controllers: [ProductsController, CategoriesController, AdminProductsController],
-  providers: [ProductsService, WarehouseService],
+  providers: [ProductsService, WarehouseService, RolesGuard, Reflector],
   exports: [ProductsService, WarehouseService],
 })
 export class ProductsModule {}

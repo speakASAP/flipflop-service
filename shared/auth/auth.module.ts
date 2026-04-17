@@ -36,7 +36,7 @@ import * as https from 'https';
     ResilienceModule,
   ],
   providers: [AuthService, JwtAuthGuard, RolesGuard, Reflector],
-  exports: [AuthService, JwtAuthGuard, RolesGuard],
+  exports: [AuthService, JwtAuthGuard, RolesGuard, Reflector],
 })
 export class AuthModule {}
 
