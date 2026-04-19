@@ -7,9 +7,9 @@ RUN npm install --prefer-offline --no-audit || npm ci
 
 COPY . .
 
-RUN npm run build 2>/dev/null || true
+# If build script not found, use tsc directly
+RUN npm run build 2>/dev/null || npx tsc 2>/dev/null || true
 
 EXPOSE 3000
 
-ENTRYPOINT ["node"]
-CMD ["dist/main.js"]
+CMD ["node", "dist/main.js"]
