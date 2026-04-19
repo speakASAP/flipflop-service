@@ -67,13 +67,40 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     });
   }
 
+  private readonly dbConnectRetries = Number(process.env.DB_CONNECT_RETRIES ?? 10);
+  private readonly dbConnectRetryDelayMs = Number(process.env.DB_CONNECT_RETRY_DELAY_MS ?? 5000);
+
+  private async sleep(ms: number) {
+    return new Promise<void>((resolve) => setTimeout(resolve, ms));
+  }
+
   async onModuleInit() {
-    try {
-      await this.$connect();
-      this.logger.log('Prisma Client connected to database');
-    } catch (error) {
-      this.logger.error('Failed to connect to database', error);
-      throw error;
+    let attempt = 0;
+    while (true) {
+      attempt += 1;
+      try {
+        await this.$connect();
+        this.logger.log('Prisma Client connected to database');
+        break;
+      } catch (error) {
+        this.logger.error(
+          `Prisma database connection attempt ${attempt} failed.`,
+          error as Error,
+        );
+
+        if (attempt >= this.dbConnectRetries) {
+          this.logger.error(
+            `Failed to connect to the database after ${attempt} attempts.`,
+          );
+          throw error;
+        }
+
+        const delay = this.dbConnectRetryDelayMs * attempt;
+        this.logger.warn(
+          `Retrying database connection in ${delay}ms (${attempt}/${this.dbConnectRetries}).`,
+        );
+        await this.sleep(delay);
+      }
     }
   }
 
