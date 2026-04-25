@@ -2,13 +2,19 @@ FROM node:24-slim
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install --prefer-offline --no-audit || npm ci
+# Install service dependencies
+COPY services/api-gateway/package*.json ./
+RUN npm install --prefer-offline --legacy-peer-deps
 
-COPY . .
+# Copy pre-built dist (already compiled in repo)
+COPY services/api-gateway/dist ./dist
 
-# Copy pre-built dist directory (exists in repo)
+# Copy shared module (pre-built dist in repo)
+COPY shared ./shared
+
+# Ensure @flipflop/shared is properly resolved in node_modules
+RUN mkdir -p /app/node_modules/@flipflop && ln -sf ../shared /app/node_modules/@flipflop/shared
+
 EXPOSE 3000
 
-ENTRYPOINT ["node"]
-CMD ["dist/main.js"]
+CMD ["node", "dist/main.js"]

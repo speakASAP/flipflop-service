@@ -30,9 +30,7 @@ spec:
               name: http
           envFrom:
             - configMapRef:
-                name: flipflop-service-config
-            - secretRef:
-                name: flipflop-service-secret
+                name: flipflop-config
           env:
             - name: DB_PASSWORD
               valueFrom:
