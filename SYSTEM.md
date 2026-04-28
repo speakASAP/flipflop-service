@@ -2,90 +2,34 @@
 
 ## Architecture
 
-NestJS + PostgreSQL + Redis + Next.js frontend. Blue/green deployment.
+NestJS + PostgreSQL + Redis + Next.js frontend. Deployed on Kubernetes (`statex-apps` namespace).
 
-- Backend: product, cart, order, user, payment modules
+- Backend services: api-gateway, product-service, order-service, cart-service, user-service, warehouse-service
 - Frontend: Next.js SSR + Tailwind
 - AI: product descriptions, SEO via ai-microservice
 
-## Integrations
+## External Integrations
 
-| Service | Usage |
-|---------|-------|
-| auth-microservice:3370 | User auth |
-| database-server:5432 | PostgreSQL |
-| logging-microservice:3367 | Logs |
-| notifications-microservice:3368 | Order emails |
-| payments-microservice:3468 | PayU, PayPal |
-| catalog-microservice:3200 | Product data |
-| warehouse-microservice:3201 | Stock |
-| orders-microservice:3203 | Order processing; **ecosystem owner for product list pricing** (flipflop hosts `order-service` pricing HTTP/DB until consolidated) |
-| ai-microservice:3380 | Product AI tasks |
+| Service | URL | Usage |
+|---------|-----|-------|
+| auth-microservice | https://auth.alfares.cz | User auth / JWT |
+| notifications-microservice | https://notifications.alfares.cz | Order emails |
+| logging-microservice | https://logging.alfares.cz | Centralized logs |
+| payments-microservice | https://payments.alfares.cz | PayU, PayPal, Stripe, GP WebPay |
+| catalog-microservice | https://catalog.alfares.cz | Product data |
+| warehouse-microservice | https://warehouse.alfares.cz | Stock |
+| orders-microservice | https://orders.alfares.cz | Order processing; ecosystem owner for product pricing |
+| ai-microservice | https://ai.alfares.cz | AI tasks (cheap tier) |
 
 ## Current State
-<!-- AI-maintained -->
-Stage: active
 
-## Known Issues
-<!-- AI-maintained -->
-- None
+Stage: operational — all orchestration phases P1–P10 complete (2026-04-15).  
+Managed by `business-orchestrator` project `flipflop-v1`, coordinator cycle every 5 minutes.
 
-## Programme Status (as of 2026-04-14)
-
-All automation phases complete. The platform is managed by `business-orchestrator` (project slug `flipflop-v1`). The orchestrator runs coordinator cycles every 5 minutes; tasks are spawned, executed by worker agents, and validated before being marked done.
-
-### Completed phases
-
-| Phase | Feature | Status |
-|-------|---------|--------|
-| 1 | Checkout & Payments (PayU, PayPal, GP WebPay, Stripe) | ✅ |
-| 2 | AI Content & SEO (product descriptions, meta tags, competitor pricing) | ✅ |
-| 3 | Marketing Automation (email campaigns, abandoned cart, discount codes) | ✅ |
-| 4 | Analytics & Reporting (revenue dashboard, conversion, SLA) | ✅ |
-| 5 | Inventory Management (low-stock alerts, dead stock, supplier scoring) | ✅ |
-| 6 | Customer Retention (review solicitation, loyalty points, repeat purchase AI) | ✅ |
-| 7 | Dynamic Pricing (AI price suggestions, approval workflow) | ✅ |
-
-### Ops commands
+## Ops
 
 ```bash
-# Orchestrator health
-cd business-orchestrator && bash scripts/orch-flipflop-health.sh
-
-# Trigger coordinator cycle manually
-bash scripts/orch-trigger-cycle.sh flipflop-v1
-
-# Full platform validation
-bash scripts/orch-final-validation.sh
-```
-
----
-
-## Programme Status (as of 2026-04-15)
-
-The flipflop-service has completed all orchestrated phases P1-P10 under the Business Orchestrator programme.
-
-| Phase | Feature | Status |
-|-------|---------|--------|
-| P1 | Go-live: checkout, payments (PayU, PayPal, Stripe, GP WebPay) | ✅ Complete |
-| P2 | Payment provider E2E verification | ✅ Complete |
-| P3 | Post-payment UX, Stripe raw body, checkout funnel, sitemap | ✅ Complete |
-| P4 | AI product descriptions, SEO meta tags, competitor price analysis | ✅ Complete |
-| P5 | Marketing automation (review solicitation, loyalty points, repeat purchase) | ✅ Complete |
-| P6 | Analytics: revenue dashboard, conversion monitoring, SLA tracking | ✅ Complete |
-| P7 | Inventory: stock alerts, dead stock, supplier performance | ✅ Complete |
-| P8 | Customer retention: review solicitation, loyalty, repeat purchase | ✅ Complete |
-| P9 | Documentation sync, RabbitMQ consumers, payment audit | ✅ Complete |
-| P10 | Dynamic pricing engine + approval workflow | ✅ Complete |
-
-### Ongoing Orchestration
-
-The business-orchestrator continues to run coordinator cycles every 5 minutes, dispatching AI worker tasks autonomously.
-
-**Ops commands:**
-
-```bash
-./scripts/orch-status.sh                    # platform health
-./scripts/orch-trigger-cycle.sh flipflop-v1 # manual cycle
-./scripts/orch-final-validation.sh          # full smoke test
+kubectl get pods -n statex-apps -l app=flipflop
+./scripts/orch-status.sh
+./scripts/orch-trigger-cycle.sh flipflop-v1
 ```

@@ -30,6 +30,7 @@ ai-microservice (product descriptions, SEO) ← flipflop-service
 
 ### Quick ops
 ```bash
-docker compose logs -f
+kubectl get pods -n statex-apps -l app=flipflop
+kubectl logs -n statex-apps deploy/flipflop-api-gateway --tail=100
 ./scripts/deploy.sh
 ```
