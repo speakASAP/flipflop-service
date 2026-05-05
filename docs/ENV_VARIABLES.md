@@ -15,7 +15,7 @@ For local dev: `vault kv get secret/prod/flipflop` or use SSH tunnel + `.env`.
 | `DATABASE_URL`                                                                   | Yes      | Prisma connection string (injected from Vault)    |
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD`                                   | Yes      | Redis cache                                       |
 | `AUTH_SERVICE_URL`                                                               | Yes      | `https://auth.alfares.cz`                         |
-| `NOTIFICATION_SERVICE_URL`                                                       | Yes      | `https://notifications.alfares.cz`                |
+| `NOTIFICATION_SERVICE_URL`                                                       | Yes      | `https://notifications.alfares.cz` (AWS SES-backed email delivery path; replaces prior SendGrid identity target) |
 | `LOGGING_SERVICE_URL`                                                            | Yes      | `https://logging.alfares.cz`                      |
 | `PAYMENT_SERVICE_URL`                                                            | Yes      | `https://payments.alfares.cz`                     |
 | `PAYMENT_API_KEY`                                                                | Yes      | Outbound key for payments-microservice            |

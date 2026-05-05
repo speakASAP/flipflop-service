@@ -24,6 +24,8 @@ Secrets: Vault `secret/prod/flipflop` (injected via ESO)
 
 See `SYSTEM.md` → External Integrations table.
 
+Email delivery for platform notifications routes through `notifications-microservice` with AWS SES as the active sender identity path.
+
 ## Quick ops
 
 ```bash
