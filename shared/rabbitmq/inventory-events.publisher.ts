@@ -11,7 +11,7 @@ export type InventoryLowStockPayload = {
 };
 
 /**
- * Publishes inventory alerts to RabbitMQ for business-orchestrator / reorder workflows.
+ * Publishes inventory alerts to RabbitMQ for runlayer / reorder workflows.
  * Exchange: inventory.events, routing key: inventory.low_stock
  */
 @Injectable()

@@ -70,7 +70,7 @@ AI-generated price suggestions (cheap tier via ai-microservice). Human-in-loop a
 
 ### Phase 8 — Second Business Onboarding
 
-Register `speakasap` as second orchestrated project in business-orchestrator. Activate first orchestration goal to prove multi-tenant coordinator isolation.
+Register `speakasap` as second orchestrated project in runlayer. Activate first orchestration goal to prove multi-tenant coordinator isolation.
 
 ### Phase 9 — Project Closure
 

@@ -21,11 +21,11 @@ Stripe E2E: confirmed in production. PayU/PayPal blocked on provider credentials
 ## Phases 2–7 — Complete ✅
 
 AI Content & SEO · Marketing Automation · Analytics · Inventory Management · Customer Retention · Dynamic Pricing  
-All phases implemented via Business Orchestrator P1–P10 (completed 2026-04-15). See `SYSTEM.md`.
+All phases implemented via RunLayer P1–P10 (completed 2026-04-15). See `SYSTEM.md`.
 
 ---
 
 ## Phase 8–9 — Backlog
 
-- Phase 8: Register `speakasap` in business-orchestrator as second tenant
+- Phase 8: Register `speakasap` in runlayer as second tenant
 - Phase 9: Final validation + operational closure (STATE.json → operational)

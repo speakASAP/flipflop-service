@@ -23,9 +23,6 @@ NestJS + PostgreSQL + Redis + Next.js frontend. Deployed on Kubernetes (`statex-
 
 ## Current State
 
-Stage: operational — all orchestration phases P1–P10 complete (2026-04-15).  
-Managed by `business-orchestrator` project `flipflop-v1`, coordinator cycle every 5 minutes.
-
 ## Ops
 
 ```bash

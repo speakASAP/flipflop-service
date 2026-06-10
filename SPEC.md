@@ -169,7 +169,7 @@ delivered → refunded (14-day Czech law window)
 
 `orders-microservice:3203` handles order processing logic (fulfilment routing, supplier forwarding). flipflop `order-service` delegates complex order orchestration to it via HTTP. Supplier `autoForwardOrders` flag on `Supplier` model controls automatic order forwarding.
 
-**Product list pricing** (AI suggestions, approve/reject, updating `Product.price`) is part of the **orders** domain and belongs with **`orders-microservice`**, not `payments-microservice` (payment capture only) and not `business-orchestrator`. Today those HTTP routes and Prisma access ship inside flipflop’s Nest **`order-service`** (`flipflop-service/services/order-service/`), colocated with the flipflop catalog database, until consolidated into the standalone `orders-microservice` repo.
+**Product list pricing** (AI suggestions, approve/reject, updating `Product.price`) is part of the **orders** domain and belongs with **`orders-microservice`**, not `payments-microservice` (payment capture only) and not `runlayer`. Today those HTTP routes and Prisma access ship inside flipflop’s Nest **`order-service`** (`flipflop-service/services/order-service/`), colocated with the flipflop catalog database, until consolidated into the standalone `orders-microservice` repo.
 
 ### Czech Consumer Law Compliance
 
@@ -316,7 +316,7 @@ AI tasks are budget-capped at 500,000 LLM units/month across all flipflop AI ope
 
 ### Orchestrator Task Routing
 
-All AI tasks for flipflop-service are routed via `business-orchestrator` `ProjectCoordinator`:
+All AI tasks for flipflop-service are routed via `runlayer` `ProjectCoordinator`:
 
 | Task Type | Target Service | Priority |
 | --------- | ------------- | -------- |
@@ -363,7 +363,7 @@ All AI tasks for flipflop-service are routed via `business-orchestrator` `Projec
 
 ### Worker Task Routing
 
-`business-orchestrator` `ProjectCoordinator` reads this SPEC.md before each cycle to understand:
+`runlayer` `ProjectCoordinator` reads this SPEC.md before each cycle to understand:
 
 1. Which task types are valid for flipflop-service.
 2. Which modules have active blockers (T0a, T0b, T0c in Module 3).
