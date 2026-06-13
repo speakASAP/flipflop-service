@@ -802,6 +802,7 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
       const orderData = {
         externalOrderId: order.orderNumber,
         channel: 'flipflop',
+        channelAccountId: process.env.ORDERS_CHANNEL_ACCOUNT_ID || 'flipflop-storefront',
         customer: {
           id: userId,
           email: user?.email,
