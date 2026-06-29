@@ -2,11 +2,41 @@
 
 ## Current Status
 
-**Date:** 2026-06-26
+**Date:** 2026-06-29
 **Mode:** Goal-driven orchestration enabled
 **Active goal:** GOAL-09-smarty-checkout-reference-ux
 **Goal status:** implemented, deployed, and production-smoked
-**Current checkpoint:** GOAL-09 guest checkout, Smarty.cz reference documentation, optional account creation, delivery/payment/summary/upsell UI, bank-transfer QR behavior, guest-order route registration, server-side guest fee hardening, Vault-backed production bank-transfer secret wiring, and owner-approved synthetic production guest order are implemented and verified.
+**Current checkpoint:** GOAL-09 guest checkout, Smarty.cz reference documentation, optional account creation, delivery/payment/summary/upsell UI, bank-transfer QR behavior, guest-order route registration, server-side guest fee hardening, Vault-backed production bank-transfer secret wiring, owner-approved synthetic production guest order, and checkout-login return-loop prevention are implemented, deployed, and verified.
+
+
+## 2026-06-29 - Checkout Login Return Loop Fix
+
+Owner reported that clicking `Přihlaste se` from checkout delivery-details step returned them to the previous `Doprava a platba` step and could create a login loop for customers who thought they already had an account.
+
+Implemented source changes:
+
+- Checkout account prompt now redirects login/register to `/checkout?step=details` instead of bare `/checkout`.
+- Checkout restores the delivery-details step from `step=details` after Auth callback return.
+- Checkout account prompt now explicitly offers guest continuation, registration, and access recovery without leaving the current checkout step.
+- FlipFlop login landing now shows both registration and `Obnovit přístup` links preserving the same checkout return target.
+- Hosted Auth helper now builds shared password-reset URLs with `client_id=flipflop` and `return_url=https://flipflop.alfares.cz/auth/callback?next=/checkout?step=details`.
+- Guest checkout verifier now asserts this redirect-step preservation contract.
+
+Validation passed:
+
+- `python3 scripts/pre_coding_gate.py --root .`
+- `python3 scripts/strict_doc_audit.py --root . --format markdown --fail-on-issues`
+- `git diff --check`
+- `npm run verify:guest-checkout-ui`
+- `cd services/frontend && npm run build`
+- `python3 scripts/deployment_readiness_gate.py --root .`
+- `./scripts/deploy.sh` completed successfully; all FlipFlop deployments rolled out and deploy HTTP checks passed.
+- In-app Browser production QA: `/checkout?step=details` rendered `Kontaktní údaje`, login/register/reset links preserved `/checkout?step=details`, local `/login?redirect=%2Fcheckout%3Fstep%3Ddetails` showed registration and recovery options, and hosted Auth redirected to `auth.alfares.cz/login` with `client_id=flipflop`, generated `state`, and return URL `https://flipflop.alfares.cz/auth/callback?next=%2Fcheckout%3Fstep%3Ddetails`. Browser console warnings/errors were empty for the verified pages.
+
+Intent compliance:
+
+- Preserves guest checkout and optional account creation; no order, payment, price, stock, password, token, OAuth, database schema, or production user-data behavior was changed.
+- Auth remains delegated to the shared hosted Auth surface.
 
 ## Current Intent Summary
 
