@@ -6,7 +6,7 @@
 **Mode:** Goal-driven orchestration enabled
 **Active goal:** GOAL-10-catalog-connector-content-preview
 **Goal status:** implemented, validated, deployed, and runtime-smoked
-**Current checkpoint:** Catalog canonical `flipflop` connector previews are deployed through the protected read-only product-service endpoint and admin sync flow. Runtime deployment completed after repairing gateway CMD layout and product-service Prisma client packaging.
+**Current checkpoint:** Catalog canonical `flipflop` connector previews are deployed through the protected read-only product-service endpoint and admin sync flow. Runtime deployment completed after repairing gateway CMD layout, product-service Prisma client packaging, and product-service entrypoint layout tolerance.
 
 
 
@@ -18,8 +18,9 @@ Runtime deployment evidence:
 
 - Commit `1580942` added the Catalog connector preview endpoint and admin sync UI.
 - Commit `0c199ce` repaired runtime image packaging: gateway now starts whichever compiled layout is present, and product-service syncs generated Prisma client into service-local `node_modules`.
-- `./scripts/deploy.sh` completed successfully in 140.60s.
-- New pods reached `1/1 Running`: `flipflop-service-69dd6bd79c-gftbh`, `flipflop-product-service-78f4677dc6-dgkv5`, `flipflop-frontend-cd4fbc5df-zqpnp`, `flipflop-cart-service-6f59647847-ckm2x`, `flipflop-order-service-6d44c6db6c-flpm7`, and `flipflop-user-service-79ddfdf4d8-psb5t`.
+- Commit `e4f8781` made the product-service image entrypoint layout tolerant.
+- Final `./scripts/deploy.sh` completed successfully in 181.24s.
+- New pods reached `1/1 Running`: `flipflop-service-6c9646f57d-hwvzk`, `flipflop-product-service-6bfd8555f8-zm4bn`, `flipflop-frontend-5b9d5985d8-789cl`, `flipflop-cart-service-55d6446c9b-f6g6h`, `flipflop-order-service-76748648fd-f6vh5`, and `flipflop-user-service-5cf5fc9895-4b49w`.
 - Production smoke returned `https://flipflop.alfares.cz/` HTTP 200 and `https://flipflop.alfares.cz/api/products?limit=1` HTTP 200.
 - The protected preview route is mapped as `GET /products/:id/catalog-content-preview`; anonymous calls are blocked by the existing JWT guard, although missing/invalid token exceptions currently surface as HTTP 500 because of the shared guard exception-class boundary.
 

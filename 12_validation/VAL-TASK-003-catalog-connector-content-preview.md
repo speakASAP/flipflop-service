@@ -41,8 +41,8 @@ The Catalog connector content preview lane is implemented, validated, deployed, 
 
 ## Runtime deployment addendum
 
-- FlipFlop deployment completed after commit `0c199ce` repaired gateway/product-service runtime packaging.
-- `./scripts/deploy.sh` completed successfully in 140.60s.
+- FlipFlop deployment completed after commits `0c199ce` and `e4f8781` repaired gateway/product-service runtime packaging and product-service entrypoint layout tolerance.
+- Final `./scripts/deploy.sh` completed successfully in 181.24s.
 - Public smoke passed: `/` HTTP 200 and `/api/products?limit=1` HTTP 200.
 - Protected preview route is mapped as `GET /products/:id/catalog-content-preview`; anonymous access is blocked by the existing JWT guard. Missing/invalid token errors currently surface as HTTP 500 and are tracked as optional auth hardening, not as a connector rendering failure.
 
