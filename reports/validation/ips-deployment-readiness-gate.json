@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-06-29T11:57:50Z",
+  "created_at": "2026-06-30T11:20:49Z",
   "gate": "deployment_readiness",
   "next_step": "ready_for_deployment_review",
   "pre_coding_gate": {
@@ -52,52 +52,57 @@
       "path": "docs/IMPLEMENTATION_ORCHESTRATOR.md"
     },
     {
-      "line": 154,
+      "line": 23,
+      "marker": "[UNKNOWN: whether Warehouse getTotalAvailable includes reservations or only physical available stock]",
+      "path": "docs/IMPLEMENTATION_STATE.md"
+    },
+    {
+      "line": 199,
       "marker": "[MISSING: catalogProductId]",
       "path": "docs/IMPLEMENTATION_STATE.md"
     },
     {
-      "line": 356,
+      "line": 401,
       "marker": "[MISSING: production bank account]",
       "path": "docs/IMPLEMENTATION_STATE.md"
     },
     {
-      "line": 378,
+      "line": 423,
       "marker": "[MISSING: auth-microservice magic-link or passwordless account API]",
       "path": "docs/IMPLEMENTATION_STATE.md"
     },
     {
-      "line": 379,
+      "line": 424,
       "marker": "[MISSING: production bank account]",
       "path": "docs/IMPLEMENTATION_STATE.md"
     },
     {
-      "line": 396,
+      "line": 441,
       "marker": "[MISSING: production bank account]",
       "path": "docs/IMPLEMENTATION_STATE.md"
     },
     {
-      "line": 396,
+      "line": 441,
       "marker": "[MISSING: production IBAN]",
       "path": "docs/IMPLEMENTATION_STATE.md"
     },
     {
-      "line": 418,
+      "line": 463,
       "marker": "[MISSING: production bank account]",
       "path": "docs/IMPLEMENTATION_STATE.md"
     },
     {
-      "line": 418,
+      "line": 463,
       "marker": "[MISSING: production IBAN]",
       "path": "docs/IMPLEMENTATION_STATE.md"
     },
     {
-      "line": 499,
+      "line": 544,
       "marker": "[MISSING: production bank account]",
       "path": "docs/IMPLEMENTATION_STATE.md"
     },
     {
-      "line": 499,
+      "line": 544,
       "marker": "[MISSING: production IBAN]",
       "path": "docs/IMPLEMENTATION_STATE.md"
     },

@@ -9,6 +9,21 @@
 **Current checkpoint:** GOAL-09 guest checkout, Smarty.cz reference documentation, optional account creation, delivery/payment/summary/upsell UI, bank-transfer QR behavior, guest-order route registration, server-side guest fee hardening, Vault-backed production bank-transfer secret wiring, owner-approved synthetic production guest order, and checkout-login return-loop prevention are implemented, deployed, and verified.
 
 
+
+## 2026-06-30 - Warehouse Stock Event Orchestration
+
+Implemented FlipFlop sales-channel stock sync parity with the Allegro Warehouse-only policy:
+
+- Warehouse remains the only source of sellable quantity for FlipFlop stock orchestration.
+- `stock.updated` events mirror Warehouse `available` into linked FlipFlop `Product.stockQuantity` rows where `catalogProductId` matches and `trackInventory=true`.
+- `stock.out` events force target quantity `0`; the existing storefront/cart contract treats `stockQuantity=0` as not sellable while cart writes still re-check Warehouse directly.
+- Automatic execution requires no manual approval and never mutates Warehouse or Catalog.
+- Durable audit state is recorded in `flipflop_stock_sync_attempts` with idempotency key, policy snapshot, request payload, result snapshot, blocked reasons, failure context, and remediation context.
+- Default pacing is one product-cache write per second via `FLIPFLOP_STOCK_SYNC_RATE_LIMIT_MS=1000`.
+- `[UNKNOWN: whether Warehouse getTotalAvailable includes reservations or only physical available stock]` is preserved in the policy snapshot.
+
+Validation evidence is recorded in this task final response after gates complete.
+
 ## 2026-06-29 - Checkout Login Return Loop Fix
 
 Owner reported that clicking `Přihlaste se` from checkout delivery-details step returned them to the previous `Doprava a platba` step and could create a login loop for customers who thought they already had an account.

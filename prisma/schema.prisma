@@ -112,6 +112,35 @@ model ProductVariant {
   @@map("product_variants")
 }
 
+
+model FlipflopStockSyncAttempt {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  status              String    @db.VarChar(50)
+  idempotencyKey      String    @unique @db.VarChar(180)
+  eventType           String    @db.VarChar(50)
+  eventId             String?   @db.VarChar(255)
+  warehouseProductId  String?   @db.VarChar(255)
+  targetQuantity      Int
+  matchedProductCount Int       @default(0)
+  requestPayload      Json?
+  policySnapshot      Json
+  blockedReasons      Json?
+  resultSnapshot      Json?
+  failureContext      Json?
+  remediationContext  Json?
+  queuedAt            DateTime? @db.Timestamp(6)
+  startedAt           DateTime? @db.Timestamp(6)
+  completedAt         DateTime? @db.Timestamp(6)
+  createdAt           DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt           DateTime  @updatedAt @db.Timestamp(6)
+
+  @@index([status], map: "IDX_flipflop_stock_sync_attempts_status")
+  @@index([warehouseProductId], map: "IDX_flipflop_stock_sync_attempts_warehouseProductId")
+  @@index([eventType], map: "IDX_flipflop_stock_sync_attempts_eventType")
+  @@index([createdAt], map: "IDX_flipflop_stock_sync_attempts_createdAt")
+  @@map("flipflop_stock_sync_attempts")
+}
+
 model Supplier {
   id                String            @id(map: "PK_b70ac51766a9e3144f778cfe81e") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name              String            @db.VarChar(255)
