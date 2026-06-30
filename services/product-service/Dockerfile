@@ -33,6 +33,11 @@ RUN npm run build
 # Build service
 WORKDIR /app/services/product-service
 RUN npm install --include=dev
+RUN /app/shared/node_modules/.bin/prisma generate --schema=/app/prisma/schema.prisma && \
+    rm -rf node_modules/@prisma/client node_modules/.prisma && \
+    mkdir -p node_modules/@prisma node_modules/.prisma && \
+    cp -r /app/node_modules/@prisma/client node_modules/@prisma/client && \
+    cp -r /app/node_modules/.prisma/client node_modules/.prisma/client
 RUN npm run build
 
 # Expose port

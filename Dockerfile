@@ -33,4 +33,4 @@ RUN ln -sf /app/shared /shared
 
 EXPOSE 3000
 
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-c", "if [ -f dist/main.js ]; then exec node dist/main.js; fi; exec node dist/services/api-gateway/src/main.js"]
