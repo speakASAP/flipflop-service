@@ -149,13 +149,28 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {/* Quick Add Button */}
-        <AddToCartButton
-          productId={product.id}
-          product={product}
-          label="Přidat do košíku"
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-bold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-        />
+        {/* Purchase Actions */}
+        <div className="flex items-stretch gap-2">
+          <AddToCartButton
+            productId={product.id}
+            product={product}
+            label="Koupit hned"
+            redirectTo="/checkout"
+            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-center text-sm font-extrabold text-white shadow-md transition-all duration-300 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+          />
+          <AddToCartButton
+            productId={product.id}
+            product={product}
+            label={
+              <span className="flex items-center justify-center gap-0.5" aria-hidden="true">
+                <span className="text-lg leading-none">🛒</span>
+                <span className="text-base font-black leading-none">+</span>
+              </span>
+            }
+            ariaLabel="Přidat do košíku"
+            className="flex h-12 w-14 shrink-0 items-center justify-center border-2 border-blue-200 bg-white text-blue-700 shadow-sm transition-all duration-300 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+          />
+        </div>
       </div>
     </article>
   );

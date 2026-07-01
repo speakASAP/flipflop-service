@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { addressesApi, DeliveryAddress, CreateAddressData } from '@/lib/api/addresses';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import AddressAutocomplete, { AddressValue } from '@/components/AddressAutocomplete';
 
 export default function AddressesPage() {
   const [addresses, setAddresses] = useState<DeliveryAddress[]>([]);
@@ -116,6 +117,16 @@ export default function AddressesPage() {
     });
   };
 
+  const handleAddressChange = (address: AddressValue) => {
+    setFormData((current) => ({
+      ...current,
+      street: address.street,
+      city: address.city,
+      postalCode: address.postalCode,
+      country: address.country || current.country,
+    }));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
@@ -174,47 +185,14 @@ export default function AddressesPage() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-gray-700 mb-2 font-semibold">Ulice</label>
-                  <input
-                    type="text"
-                    name="street"
-                    value={formData.street}
-                    onChange={handleChange}
+                  <AddressAutocomplete
                     required
-                    className="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 mb-2 font-semibold">Město</label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    required
-                    className="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 mb-2 font-semibold">PSČ</label>
-                  <input
-                    type="text"
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleChange}
-                    required
-                    className="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 mb-2 font-semibold">Země</label>
-                  <input
-                    type="text"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleChange}
-                    required
-                    className="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                    value={{ street: formData.street, city: formData.city, postalCode: formData.postalCode, country: formData.country }}
+                    onChange={handleAddressChange}
+                    wrapperClassName="grid grid-cols-1 md:grid-cols-2 gap-6"
+                    fieldClassName="block text-gray-700 font-semibold"
+                    inputClassName="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                    selectClassName="w-full border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                   />
                 </div>
                 <div>

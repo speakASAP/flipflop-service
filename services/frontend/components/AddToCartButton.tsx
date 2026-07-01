@@ -1,11 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import type { ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { cartApi } from '@/lib/api/cart';
 import { useAuth } from '@/contexts/AuthContext';
 import { addGuestCartItem, GuestCartProduct, GuestCartVariant } from '@/lib/guest-cart';
 
 type MessageTone = 'success' | 'warning' | 'error';
+type ApiErrorLike = {
+  message?: string;
+  details?: {
+    status?: number;
+  };
+};
 
 interface AddToCartButtonProps {
   productId: string;
@@ -14,7 +22,9 @@ interface AddToCartButtonProps {
   variantId?: string;
   quantity?: number;
   className?: string;
-  label?: string;
+  label?: ReactNode;
+  ariaLabel?: string;
+  redirectTo?: string;
 }
 
 export default function AddToCartButton({
@@ -25,7 +35,10 @@ export default function AddToCartButton({
   quantity = 1,
   className,
   label = '🛒 Přidat do košíku',
+  ariaLabel,
+  redirectTo,
 }: AddToCartButtonProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<MessageTone>('success');
@@ -35,6 +48,12 @@ export default function AddToCartButton({
     setMessageTone(tone);
     setMessage(nextMessage);
     setTimeout(() => setMessage(''), 3000);
+  };
+
+  const redirectAfterAdd = () => {
+    if (redirectTo) {
+      router.push(redirectTo);
+    }
   };
 
   const availableStock = variant?.stockQuantity ?? product?.stockQuantity;
@@ -47,16 +66,16 @@ export default function AddToCartButton({
     stock <= 0 ? 'Produkt není skladem' : `Skladem je pouze ${stock} ks`
   );
 
-  const getErrorStatus = (error?: { details?: any }) => error?.details?.status;
+  const getErrorStatus = (error?: ApiErrorLike) => error?.details?.status;
 
-  const isAlreadyInCartError = (error?: { message?: string; details?: any }) => (
+  const isAlreadyInCartError = (error?: ApiErrorLike) => (
     getErrorStatus(error) === 409 ||
     error?.message?.toLowerCase().includes('status code 409') ||
     error?.message?.toLowerCase().includes('already in your cart') ||
     error?.message?.toLowerCase().includes('already exists')
   );
 
-  const isInsufficientStockError = (error?: { message?: string; details?: any }) => (
+  const isInsufficientStockError = (error?: ApiErrorLike) => (
     getErrorStatus(error) === 400 ||
     error?.message?.toLowerCase().includes('insufficient stock')
   );
@@ -85,10 +104,12 @@ export default function AddToCartButton({
 
         if (result.status === 'already-in-cart') {
           showMessage('Tento produkt už v košíku máte', 'warning');
+          redirectAfterAdd();
         } else if (result.status === 'insufficient-stock') {
           showMessage(stockErrorMessage(result.availableStock || 0), 'error');
         } else {
           showMessage('Produkt přidán do košíku');
+          redirectAfterAdd();
         }
         return;
       }
@@ -101,8 +122,10 @@ export default function AddToCartButton({
 
       if (response.success) {
         showMessage('Produkt přidán do košíku');
+        redirectAfterAdd();
       } else if (isAlreadyInCartError(response.error)) {
         showMessage('Tento produkt už v košíku máte', 'warning');
+        redirectAfterAdd();
       } else if (isInsufficientStockError(response.error)) {
         showMessage('Nelze přidat více kusů, než je skladem', 'error');
       } else {
@@ -120,6 +143,7 @@ export default function AddToCartButton({
       <button
         onClick={handleAddToCart}
         disabled={loading || authLoading}
+        aria-label={ariaLabel}
         className={className || 'w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'}
       >
         {loading ? 'Přidávání...' : label}

@@ -70,7 +70,7 @@ function PaymentResultContent() {
         <div className="border-b border-neutral-200 bg-white px-6 py-6">
           <div className="mx-auto flex max-w-7xl items-center justify-between">
             <Link href="/" className="text-3xl font-black">FlipFlop</Link>
-            <div className="hidden gap-5 text-sm font-semibold md:flex"><span>Stačí písknout</span><span>+420 226 201 606</span><span>eshop@flipflop.alfares.cz</span></div>
+            <div className="hidden gap-5 text-sm font-semibold md:flex"><span>Stačí písknout</span><span>+420 720 780 770</span><span>obchod@flipflop.cz</span></div>
           </div>
         </div>
         <main className="mx-auto max-w-7xl px-6 py-14">
@@ -101,7 +101,7 @@ function PaymentResultContent() {
           </div>
           <section className="mt-10 grid gap-8 border border-neutral-200 bg-white p-8 md:grid-cols-3">
             <div><h3 className="text-2xl font-black">Nevíš si s něčím rady?</h3><p className="font-black text-pink-700">Stačí písknout.</p><p>Po - Pá: 8:30 - 18:00</p><p>So - Ne: 9:00 - 17:00</p></div>
-            <div className="font-bold"><p>+420 226 201 606</p><p>eshop@flipflop.alfares.cz</p></div>
+            <div className="font-bold"><p>+420 720 780 770</p><p>obchod@flipflop.cz</p></div>
             <div><h3 className="text-2xl font-black">Typická vytíženost zákaznické linky</h3><p className="mt-3 inline-block bg-green-600 px-8 py-3 font-black text-white">Nízká</p></div>
           </section>
         </main>

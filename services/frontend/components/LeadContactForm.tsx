@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 type FormState = 'idle' | 'submitting' | 'success' | 'error';
 
-export default function LeadContactForm() {
+export default function LeadContactForm({ submitLabel = 'Odeslat poptavku' }: { submitLabel?: string }) {
   const { user, isAuthenticated, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -140,7 +140,7 @@ export default function LeadContactForm() {
         disabled={isSubmitting || loading}
         className="w-full rounded-xl bg-slate-900 px-6 py-3 font-bold text-white shadow-lg transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
-        {isSubmitting ? 'Odesilam...' : 'Odeslat poptavku'}
+        {isSubmitting ? 'Odesilam...' : submitLabel}
       </button>
 
       {state === 'success' && (

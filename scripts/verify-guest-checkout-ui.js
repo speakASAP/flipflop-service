@@ -67,6 +67,9 @@ async function main() {
   assert(!checkout.includes('Poděkování operátorům expedice'), 'Checkout must not include operator-tip upsell');
   assert(!checkout.includes('Tentokrát ne'), 'Checkout must not include no-tip option');
   assert(checkout.includes('Souhrn objednávky'), 'Checkout must include order summary');
+  assert(checkout.includes('AddressAutocomplete') && checkout.includes('updateBillingAddress') && checkout.includes('updateDeliveryAddress'), 'Checkout must use address autocomplete for billing and delivery addresses');
+  assert(fs.existsSync('services/frontend/app/api/address-autocomplete/route.ts'), 'Frontend must expose a server-side address autocomplete proxy route');
+  assert(read('services/frontend/app/api/address-autocomplete/route.ts').includes('GOOGLE_PLACES_API_KEY') && read('services/frontend/app/api/address-autocomplete/route.ts').includes('places:autocomplete'), 'Address autocomplete proxy must use a server-side provider key and Google Places autocomplete contract');
   assert(checkout.includes('CheckoutStepButton') && checkout.includes("router.push('/cart')") && checkout.includes('goToDelivery'), 'Checkout must allow returning to previous steps from the stepper');
   assert(checkout.includes('Vrátit se na předchozí krok'), 'Checkout must include an explicit previous-step button');
   assert(!checkout.includes('shippingCost: selectedDelivery.price'), 'Checkout must not send browser-computed shippingCost');
