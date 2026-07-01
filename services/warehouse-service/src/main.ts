@@ -5,10 +5,13 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { HttpExceptionNormalizerFilter } from '@flipflop/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
+  app.useGlobalFilters(new HttpExceptionNormalizerFilter());
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

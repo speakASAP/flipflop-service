@@ -41,6 +41,9 @@ export * from './types/common.types';
 // Interfaces
 export * from './interfaces/logger.interface';
 
+// Filters
+export * from './filters/http-exception-normalizer.filter';
+
 // Utils
 export * from './utils/api-response.util';
 export * from './utils/error-handler.util';
