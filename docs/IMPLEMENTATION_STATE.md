@@ -25,7 +25,7 @@ IPS chain:
 - Execution Plan: Keep local `invoice` bank-transfer QR unchanged; route the new customer QR option through `payments-microservice` with `applicationId=flipflop-service`, `paymentMethod=fiobanka`, callback URL, and hosted result URLs.
 - Coding Prompt: Do not mutate order totals, payment status, webhook trust, provider credentials, Stripe/PayPal keys, stock reservation logic, or local invoice QR rendering.
 - Code: Updated checkout payment options, order-service payment validation/request payloads, shared payment client success/cancel forwarding, and guest-checkout verifier assertions.
-- Validation: pending in this session.
+- Validation: `python3 scripts/pre_coding_gate.py --root .` passed; `python3 scripts/strict_doc_audit.py --root . --format markdown --fail-on-issues` passed; `git diff --check` passed; `node --check scripts/verify-guest-checkout-ui.js` passed; `npm run verify:guest-checkout-ui` passed; `cd shared && npm run build` passed; `cd services/order-service && npm run build` passed; `cd services/frontend && npm run build` passed.
 
 Runtime evidence before config repair:
 
@@ -33,15 +33,16 @@ Runtime evidence before config repair:
 - `payments-microservice` has Stripe and PayPal provider credentials present by env-name check only.
 - `payments-microservice` has `FIO_BANKA_ACCOUNT_NUMBER` present by env-name check only.
 - `[MISSING: flipflop-service entry in payments-microservice PAYMENT_CALLBACK_API_KEYS]` was found before runtime callback-map repair.
+- Runtime callback-map repair merged the existing FlipFlop webhook key into `payments-marathon-integration/PAYMENT_CALLBACK_API_KEYS`; `payments-microservice` rollout completed and the new pod reports `flipflop-service` present in callback keys.
 
 Parallel execution section:
 
 - Frontend checkout lane: complete in this session; owner role frontend integrator; allowed file `services/frontend/app/checkout/page.tsx`; validation owner original thread.
 - Backend payment contract lane: complete in this session; owner role payment integration; allowed files `services/order-service/src/orders/orders.service.ts`, `shared/payments/payment.service.ts`, `shared/payments/payment.interface.ts`; validation owner original thread.
-- Runtime callback-map lane: in progress in this session; owner role platform/secrets operator; allowed scope Kubernetes secret value merge for `PAYMENT_CALLBACK_API_KEYS`; forbidden scope provider keys and payment account values; validation owner original thread.
-- Deployment lane: dependency-gated on source validation and callback-map repair; merge order source, runtime callback map, deploy, smoke.
+- Runtime callback-map lane: complete in this session; owner role platform/secrets operator; allowed scope Kubernetes secret value merge for `PAYMENT_CALLBACK_API_KEYS`; forbidden scope provider keys and payment account values; validation owner original thread.
+- Deployment lane: in progress in this session; merge order source, runtime callback map, deploy, smoke.
 
-Next action: run source validation, repair the callback map, deploy FlipFlop, and smoke the payment surface.
+Next action: run deployment readiness, deploy FlipFlop, and smoke the payment surface.
 
 
 
