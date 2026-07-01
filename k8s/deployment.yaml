@@ -178,8 +178,6 @@ spec:
                 name: flipflop-config
             - secretRef:
                 name: flipflop-service-secret
-            - secretRef:
-                name: flipflop-warehouse-token
           env:
             - name: PORT
               value: "3002"

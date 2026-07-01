@@ -4,7 +4,7 @@
 id: VAL-GOAL-11-NATIVE-CATALOG-BULK-PUBLISH
 status: passed
 created: 2026-06-30
-updated: 2026-07-01T07:10:00Z
+updated: 2026-07-01T08:30:00Z
 repository: /home/ssf/Documents/Github/flipflop-service-bulk-publish
 branch: codex/flipflop-native-bulk-publish
 ```
@@ -25,10 +25,13 @@ branch: codex/flipflop-native-bulk-publish
 - Direct in-pod smoke for POST /products/publish/bulk without Authorization returned HTTP 401.
 - Public gateway smoke for POST https://flipflop.alfares.cz/api/products/publish/bulk without Authorization returned HTTP 401.
 - Auth service principal `flipflop-service@internal` was provisioned with `internal:warehouse-microservice:admin`; the issued token was not printed.
-- Live Kubernetes Secret `flipflop-warehouse-token` mounted `WAREHOUSE_SERVICE_TOKEN` into `flipflop-product-service`; Auth validate returned valid service identity and Warehouse stock total returned HTTP 200.
+- Initial smoke used live Kubernetes Secret `flipflop-warehouse-token` to mount `WAREHOUSE_SERVICE_TOKEN` into `flipflop-product-service`; Auth validate returned valid service identity and Warehouse stock total returned HTTP 200.
 - Catalog bulk publication smoke with marketplace `[flipflop]` and three stock-positive products returned requested=3, succeeded=3, failed=0, blocked=0.
 - Follow-up status reads returned `published=true` for all three FlipFlop lifecycle attempts.
-- Vault-backed durable storage for `WAREHOUSE_SERVICE_TOKEN` is still pending because the available Vault token returned 403 on write.
+- `WAREHOUSE_SERVICE_TOKEN` is now present by field name in Vault path `secret/prod/flipflop-service`; value was not printed.
+- ExternalSecret `flipflop-service-secret` maps `WAREHOUSE_SERVICE_TOKEN` from Vault and reports Ready=True / SecretSynced.
+- `flipflop-product-service` was rolled out with only `flipflop-service-secret` as secret env source; `flipflop-warehouse-token` is no longer referenced by the deployment manifest.
+- Runtime smoke from restarted product-service confirmed `WAREHOUSE_SERVICE_TOKEN` present and Warehouse stock total returned HTTP 200 for a stock-positive catalog product.
 
 ## Boundary Check
 
