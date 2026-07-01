@@ -80,6 +80,7 @@ function psql(sql) {
     '-n',
     'statex-apps',
     'exec',
+    '-i',
     'deploy/db-server-postgres',
     '--',
     'psql',
@@ -93,6 +94,50 @@ function psql(sql) {
     '-t',
     '-A',
   ], { input: sql, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+}
+
+async function selectLocalSmokeProduct(candidates) {
+  if (!Array.isArray(candidates) || !candidates.length) {
+    return null;
+  }
+
+  const encodedCandidates = Buffer.from(JSON.stringify(candidates)).toString('base64');
+  return parseJson(kubectlNode(`
+    (async () => {
+      const candidates = JSON.parse(Buffer.from('${encodedCandidates}', 'base64').toString('utf8'));
+      const token = (
+        process.env.WAREHOUSE_SERVICE_TOKEN ||
+        process.env.JWT_TOKEN ||
+        process.env.SERVICE_TOKEN ||
+        ''
+      ).trim();
+      const headers = token
+        ? { Authorization: token.startsWith('Bearer ') ? token : 'Bearer ' + token }
+        : {};
+      const baseUrl = (process.env.WAREHOUSE_SERVICE_URL || 'http://warehouse-microservice:3201').replace(/\\/$/, '');
+
+      for (const candidate of candidates) {
+        const catalogProductId = String(candidate.catalogProductId || '').trim();
+        if (!candidate.id || !catalogProductId) continue;
+        try {
+          const response = await fetch(baseUrl + '/api/stock/' + encodeURIComponent(catalogProductId) + '/total', { headers });
+          if (!response.ok) continue;
+          const body = await response.json().catch(() => ({}));
+          const totalAvailable = Number(body.data?.totalAvailable || 0);
+          if (totalAvailable > 0) {
+            console.log(JSON.stringify({
+              id: candidate.id,
+              catalogProductIdPresent: true,
+              warehouseStockPositive: true
+            }));
+            return;
+          }
+        } catch {}
+      }
+
+      console.log(JSON.stringify(null));
+    })();
+  `), null);
 }
 
 function writeReport(report) {
@@ -314,6 +359,26 @@ async function runLiveSmoke() {
       "updatedAt" = now();
   `);
 
+  const localSmokeCandidates = parseJson(psql(`
+    SELECT coalesce(jsonb_agg(jsonb_build_object(
+      'id', id,
+      'catalogProductId', "catalogProductId"
+    )), '[]'::jsonb)
+    FROM (
+      SELECT id, "catalogProductId", "stockQuantity", "updatedAt"
+      FROM products
+      WHERE "isActive" = true
+        AND "catalogProductId" IS NOT NULL
+        AND price > 0
+      ORDER BY coalesce("stockQuantity", 0) DESC, "updatedAt" DESC
+      LIMIT 20
+    ) smoke_candidates;
+  `), []);
+  const localSmokeProduct = await selectLocalSmokeProduct(localSmokeCandidates);
+  if (!localSmokeProduct?.id) {
+    throw new Error('[MISSING: local FlipFlop smoke product with Warehouse stock]');
+  }
+
   const authHeaders = { authorization: `Bearer ${token}` };
   const addresses = await request('/users/addresses', { headers: authHeaders });
   let address = (addresses.data || [])[0];
@@ -336,15 +401,10 @@ async function runLiveSmoke() {
   }
 
   await request('/cart', { method: 'DELETE', headers: authHeaders });
-  const product =
-    products.find((item) => Number(item.stockQuantity || 0) > 0 && Number(item.price || 0) > 0) ||
-    products.find((item) => Number(item.stockQuantity || 0) > 0) ||
-    products[0];
-
   await request('/cart/items', {
     method: 'POST',
     headers: authHeaders,
-    body: JSON.stringify({ productId: product.id, quantity: 1 }),
+    body: JSON.stringify({ productId: localSmokeProduct.id, quantity: 1 }),
   });
   const cart = await request('/cart', { headers: authHeaders });
   if (!cart.data?.items?.length) {

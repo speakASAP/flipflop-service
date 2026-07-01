@@ -1,8 +1,8 @@
 {
   "ok": false,
-  "generatedAt": "2026-07-01T07:54:11.083Z",
+  "generatedAt": "2026-07-01T08:25:05.577Z",
   "mutatingSmokeApprovedByOwner": true,
-  "liveSmokeRun": false,
+  "liveSmokeRun": true,
   "prerequisites": {
     "deploymentReady": "1/1",
     "deploymentAvailable": "1/1",
@@ -13,7 +13,7 @@
       "ORDERS_MICROSERVICE_URL": true,
       "ORDERS_SERVICE_TOKEN": true,
       "WAREHOUSE_SERVICE_URL": true,
-      "WAREHOUSE_SERVICE_TOKEN": false,
+      "WAREHOUSE_SERVICE_TOKEN": true,
       "JWT_TOKEN": true,
       "DEFAULT_WAREHOUSE_ID": false,
       "TEST_PASSWORD": true
@@ -24,18 +24,14 @@
       "validationRejectedSyntheticBody": true
     },
     "warehouseProbe": {
-      "httpStatus": 401,
-      "authorized": false,
-      "warehouseIdPresent": false
+      "httpStatus": 200,
+      "authorized": true,
+      "warehouseIdPresent": true
     },
-    "blockers": [
-      "[MISSING: warehouseId]",
-      "[MISSING: WAREHOUSE_SERVICE_TOKEN accepted by warehouse-microservice]"
-    ]
+    "blockers": []
   },
   "result": null,
   "blockers": [
-    "[MISSING: warehouseId]",
-    "[MISSING: WAREHOUSE_SERVICE_TOKEN accepted by warehouse-microservice]"
+    "POST /orders failed: 400 Request failed with status code 400"
   ]
 }

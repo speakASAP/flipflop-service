@@ -73,6 +73,9 @@ export class WarehouseClientService {
           warehouseId,
           quantity,
           orderId,
+          reasonCode: 'flipflop_order_reservation',
+          channel: 'flipflop',
+          reference: orderId,
         }, this.requestOptions())
       );
       return response.data.data;
@@ -149,7 +152,10 @@ export class WarehouseClientService {
           warehouseId,
           quantity,
           orderId,
-        })
+          reasonCode: 'flipflop_order_reservation_release',
+          channel: 'flipflop',
+          reference: orderId,
+        }, this.requestOptions())
       );
       return response.data.data;
     } catch (error: unknown) {
