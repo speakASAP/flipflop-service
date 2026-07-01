@@ -105,6 +105,9 @@ Results:
 - Build checks: PASS for `shared` and `services/order-service`.
 - Live smoke: NOT RUN. The runner exited before mutation with `liveSmokeRun=false`.
 - Runtime blockers:
+  - Deploy status: `./scripts/deploy.sh` built and pushed images, then timed out while replacement pods were still pulling images; recreating only the stuck replacement pods completed rollout, and all six FlipFlop deployments reached `1/1` ready/available.
+  - Public post-deploy checks: `GET https://flipflop.alfares.cz/` returned HTTP 200 and `GET https://flipflop.alfares.cz/api/products?limit=1` returned HTTP 200.
+  - Post-deploy readiness smoke: `RUN_LIVE_ORDERS_SMOKE=1 node scripts/smoke-orders-readiness.js` stopped before mutation; Orders create auth reached validation with HTTP 400.
   - `[MISSING: warehouseId]` because the in-pod Warehouse probe returned HTTP 401 and no `DEFAULT_WAREHOUSE_ID` is configured.
   - `[MISSING: WAREHOUSE_SERVICE_TOKEN accepted by warehouse-microservice]` because no dedicated Warehouse token is projected and the available token did not authorize `/api/warehouses`.
 - Unknowns preserved:

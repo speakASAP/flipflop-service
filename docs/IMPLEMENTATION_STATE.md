@@ -50,6 +50,14 @@ Parallel execution section:
 
 Next action: provision/project an Auth-compatible Warehouse service token and a Warehouse-owned default id for FlipFlop, then rerun `RUN_LIVE_ORDERS_SMOKE=1 node scripts/smoke-orders-readiness.js`.
 
+Post-deploy evidence:
+
+- Commit `83c71c7` was deployed with `./scripts/deploy.sh`; the deploy script timed out during rollout while replacement pods were still pulling images, with old ready pods continuing to serve.
+- Recovery was limited to recreating stuck replacement pods; all six FlipFlop deployments then reported `1/1` ready/available: `flipflop-service`, `flipflop-frontend`, `flipflop-product-service`, `flipflop-cart-service`, `flipflop-order-service`, and `flipflop-user-service`.
+- Post-rollout public checks returned HTTP 200 for `GET https://flipflop.alfares.cz/` and `GET https://flipflop.alfares.cz/api/products?limit=1`.
+- Post-rollout `RUN_LIVE_ORDERS_SMOKE=1 node scripts/smoke-orders-readiness.js` stopped before mutation and refreshed `reports/validation/orders-readiness-smoke/report-latest.json`; Orders create auth still reached validation with HTTP 400, while Warehouse remained blocked with HTTP 401 and no Warehouse id.
+- Remaining blockers are `[MISSING: warehouseId]` and `[MISSING: WAREHOUSE_SERVICE_TOKEN accepted by warehouse-microservice]`.
+
 ## 2026-06-30 - GOAL-10 Runtime Deployment Addendum
 
 Deployment status changed from no-deploy source lane to deployed Goal 19 channel integration after owner requested full connector rollout.
